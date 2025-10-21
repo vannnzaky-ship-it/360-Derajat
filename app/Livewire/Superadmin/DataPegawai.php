@@ -10,7 +10,9 @@ use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On; // <-- Pastikan ini di-import
+use Livewire\Attributes\On; 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 #[Layout('layouts.admin')]
 class DataPegawai extends Component
@@ -19,7 +21,7 @@ class DataPegawai extends Component
 
     // Properti untuk form
     public $name, $email, $password, $jabatan_id, $nip;
-    public $selectedRoles = []; // Untuk checkbox role
+    public $selectedRoles = []; 
 
     // Properti untuk edit
     public $pegawaiId, $userId;
@@ -29,31 +31,55 @@ class DataPegawai extends Component
     public $search = '';
     public $showModal = false;
 
-    // Listener '$listeners' sudah tidak digunakan di Livewire 3
-    // protected $listeners = ['deleteConfirmed' => 'destroy'];
-
     public function render()
     {
-        $pegawai = Pegawai::with(['user', 'jabatan'])
+        $pegawaiQuery = Pegawai::with(['user.roles', 'jabatan'])
             ->whereHas('user', function ($query) {
-                $query->where('name', 'like', '%'.$this->search.'%')
-                      ->orWhere('email', 'like', '%'.$this->search.'%');
-            })
-            ->orWhere('nip', 'like', '%'.$this->search.'%')
-            ->paginate(10);
+                $query->whereDoesntHave('roles', function ($roleQuery) {
+                    $roleQuery->where('name', 'superadmin');
+                });
+                $query->where('id', '!=', Auth::id()); 
+                if ($this->search) {
+                    $query->where(function($subQuery) {
+                         $subQuery->where('name', 'like', '%'.$this->search.'%')
+                                  ->orWhere('email', 'like', '%'.$this->search.'%');
+                    });
+                }
+            });
+            
+        if ($this->search) {
+             $pegawaiQuery->orWhere('nip', 'like', '%'.$this->search.'%');
+        }
+
+        $pegawai = $pegawaiQuery->paginate(10);
+
+        $currentUser = Auth::user(); 
+        $isAdminAccessing = false; 
+        if ($currentUser) { 
+            /** @var \App\Models\User $currentUser */ 
+            if (!$currentUser->hasRole('superadmin')) { 
+                $isAdminAccessing = true; 
+            }
+        }
+        
+        $availableRolesQuery = Role::where('name', '!=', 'superadmin');
+        if ($isAdminAccessing) {
+            $availableRolesQuery->where('name', '!=', 'admin');
+        }
+        $roleList = $availableRolesQuery->get();
 
         return view('livewire.superadmin.data-pegawai', [
             'pegawaiList' => $pegawai,
             'jabatanList' => Jabatan::all(),
-            // Ambil role selain superadmin
-            'roleList' => Role::where('name', '!=', 'superadmin')->get() 
-        ]);
+            'roleList' => $roleList 
+        ]); 
     }
 
-    // Buka modal (kosong)
+    // Buka modal (kosong) - PASTIKAN INI ADA DAN PUBLIC
     public function create()
     {
         $this->resetForm();
+        $this->isEditMode = false; // Pastikan mode edit false saat create
         $this->showModal = true;
     }
 
@@ -61,6 +87,11 @@ class DataPegawai extends Component
     public function edit($id)
     {
         $pegawai = Pegawai::with('user.roles')->findOrFail($id);
+
+        if ($pegawai->user->hasRole('superadmin')) {
+            session()->flash('error', 'Tidak diizinkan mengedit akun Superadmin.'); 
+            return; 
+        }
         
         $this->pegawaiId = $pegawai->id;
         $this->userId = $pegawai->user_id;
@@ -69,7 +100,7 @@ class DataPegawai extends Component
         $this->nip = $pegawai->nip;
         $this->jabatan_id = $pegawai->jabatan_id;
         $this->selectedRoles = $pegawai->user->roles->pluck('id')->toArray();
-        $this->password = ''; // Kosongkan password saat edit
+        $this->password = ''; 
         
         $this->isEditMode = true;
         $this->showModal = true;
@@ -80,31 +111,38 @@ class DataPegawai extends Component
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $this->userId,
-            'nip' => 'required|string|unique:pegawai,nip,' . $this->pegawaiId,
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->ignore($this->userId), 
+            ],
+            'nip' => [
+                'required',
+                'string',
+                'unique:pegawai,nip,' . ($this->pegawaiId ?? 'NULL') . ',id' 
+            ],
             'jabatan_id' => 'required|exists:jabatan,id',
             'selectedRoles' => 'required|array|min:1',
         ];
 
-        // Tambahkan validasi password HANYA saat create
         if (!$this->isEditMode) {
             $rules['password'] = 'required|string|min:8';
+        } else {
+            $rules['password'] = 'nullable|string|min:8'; 
         }
 
-        $this->validate($rules);
+        $this->validate($rules); // Perbaiki typo validate()
 
-        // Update atau Create User
-        $user = User::updateOrCreate(
-            ['id' => $this->userId],
-            [
-                'name' => $this->name,
-                'email' => $this->email,
-                // Hanya update password jika diisi
-                'password' => $this->password ? Hash::make($this->password) : User::find($this->userId)?->password
-            ]
-        );
+        $userData = [
+            'name' => $this->name,
+            'email' => $this->email,
+        ];
+        if (!empty($this->password)) {
+            $userData['password'] = Hash::make($this->password);
+        }
         
-        // Update atau Create Pegawai
+        $user = User::updateOrCreate(['id' => $this->userId], $userData);
+        
         Pegawai::updateOrCreate(
             ['id' => $this->pegawaiId],
             [
@@ -114,26 +152,28 @@ class DataPegawai extends Component
             ]
         );
 
-        // Sync roles
         $user->roles()->sync($this->selectedRoles);
 
         session()->flash('message', $this->isEditMode ? 'Data Pegawai Berhasil Diperbarui' : 'Data Pegawai Berhasil Ditambahkan');
         $this->closeModal();
     }
-
-    /**
-     * Ini adalah cara baru untuk menangani event di Livewire 3.
-     * Atribut #[On] akan "mendengarkan" event 'deleteConfirmed' dari frontend.
-     */
-    #[On('deleteConfirmed')]
-    public function destroy($id)
+    
+    // Hapus
+    #[On('deleteConfirmed')] 
+    public function destroy($id) 
     {
-        // Temukan user berdasarkan ID dan hapus.
-        // Relasi onDelete('cascade') di migrasi akan otomatis menghapus data pegawai terkait.
-        $user = User::find($id);
+        $user = User::find($id); 
+
+        if ($user && $user->hasRole('superadmin')) {
+            session()->flash('error', 'Tidak diizinkan menghapus akun Superadmin.'); 
+            return; 
+        }
+       
         if ($user) {
-            $user->delete();
+            $user->delete(); 
             session()->flash('message', 'Data Pegawai Berhasil Dihapus');
+        } else {
+             session()->flash('error', 'Data Pegawai tidak ditemukan.');
         }
     }
 
@@ -147,5 +187,7 @@ class DataPegawai extends Component
     public function resetForm()
     {
         $this->reset(['name', 'email', 'password', 'jabatan_id', 'nip', 'selectedRoles', 'pegawaiId', 'userId', 'isEditMode']);
+        $this->resetErrorBag(); // Bersihkan error validasi juga
+        $this->resetValidation(); // Bersihkan status validasi
     }
 }

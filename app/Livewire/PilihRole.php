@@ -33,17 +33,21 @@ class PilihRole extends Component
         // 2. Simpan peran yang dipilih ke session
         Session::put('selected_role', $roleName);
 
-        // 3. Arahkan ke dashboard yang sesuai
-        return $this->redirect($this->getRedirectPath($roleName), navigate: true);
+        // 3. Arahkan ke dashboard yang sesuai (tanpa navigate:true)
+        return $this->redirect($this->getRedirectPath($roleName));
     }
 
+    /**
+     * Fungsi untuk menentukan path redirect
+     */
     protected function getRedirectPath(string $roleName): string
     {
         return match ($roleName) {
             'superadmin' => '/superadmin/dashboard',
-            'peninjau' => '/peninjau/dashboard',
-            'karyawan' => '/karyawan/dashboard',
-            default => '/',
+            'admin'      => '/admin/dashboard', // <-- INI YANG HILANG SEBELUMNYA
+            'peninjau'   => '/peninjau/dashboard',
+            'karyawan'   => '/karyawan/dashboard',
+            default      => '/', // Fallback
         };
     }
 

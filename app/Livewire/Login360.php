@@ -55,14 +55,15 @@ class Login360 extends Component
     }
 
     protected function getRedirectPath(string $roleName): string
-    {
-        return match ($roleName) {
-            'superadmin' => '/superadmin/dashboard',
-            'peninjau' => '/peninjau/dashboard',
-            'karyawan' => '/karyawan/dashboard',
-            default => '/',
-        };
-    }
+{
+    return match ($roleName) {
+        'superadmin' => '/superadmin/dashboard',
+        'admin'      => '/admin/dashboard', // <-- TAMBAHKAN INI
+        'peninjau'   => '/peninjau/dashboard',
+        'karyawan'   => '/karyawan/dashboard',
+        default      => '/', // Fallback ke root (yang akan redirect lagi)
+    };
+}
 
     public function render()
     {

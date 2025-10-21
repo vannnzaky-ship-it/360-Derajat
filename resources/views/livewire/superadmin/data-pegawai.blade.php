@@ -40,10 +40,17 @@
                                         @endforeach
                                     </td>
                                     <td>
-                                        <button wire:click="edit({{ $pegawai->id }})" class="btn btn-sm btn-warning">Edit</button>
-                                        <button 
-                                            wire:click="$dispatch('confirmDelete', { id: {{ $pegawai->user_id }} })" 
-                                            class="btn btn-sm btn-danger">Hapus</button>
+                                        <td>
+                                            {{-- Tombol akan selalu tampil karena Superadmin & diri sendiri sudah disembunyikan --}}
+                                            <button wire:click="edit({{ $pegawai->id }})" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil-fill"></i> Edit
+                                            </button>
+                                            <button 
+                                                wire:click="$dispatch('confirmDelete', { id: {{ $pegawai->user_id }} })" 
+                                                class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash-fill"></i> Hapus
+                                            </button>
+                                        </td>
                                     </td>
                                 </tr>
                             @empty
