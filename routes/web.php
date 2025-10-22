@@ -47,18 +47,23 @@ Route::prefix('admin')
     ->group(function () {
         Route::redirect('/dashboard', '/admin/data-pegawai')->name('dashboard');
         Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
+        Route::get('/siklus-semester', \App\Livewire\Admin\SiklusSemester::class)->name('siklus-semester');
+        Route::get('/pertanyaan', \App\Livewire\Admin\Pertanyaan::class)->name('pertanyaan');
 });
 
-// GRUP PENINJAU
-// GRUP PENINJAU
-Route::prefix('peninjau')
-    ->middleware(['auth', 'role:peninjau'])
-    ->name('peninjau.')
+// GRUP ADMINISTRATOR
+Route::prefix('admin')
+    ->middleware(['auth', 'role:admin'])
+    ->name('admin.')
     ->group(function () {
-        // ==== GANTI closure DENGAN KOMPONEN BARU ====
-        Route::get('/dashboard', \App\Livewire\Peninjau\Dashboard::class)->name('dashboard');
-        // ---------------------------------------------
-        // Rute lain untuk peninjau bisa ditambahkan di sini
+        // --- UBAH INI ---
+        Route::get('/dashboard', \App\Livewire\Admin\Dashboard::class)->name('dashboard');
+        // ----------------
+
+        Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
+        Route::get('/siklus-semester', \App\Livewire\Admin\SiklusSemester::class)->name('siklus-semester');
+        Route::get('/pertanyaan', \App\Livewire\Admin\Pertanyaan::class)->name('pertanyaan');
+        
 });
 
 // GRUP KARYAWAN
