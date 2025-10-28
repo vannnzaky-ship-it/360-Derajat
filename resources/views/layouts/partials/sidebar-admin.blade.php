@@ -15,9 +15,10 @@
     </li>
     
     <li class="sidebar-item">
-        <a class="sidebar-link" href="#">
+        {{-- Ganti nama dan href --}}
+        <a class="sidebar-link" href="{{ route('admin.kompetensi') }}"> 
             <i class="bi bi-bar-chart-fill" style="width: 20px;"></i>
-            <span class="sidebar-text">Bobot</span>
+            <span class="sidebar-text">Bobot</span> {{-- Ganti nama menu --}}
         </a>
     </li>
 

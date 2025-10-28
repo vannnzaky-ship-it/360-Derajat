@@ -3,143 +3,198 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
-use Livewire\Attributes\Rule; // Import Atribut Rule
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Rule;
+use App\Models\Siklus; // Import Model
+use Livewire\WithPagination;
+use Livewire\Attributes\On; // Import On
 
+#[Layout('layouts.admin', ['title' => 'Siklus Semester'])]
 class SiklusSemester extends Component
 {
+    use WithPagination;
+
     public $search = '';
 
-    // --- Properti untuk Form Modal ---
-    
-    #[Rule('required|digits:4|integer|min:2020|max:2099', message: 'Tahun ajaran wajib diisi format 4 digit.')]
+    // Properti Form
+    public $siklusId = null;
+    public $isEditMode = false;
+    public $showModal = false; // Tambah properti untuk kontrol modal
+
+    #[Rule('required|digits:4|integer|min:2020|max:2099', message: 'Tahun ajaran wajib format 4 digit.')]
     public $tahun_ajaran = '';
 
     #[Rule('required|in:Ganjil,Genap', message: 'Semester wajib dipilih.')]
     public $semester = '';
 
-    #[Rule('required|integer|min:0|max:100', message: 'Presentase wajib diisi angka 0-100.')]
-    public $persen_atasan = '';
-    
-    #[Rule('required|integer|min:0|max:100', message: 'Presentase wajib diisi angka 0-100.')]
-    public $persen_rekan = '';
+    #[Rule('required|integer|min:0|max:100', message: 'Presentase wajib angka 0-100.')]
+    public $persen_diri = 0;
 
-    #[Rule('required|integer|min:0|max:100', message: 'Presentase wajib diisi angka 0-100.')]
-    public $persen_bawahan = '';
+    #[Rule('required|integer|min:0|max:100', message: 'Presentase wajib angka 0-100.')]
+    public $persen_atasan = 0;
+
+    #[Rule('required|integer|min:0|max:100', message: 'Presentase wajib angka 0-100.')]
+    public $persen_rekan = 0;
+
+    #[Rule('required|integer|min:0|max:100', message: 'Presentase wajib angka 0-100.')]
+    public $persen_bawahan = 0;
 
     #[Rule('required|in:Aktif,Tidak Aktif', message: 'Status wajib dipilih.')]
-    public $status = 'Aktif'; // Set nilai default
-
-    // --- Method untuk Modal ---
-    
-    /**
-     * Reset form & validasi saat modal ditutup
-     */
-    public function closeModal()
-    {
-        $this->reset([
-            'tahun_ajaran', 'semester', 'persen_atasan', 
-            'persen_rekan', 'persen_bawahan', 'status'
-        ]);
-        $this->resetValidation();
-    }
+    public $status = 'Tidak Aktif'; // Default Tidak Aktif
 
     /**
-     * Reset form saat modal akan dibuka
-     */
-    public function showTambahModal()
-    {
-        // Kita reset datanya di sini agar form selalu kosong
-        $this->closeModal();
-        $this->status = 'Aktif'; // Set default status
-    }
-
-    /**
-     * Simpan data baru
+     * Fungsi utama untuk menyimpan (Create atau Update)
      */
     public function saveSiklus()
     {
-        // 1. Validasi input
+        // 1. Validasi dasar
         $validatedData = $this->validate();
 
-        // 2. (Simulasi) Logika penyimpanan data
-        // Ganti bagian ini dengan logika database Anda
-        // ...
+        // 2. Validasi custom: Total Persentase harus 100
+        $totalPersen = $this->persen_diri + $this->persen_atasan + $this->persen_rekan + $this->persen_bawahan;
+        if ($totalPersen !== 100) {
+            $this->addError('persen_total', 'Total persentase Diri+Atasan+Rekan+Bawahan harus 100%. Total saat ini: ' . $totalPersen . '%');
+            return;
+        }
+
+        // 3. Validasi custom: Hanya boleh ada 1 Siklus Aktif
+        if ($this->status == 'Aktif') {
+             $query = Siklus::where('status', 'Aktif');
+             if ($this->isEditMode && $this->siklusId) {
+                 $query->where('id', '!=', $this->siklusId);
+             }
+             if ($query->exists()) {
+                 $this->addError('status', 'Hanya boleh ada satu Siklus Semester yang berstatus Aktif.');
+                 return;
+             }
+        }
         
-        // 3. Reset form
+        // 4. Validasi unique kombinasi tahun & semester
+        $queryUnique = Siklus::where('tahun_ajaran', $this->tahun_ajaran)
+                             ->where('semester', $this->semester);
+        if ($this->isEditMode && $this->siklusId) {
+            $queryUnique->where('id', '!=', $this->siklusId);
+        }
+        if ($queryUnique->exists()) {
+            $this->addError('tahun_ajaran', 'Kombinasi Tahun Ajaran dan Semester ini sudah ada.');
+            $this->addError('semester', ''); // Error kedua agar jelas
+            return;
+        }
+
+        // 5. Simpan atau Update ke Database
+        Siklus::updateOrCreate(['id' => $this->siklusId], $validatedData);
+
+        // 6. Tutup modal & kirim notifikasi
         $this->closeModal();
-
-        // 4. Kirim event untuk memberitahu JS agar menutup modal
-        $this->dispatch('close-modal', '#tambahSiklusModal');
-        
-        // 5. (Opsional) Kirim notifikasi sukses
-        // $this->dispatch('swal:success', 'Data siklus berhasil ditambahkan!');
-
-        // 6. Refresh data di tabel
-        // (Jika data dari DB, panggil method render ulang atau refresh komponen)
+        $this->dispatch('close-modal', '#siklusModal'); 
+        session()->flash('message', $this->isEditMode ? 'Data siklus berhasil diperbarui!' : 'Data siklus berhasil ditambahkan!');
+        $this->resetPage(); // Kembali ke halaman 1 pagination
     }
 
+    /**
+     * Memuat data untuk mode Edit & membuka modal
+     */
+    public function edit($id)
+    {
+        $siklus = Siklus::findOrFail($id);
+        $this->siklusId = $siklus->id;
+        $this->tahun_ajaran = $siklus->tahun_ajaran;
+        $this->semester = $siklus->semester;
+        $this->persen_diri = $siklus->persen_diri;
+        $this->persen_atasan = $siklus->persen_atasan;
+        $this->persen_rekan = $siklus->persen_rekan;
+        $this->persen_bawahan = $siklus->persen_bawahan;
+        $this->status = $siklus->status;
+        $this->isEditMode = true;
+        $this->showModal = true; // Buka modal
+        $this->resetValidation(); 
+
+        $this->dispatch('open-modal');
+    }
+
+     /**
+     * Membuka modal Tambah
+     */
+    public function showTambahModal()
+    {
+        $this->resetForm(); // Reset form dulu
+        $this->tahun_ajaran = date('Y'); // Default tahun sekarang
+        $this->semester = 'Ganjil'; // Default Ganjil
+        $this->status = 'Tidak Aktif'; // Default Tidak Aktif
+        $this->isEditMode = false;
+        $this->showModal = true; // Buka modal
+        $this->dispatch('open-modal');
+    }
 
     /**
-     * Render komponen.
+     * Konfirmasi sebelum hapus
      */
+    public function confirmDelete($id)
+    {
+        $this->siklusId = $id; 
+        $this->dispatch('show-delete-confirmation');
+    }
+
+    /**
+     * Hapus data setelah dikonfirmasi
+     */
+    #[On('deleteConfirmed')] 
+    public function delete()
+    {
+        $siklus = Siklus::find($this->siklusId);
+        if ($siklus) {
+            // Logika tambahan: Jika siklus aktif, jangan biarkan dihapus?
+            if ($siklus->status == 'Aktif') {
+                 session()->flash('error', 'Tidak dapat menghapus Siklus Semester yang sedang Aktif.');
+                 $this->siklusId = null;
+                 return;
+            }
+            $siklus->delete();
+            session()->flash('message', 'Data siklus berhasil dihapus.');
+        } else {
+            session()->flash('error', 'Data siklus tidak ditemukan.');
+        }
+        $this->siklusId = null;
+    }
+
+    /**
+     * Menutup modal dan reset state
+     */
+    public function closeModal()
+    {
+        $this->showModal = false; // Tutup modal
+        $this->resetForm();
+
+        $this->dispatch('close-modal');
+    }
+
+    /**
+     * Reset properti form
+     */
+    public function resetForm()
+    {
+         $this->reset([
+            'siklusId', 'isEditMode', 'tahun_ajaran', 'semester', 
+            'persen_diri', 'persen_atasan', 'persen_rekan', 'persen_bawahan', 
+            'status'
+        ]);
+        $this->resetErrorBag(); // Bersihkan error validasi
+        $this->resetValidation();
+    }
+
     public function render()
     {
-        // === INI DATA TABEL YANG SUDAH ADA (TETAP ADA) ===
-        $data = collect([
-            (object)[
-                'id' => 1,
-                'tahun' => '2022',
-                'semester' => 'Ganjil',
-                'penilaian' => 'Atasan : 50%<br>Rekan Sejawat : 30%<br>Bawahan : 20%',
-                'status' => 'Tidak Aktif'
-            ],
-            (object)[
-                'id' => 2,
-                'tahun' => '2022',
-                'semester' => 'Genap',
-                'penilaian' => 'Atasan : 50%<br>Rekan Sejawat : 30%<br>Bawahan : 20%',
-                'status' => 'Tidak Aktif'
-            ],
-            (object)[
-                'id' => 3,
-                'tahun' => '2023',
-                'semester' => 'Ganjil',
-                'penilaian' => 'Atasan : 50%<br>Rekan Sejawat : 30%<br>Bawahan : 20%',
-                'status' => 'Tidak Aktif'
-            ],
-            (object)[
-                'id' => 4,
-                'tahun' => '2023',
-                'semester' => 'Genap',
-                'penilaian' => 'Atasan : 50%<br>Rekan Sejawat : 30%<br>Bawahan : 20%',
-                'status' => 'Aktif'
-            ],
-            (object)[
-                'id' => 5,
-                'tahun' => '2024',
-                'semester' => 'Ganjil',
-                'penilaian' => 'Atasan : 50%<br>Rekan Sejawat : 30%<br>Bawahan : 20%',
-                'status' => 'Aktif'
-            ],
-            (object)[
-                'id' => 6,
-                'tahun' => '2024',
-                'semester' => 'Genap',
-                'penilaian' => 'Atasan : 50%<br>Rekan Sejawat : 30%<br>Bawahan : 20%',
-                'status' => 'Tidak Aktif'
-            ],
-        ]);
-        // ===============================================
-
-        // Filter data berdasarkan pencarian (TETAP ADA)
-        $filteredData = $data->filter(function ($item) {
-            return str_contains(strtolower($item->tahun), strtolower($this->search)) ||
-                   str_contains(strtolower($item->semester), strtolower($this->search));
-        });
+        // Ambil data dari database dengan pagination dan search
+        $daftarSiklus = Siklus::where(function($query) {
+                                $query->where('tahun_ajaran', 'like', '%'.$this->search.'%')
+                                      ->orWhere('semester', 'like', '%'.$this->search.'%');
+                            })
+                            ->orderBy('tahun_ajaran', 'desc')
+                            ->orderBy('semester', 'desc')
+                            ->paginate(10); 
 
         return view('livewire.admin.siklus-semester', [
-            'daftarSiklus' => $filteredData
-        ])
-        ->layout('layouts.admin', ['title' => 'Siklus Semester']);
+            'daftarSiklus' => $daftarSiklus
+        ]);
     }
 }

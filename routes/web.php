@@ -5,12 +5,16 @@ use App\Livewire\Login360;
 use App\Livewire\PilihRole;
 use App\Livewire\Superadmin\DataPegawai as SuperadminDataPegawai;
 use App\Livewire\Superadmin\ManajemenAdmin;
-// use App\Livewire\Peninjau\Dashboard as PeninjauDashboard; // Kita akan buat ini setelah error hilang
+use App\Livewire\Peninjau\Dashboard as PeninjauDashboard; // Pastikan ini ada
+use App\Livewire\Admin\SiklusSemester; // Import SiklusSemester
+use App\Livewire\Admin\pertanyaanCrud;
+// use App\Livewire\Admin\Dashboard as AdminDashboard; // Import Dashboard Admin (jika ada)
 use App\Livewire\Karyawan\Dashboard as KaryawanDashboard;
 use App\Livewire\Karyawan\Penilaian as KaryawanPenilaian;
 use App\Livewire\Karyawan\Raport as KaryawanRaport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use App\Livewire\Admin\KompetensiCrud; // <-- Tambahkan ini
 
 /*
 |--------------------------------------------------------------------------
@@ -40,31 +44,45 @@ Route::prefix('superadmin')
         Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
 });
 
-// GRUP ADMINISTRATOR
+// GRUP ADMINISTRATOR (Blok Pertama Anda)
+// Route::prefix('admin')
+//     ->middleware(['auth', 'role:admin'])
+//     ->name('admin.')
+//     ->group(function () {
+//         Route::redirect('/dashboard', '/admin/data-pegawai')->name('dashboard'); // Redirect ini tetap ada
+//         Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
+//         // Tambahkan siklus-semester dan pertanyaan di sini
+//         Route::get('/siklus-semester', SiklusSemester::class)->name('siklus-semester');
+//         Route::get('/pertanyaan', \App\Livewire\Admin\Pertanyaan::class)->name('pertanyaan'); // Gunakan class yang benar
+// });
+
+// GRUP ADMINISTRATOR (Blok Kedua Anda - Duplikasi)
 Route::prefix('admin')
     ->middleware(['auth', 'role:admin'])
     ->name('admin.')
     ->group(function () {
-        Route::redirect('/dashboard', '/admin/data-pegawai')->name('dashboard');
-        Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
-        Route::get('/siklus-semester', \App\Livewire\Admin\SiklusSemester::class)->name('siklus-semester');
-        Route::get('/pertanyaan', \App\Livewire\Admin\Pertanyaan::class)->name('pertanyaan');
+        // HAPUS REDIRECT INI:
+        // Route::redirect('/dashboard', '/admin/siklus-semester')->name('dashboard'); 
+
+        // ==== TAMBAHKAN RUTE INI UNTUK KOMPONEN DASHBOARD ANDA ====
+        Route::get('/dashboard', \App\Livewire\Admin\Dashboard::class)->name('dashboard'); 
+        // ==========================================================
+
+        // Rute lain tetap ada
+        Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai'); 
+        Route::get('/siklus-semester', SiklusSemester::class)->name('siklus-semester');
+        Route::get('/kompetensi', KompetensiCrud::class)->name('kompetensi'); // Nama rute 'kompetensi
+        Route::get('/pertanyaan', PertanyaanCrud::class)->name('pertanyaan');
 });
 
-// GRUP ADMINISTRATOR
-Route::prefix('admin')
-    ->middleware(['auth', 'role:admin'])
-    ->name('admin.')
+// GRUP PENINJAU (Ditambahkan kembali)
+Route::prefix('peninjau')
+    ->middleware(['auth', 'role:peninjau'])
+    ->name('peninjau.')
     ->group(function () {
-        // --- UBAH INI ---
-        Route::get('/dashboard', \App\Livewire\Admin\Dashboard::class)->name('dashboard');
-        // ----------------
-
-        Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
-        Route::get('/siklus-semester', \App\Livewire\Admin\SiklusSemester::class)->name('siklus-semester');
-        Route::get('/pertanyaan', \App\Livewire\Admin\Pertanyaan::class)->name('pertanyaan');
-        
+        Route::get('/dashboard', PeninjauDashboard::class)->name('dashboard');
 });
+
 
 // GRUP KARYAWAN
 Route::prefix('karyawan')
@@ -77,39 +95,23 @@ Route::prefix('karyawan')
     });
 
 
-/// --- RUTE ROOT (HALAMAN UTAMA /) ---
+// --- RUTE ROOT (HALAMAN UTAMA /) ---
 Route::get('/', function () {
-    // Middleware 'auth' sudah memastikan user login di sini
+    if (Auth::guest()) { return redirect()->route('login'); }
     $user = Auth::user();
     /** @var \App\Models\User $user */
-
     $roles = $user->roles;
     $nonKaryawanRoles = $roles->where('name', '!=', 'karyawan');
-
-    // Prioritaskan redirect ke 'pilih-role' jika perlu
-    if ($nonKaryawanRoles->count() > 0 && $roles->count() > 1) {
-        // Punya >1 role & salah satunya bukan hanya 'karyawan'
-        return redirect()->route('pilih-role');
-    } 
-
-    // Jika hanya 1 role (atau hanya 'karyawan') atau tidak ada role sama sekali
+    if ($nonKaryawanRoles->count() > 0 && $roles->count() > 1) { return redirect()->route('pilih-role'); }
     elseif ($roles->isNotEmpty()) {
-        // Ambil role pertama (prioritas jika hanya 1, atau role 'karyawan' jika hanya itu)
-        $roleName = $roles->first()->name; 
+        $roleName = $roles->first()->name;
         $redirectPath = match ($roleName) {
-            'superadmin' => '/superadmin/dashboard',
-            'admin'      => '/admin/dashboard',
-            'peninjau'   => '/peninjau/dashboard',
-            'karyawan'   => '/karyawan/dashboard', // Menangani kasus hanya role 'karyawan'
-            default      => '/login', // Seharusnya tidak terjadi jika user punya role
+            'superadmin' => '/superadmin/dashboard', 'admin' => '/admin/dashboard', // Akan mengikuti redirect pertama
+            'peninjau' => '/peninjau/dashboard', 'karyawan' => '/karyawan/dashboard',
+            default => '/login',
         };
         return redirect($redirectPath);
-    } 
-
-    // Kasus Aneh: User login tapi tidak punya role sama sekali
-    else {
-        Auth::logout(); // Logout paksa
-        return redirect('/login')->withErrors('Akun Anda tidak memiliki peran yang valid.');
+    } else {
+        Auth::logout(); return redirect('/login')->withErrors('Akun Anda tidak memiliki peran.');
     }
-
-})->middleware('auth')->name('home'); // Beri nama 'home' jika perlu
+})->middleware('auth')->name('home');

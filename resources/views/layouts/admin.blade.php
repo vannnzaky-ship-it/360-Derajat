@@ -190,6 +190,10 @@
             .sidebar-logo-mobile img { height: 40px; width: 40px; }
         }
 
+        .modal-backdrop {
+            display: none !important; /* Sembunyikan backdrop sepenuhnya */
+        }
+
     </style>
 </head>
 <body>
