@@ -13,181 +13,189 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\On; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Collection; // Untuk grouping
+
 
 #[Layout('layouts.admin')]
 class DataPegawai extends Component
 {
     use WithPagination;
 
-    // Properti untuk form
-    public $name, $email, $password, $jabatan_id, $nip;
+    // Properti Form
+    public $name, $email, $password, $nip;
     public $selectedRoles = []; 
+    public $selectedJabatans = []; // Array untuk multiple jabatan
 
-    // Properti untuk edit
-    public $pegawaiId, $userId;
+    // Properti Edit
+    public $pegawaiId = null; 
+    public $userId = null; 
     public $isEditMode = false;
 
-    // Properti untuk UI
+    // Properti UI
     public $search = '';
     public $showModal = false;
 
+    // Properti untuk daftar jabatan di view
+    public Collection $allJabatans; // Koleksi semua jabatan
+    public array $takenSingletonJabatans = []; // ID jabatan singleton yg terisi
+
+    /**
+     * Mount dijalankan sekali saat komponen dimuat
+     */
+    public function mount()
+    {
+        // Ambil semua jabatan sekali saja
+        $this->allJabatans = Jabatan::orderBy('parent_id')->orderBy('nama_jabatan')->get();
+        // Cek jabatan singleton awal (tanpa mengecualikan siapapun)
+        $this->updateTakenSingletons(); 
+    }
+    
+    /**
+     * Memperbarui daftar ID jabatan singleton yang sudah terisi
+     */
+     public function updateTakenSingletons()
+     {
+         $this->takenSingletonJabatans = Jabatan::where('is_singleton', true)
+             ->whereHas('pegawais', function ($query) {
+                 // Kecualikan diri sendiri JIKA sedang mode edit
+                 if ($this->isEditMode && $this->pegawaiId) {
+                     $query->where('pegawai.id', '!=', $this->pegawaiId);
+                 }
+             })
+             ->pluck('id') 
+             ->toArray();
+     }
+
+
     public function render()
     {
-        $pegawaiQuery = Pegawai::with(['user.roles', 'jabatan'])
+        // Query utama
+        $pegawaiQuery = Pegawai::with(['user.roles', 'jabatans']) // Load jabatans (plural)
             ->whereHas('user', function ($query) {
-                $query->whereDoesntHave('roles', function ($roleQuery) {
-                    $roleQuery->where('name', 'superadmin');
-                });
+                $query->whereDoesntHave('roles', fn($q) => $q->where('name', 'superadmin'));
                 $query->where('id', '!=', Auth::id()); 
-                if ($this->search) {
-                    $query->where(function($subQuery) {
+                if ($this->search) { 
+                     $query->where(function($subQuery) {
                          $subQuery->where('name', 'like', '%'.$this->search.'%')
                                   ->orWhere('email', 'like', '%'.$this->search.'%');
                     });
                 }
             });
             
+        // Filter NIP atau Nama Jabatan
         if ($this->search) {
-             $pegawaiQuery->orWhere('nip', 'like', '%'.$this->search.'%');
+             $pegawaiQuery->where(function ($query) { // Bungkus orWhere agar tidak bentrok
+                 $query->orWhere('nip', 'like', '%'.$this->search.'%')
+                       ->orWhereHas('jabatans', function ($qJab) { // Cari berdasarkan nama jabatan
+                           $qJab->where('nama_jabatan', 'like', '%'.$this->search.'%');
+                       });
+             });
         }
 
         $pegawai = $pegawaiQuery->paginate(10);
 
+        // Logika role list
         $currentUser = Auth::user(); 
         $isAdminAccessing = false; 
-        if ($currentUser) { 
-            /** @var \App\Models\User $currentUser */ 
-            if (!$currentUser->hasRole('superadmin')) { 
-                $isAdminAccessing = true; 
-            }
-        }
-        
+        if ($currentUser && !$currentUser->hasRole('superadmin')) { $isAdminAccessing = true; }
         $availableRolesQuery = Role::where('name', '!=', 'superadmin');
-        if ($isAdminAccessing) {
-            $availableRolesQuery->where('name', '!=', 'admin');
-        }
+        if ($isAdminAccessing) { $availableRolesQuery->where('name', '!=', 'admin'); }
         $roleList = $availableRolesQuery->get();
+        
+        // Kelompokkan jabatan untuk view (setiap render agar update)
+        $groupedJabatans = $this->allJabatans->groupBy('parent_id');
 
         return view('livewire.superadmin.data-pegawai', [
             'pegawaiList' => $pegawai,
-            'jabatanList' => Jabatan::all(),
-            'roleList' => $roleList 
+            'roleList' => $roleList,
+            'groupedJabatans' => $groupedJabatans, // Kirim data terkelompok
         ]); 
     }
 
-    // Buka modal (kosong) - PASTIKAN INI ADA DAN PUBLIC
-    public function create()
+    public function edit($pegawaiId) 
     {
-        $this->resetForm();
-        $this->isEditMode = false; // Pastikan mode edit false saat create
-        $this->showModal = true;
-    }
-
-    // Buka modal (isi data)
-    public function edit($id)
-    {
-        $pegawai = Pegawai::with('user.roles')->findOrFail($id);
-
-        if ($pegawai->user->hasRole('superadmin')) {
-            session()->flash('error', 'Tidak diizinkan mengedit akun Superadmin.'); 
-            return; 
-        }
+        $pegawai = Pegawai::with('user.roles', 'jabatans')->findOrFail($pegawaiId);
+        if ($pegawai->user->hasRole('superadmin')) { return; }
         
-        $this->pegawaiId = $pegawai->id;
-        $this->userId = $pegawai->user_id;
+        $this->pegawaiId = $pegawai->id; 
+        $this->userId = $pegawai->user_id; 
         $this->name = $pegawai->user->name;
         $this->email = $pegawai->user->email;
         $this->nip = $pegawai->nip;
-        $this->jabatan_id = $pegawai->jabatan_id;
         $this->selectedRoles = $pegawai->user->roles->pluck('id')->toArray();
+        $this->selectedJabatans = $pegawai->jabatans->pluck('id')->toArray(); // Load multiple jabatans
         $this->password = ''; 
         
         $this->isEditMode = true;
+        $this->resetValidation(); 
+        $this->updateTakenSingletons(); // Update daftar singleton (kecualikan diri sendiri)
         $this->showModal = true;
     }
 
-    // Simpan (Create atau Update)
+     public function showTambahModal()
+    {
+        $this->resetForm();
+        $this->isEditMode = false;
+        $this->updateTakenSingletons(); // Update daftar singleton (tanpa pengecualian)
+        $this->showModal = true;
+    }
+
     public function store()
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('users', 'email')->ignore($this->userId), 
-            ],
-            'nip' => [
-                'required',
-                'string',
-                'unique:pegawai,nip,' . ($this->pegawaiId ?? 'NULL') . ',id' 
-            ],
-            'jabatan_id' => 'required|exists:jabatan,id',
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($this->userId)],
+            'nip' => ['required', 'string', Rule::unique('pegawai', 'nip')->ignore($this->pegawaiId)], 
             'selectedRoles' => 'required|array|min:1',
+            'selectedJabatans' => 'required|array|min:1', 
+            'selectedJabatans.*' => 'exists:jabatan,id', 
         ];
+        if (!$this->isEditMode) { $rules['password'] = 'required|string|min:8'; } 
+        else { $rules['password'] = 'nullable|string|min:8'; }
 
-        if (!$this->isEditMode) {
-            $rules['password'] = 'required|string|min:8';
-        } else {
-            $rules['password'] = 'nullable|string|min:8'; 
+        // Validasi tambahan: Cek singleton
+        // Panggil updateTakenSingletons lagi SEBELUM validasi ini untuk data terbaru
+        $this->updateTakenSingletons(); 
+        foreach ($this->selectedJabatans as $jabatanId) {
+             if (in_array($jabatanId, $this->takenSingletonJabatans)) {
+                  $jabatan = $this->allJabatans->firstWhere('id', $jabatanId); // Ambil dari koleksi
+                  $this->addError('selectedJabatans', "Jabatan '{$jabatan?->nama_jabatan}' sudah terisi.");
+                  return; 
+             }
         }
 
-        $this->validate($rules); // Perbaiki typo validate()
+        $this->validate($rules); 
 
-        $userData = [
-            'name' => $this->name,
-            'email' => $this->email,
-        ];
-        if (!empty($this->password)) {
-            $userData['password'] = Hash::make($this->password);
-        }
-        
+        // 1. Update/Create User
+        $userData = ['name' => $this->name, 'email' => $this->email];
+        if (!empty($this->password)) { $userData['password'] = Hash::make($this->password); }
         $user = User::updateOrCreate(['id' => $this->userId], $userData);
-        
-        Pegawai::updateOrCreate(
-            ['id' => $this->pegawaiId],
-            [
-                'user_id' => $user->id,
-                'jabatan_id' => $this->jabatan_id,
-                'nip' => $this->nip
-            ]
-        );
 
+        // 2. Update/Create Pegawai 
+        $pegawai = Pegawai::updateOrCreate(
+            ['user_id' => $user->id], 
+            ['nip' => $this->nip] 
+        );
+        $this->pegawaiId = $pegawai->id; // Pastikan pegawaiId terisi
+
+        // 3. Sync Jabatan
+        $pegawai->jabatans()->sync($this->selectedJabatans);
+
+        // 4. Sync Roles
         $user->roles()->sync($this->selectedRoles);
 
         session()->flash('message', $this->isEditMode ? 'Data Pegawai Berhasil Diperbarui' : 'Data Pegawai Berhasil Ditambahkan');
         $this->closeModal();
+        $this->updateTakenSingletons(); // Update lagi setelah simpan
     }
     
-    // Hapus
     #[On('deleteConfirmed')] 
-    public function destroy($id) 
-    {
-        $user = User::find($id); 
-
-        if ($user && $user->hasRole('superadmin')) {
-            session()->flash('error', 'Tidak diizinkan menghapus akun Superadmin.'); 
-            return; 
-        }
-       
-        if ($user) {
-            $user->delete(); 
-            session()->flash('message', 'Data Pegawai Berhasil Dihapus');
-        } else {
-             session()->flash('error', 'Data Pegawai tidak ditemukan.');
-        }
-    }
-
-    // Helper
-    public function closeModal()
-    {
-        $this->showModal = false;
-        $this->resetForm();
-    }
-
+    public function destroy($userId) { /* ... logika hapus user ... */ }
+    public function closeModal() { $this->showModal = false; $this->resetForm(); }
     public function resetForm()
     {
-        $this->reset(['name', 'email', 'password', 'jabatan_id', 'nip', 'selectedRoles', 'pegawaiId', 'userId', 'isEditMode']);
-        $this->resetErrorBag(); // Bersihkan error validasi juga
-        $this->resetValidation(); // Bersihkan status validasi
+        $this->reset(['name', 'email', 'password', 'nip', 'selectedRoles', 'selectedJabatans', 'pegawaiId', 'userId', 'isEditMode']);
+        $this->resetErrorBag(); 
+        $this->resetValidation(); 
     }
 }

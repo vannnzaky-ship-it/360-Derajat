@@ -8,10 +8,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable; // <-- Ini untuk login
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     // ... (use Notifiable, dll.)
+    
 
     protected $fillable = ['name', 'email', 'password'];
     

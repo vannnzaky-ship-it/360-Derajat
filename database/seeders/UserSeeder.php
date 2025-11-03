@@ -38,7 +38,7 @@ class UserSeeder extends Seeder
         Pegawai::updateOrCreate(
             ['user_id' => $superadminUser->id],
             [
-                'jabatan_id' => $jabatanDirektur->id ?? null, // Sesuaikan jabatannya
+                // 'jabatan_id' => $jabatanDirektur->id ?? null, // Sesuaikan jabatannya
                 'nip' => 'SUPERADMIN01'
             ]
         );
@@ -56,7 +56,7 @@ class UserSeeder extends Seeder
         Pegawai::updateOrCreate(
             ['user_id' => $adminUser->id],
             [
-                'jabatan_id' => $jabatanStaff->id ?? null, // Sesuaikan jabatannya
+                // 'jabatan_id' => $jabatanStaff->id ?? null, // Sesuaikan jabatannya
                 'nip' => 'ADMINHRD01'
             ]
         );
@@ -75,7 +75,7 @@ class UserSeeder extends Seeder
         Pegawai::updateOrCreate(
             ['user_id' => $peninjauUser->id],
             [
-                'jabatan_id' => $jabatanWadir1->id ?? null,
+                // 'jabatan_id' => $jabatanWadir1->id ?? null,
                 'nip' => '0987654321' // NIP lama
             ]
         );

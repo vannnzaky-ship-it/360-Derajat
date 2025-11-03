@@ -26,20 +26,27 @@ class Penilaian extends Component
 
         // Cek jika user ada sebelum load
         if ($user) {
-             $user->load('pegawai.jabatan'); // <-- Merah akan hilang
+            // PERBAIKAN 1: Ganti ke 'jabatans' (plural)
+            $user->load('pegawai.jabatans'); 
+
+            // PERBAIKAN 2: Ambil semua nama jabatan dan gabungkan
+            $namaJabatan = 'Jabatan Tidak Ditemukan';
+            if ($user->pegawai && $user->pegawai->jabatans->isNotEmpty()) {
+                $namaJabatan = $user->pegawai->jabatans->pluck('nama_jabatan')->implode(', ');
+            }
 
             // 1. Data Diri Sendiri
             $this->diriSendiri = [
                 [
                     'nama' => $user->name,
                     'nip' => $user->pegawai?->nip ?? 'N/A',
-                    'jabatan' => $user->pegawai?->jabatan?->nama_jabatan ?? 'Jabatan Tidak Ditemukan',
+                    'jabatan' => $namaJabatan, // <-- Gunakan variabel yang sudah diperbaiki
                     'foto' => '/avatar.png' 
                 ]
             ];
         } else {
-             // Handle jika user tidak ditemukan
-             return redirect('/login');
+            // Handle jika user tidak ditemukan
+            return redirect('/login');
         }
 
         // 2. Contoh data atasan

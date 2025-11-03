@@ -28,17 +28,26 @@ class Raport extends Component
     {
         // Ambil data user
         $user = Auth::user();
-        /** @var \App\Models\User|null $user */ // <-- Tambahkan PHPDoc
+        /** @var \App\Models\User|null $user */ 
 
         // Cek jika user ada sebelum load
         if ($user) {
-            $user->load('pegawai.jabatan'); // <-- Merah akan hilang
+            // PERBAIKAN 1: Gunakan 'jabatans' (plural)
+            $user->load('pegawai.jabatans'); 
+            
             $this->namaUser = $user->name;
-            $this->nipUser = $user->pegawai?->nip ?? 'N/A'; // Gunakan null safe operator
-            $this->jabatanUser = $user->pegawai?->jabatan?->nama_jabatan ?? 'N/A';
+            $this->nipUser = $user->pegawai?->nip ?? 'N/A';
+
+            // PERBAIKAN 2: 
+            // Ambil semua nama jabatan dari koleksi, lalu gabungkan dengan koma
+            if ($user->pegawai && $user->pegawai->jabatans->isNotEmpty()) {
+                $this->jabatanUser = $user->pegawai->jabatans->pluck('nama_jabatan')->implode(', ');
+            } else {
+                $this->jabatanUser = 'N/A';
+            }
+
         } else {
-            // Handle jika user tidak ditemukan (meskipun middleware harusnya mencegah ini)
-            // Misalnya, redirect ke login atau tampilkan error
+            // Handle jika user tidak ditemukan
             return redirect('/login'); 
         }
 
@@ -75,30 +84,30 @@ class Raport extends Component
         // Sesuaikan label dan nilai berdasarkan semester (jika perlu)
         if ($this->selectedSemester == '20242') {
              $this->chartData = [
-                'labels' => ['Kepribadian', 'Kompetensi Pedagogik', 'Kompetensi Profesional', 'Kompetensi Sosial', 'Kinerja'],
-                'scores' => [85, 90, 78, 92, 88] 
-            ];
-            $this->tableData = [
-                'Kepribadian' => 850,
-                'Kompetensi Pedagogik' => 900,
-                'Kompetensi Profesional' => 780,
-                'Kompetensi Sosial' => 920,
-                'Kinerja' => 880,
-            ];
-            $this->ranking = 'Posisi ke-5 dari 50 pegawai';
+                 'labels' => ['Kepribadian', 'Kompetensi Pedagogik', 'Kompetensi Profesional', 'Kompetensi Sosial', 'Kinerja'],
+                 'scores' => [85, 90, 78, 92, 88] 
+             ];
+             $this->tableData = [
+                 'Kepribadian' => 850,
+                 'Kompetensi Pedagogik' => 900,
+                 'Kompetensi Profesional' => 780,
+                 'Kompetensi Sosial' => 920,
+                 'Kinerja' => 880,
+             ];
+             $this->ranking = 'Posisi ke-5 dari 50 pegawai';
         } else {
              $this->chartData = [
-                'labels' => ['Kepribadian', 'Kompetensi Pedagogik', 'Kompetensi Profesional', 'Kompetensi Sosial', 'Kinerja'],
-                'scores' => [80, 85, 82, 88, 81] 
-            ];
+                 'labels' => ['Kepribadian', 'Kompetensi Pedagogik', 'Kompetensi Profesional', 'Kompetensi Sosial', 'Kinerja'],
+                 'scores' => [80, 85, 82, 88, 81] 
+             ];
              $this->tableData = [
-                'Kepribadian' => 800,
-                'Kompetensi Pedagogik' => 850,
-                'Kompetensi Profesional' => 820,
-                'Kompetensi Sosial' => 880,
-                'Kinerja' => 810,
-            ];
-            $this->ranking = 'Posisi ke-8 dari 48 pegawai';
+                 'Kepribadian' => 800,
+                 'Kompetensi Pedagogik' => 850,
+                 'Kompetensi Profesional' => 820,
+                 'Kompetensi Sosial' => 880,
+                 'Kinerja' => 810,
+             ];
+             $this->ranking = 'Posisi ke-8 dari 48 pegawai';
         }
     }
 
