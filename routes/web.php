@@ -15,6 +15,8 @@ use App\Livewire\Karyawan\Raport as KaryawanRaport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use App\Livewire\Admin\KompetensiCrud; // <-- Tambahkan ini
+use App\Livewire\Common\Profil;
+use App\Livewire\Superadmin\ManajemenJabatan;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,6 +44,7 @@ Route::prefix('superadmin')
         Route::redirect('/dashboard', '/superadmin/manajemen-admin')->name('dashboard');
         Route::get('/manajemen-admin', ManajemenAdmin::class)->name('manajemen-admin');
         Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
+        Route::get('/struktur-jabatan', ManajemenJabatan::class)->name('jabatan');
 });
 
 // GRUP ADMINISTRATOR (Blok Pertama Anda)
@@ -73,6 +76,7 @@ Route::prefix('admin')
         Route::get('/siklus-semester', SiklusSemester::class)->name('siklus-semester');
         Route::get('/kompetensi', KompetensiCrud::class)->name('kompetensi'); // Nama rute 'kompetensi
         Route::get('/pertanyaan', PertanyaanCrud::class)->name('pertanyaan');
+        Route::get('/profil', Profil::class)->name('profil');
 });
 
 // GRUP PENINJAU (Ditambahkan kembali)
@@ -81,6 +85,7 @@ Route::prefix('peninjau')
     ->name('peninjau.')
     ->group(function () {
         Route::get('/dashboard', PeninjauDashboard::class)->name('dashboard');
+        Route::get('/profil', Profil::class)->name('profil');
 });
 
 
@@ -92,6 +97,7 @@ Route::prefix('karyawan')
         Route::get('/dashboard', KaryawanDashboard::class)->name('dashboard');
         Route::get('/penilaian', KaryawanPenilaian::class)->name('penilaian');
         Route::get('/raport', KaryawanRaport::class)->name('raport');
+        Route::get('/profil', Profil::class)->name('profil');
     });
 
 

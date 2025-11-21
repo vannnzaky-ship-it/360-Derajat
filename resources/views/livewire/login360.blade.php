@@ -35,11 +35,15 @@
 
                     <div class="card shadow-lg border-0 rounded-2 bg-custom-form-bg mx-auto" style="max-width: 32rem;">
                         <div class="card-body p-5">
-                            
+                            @if (session('success'))
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-check-circle me-1"></i> {{ session('success') }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
                             <h2 class="fs-5 card-subtitle mb-4 text-center fw-bold text-custom-dark">
                                 SILAHKAN LOGIN
                             </h2>
-
                             <form wire:submit="login">
                                 
                                 <div class="mb-3">

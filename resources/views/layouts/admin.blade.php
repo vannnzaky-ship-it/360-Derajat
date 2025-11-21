@@ -194,6 +194,55 @@
             display: none !important; /* Sembunyikan backdrop sepenuhnya */
         }
 
+            /* Style Container Kapsul (Pill) */
+        .nav-profile-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 12px 5px 5px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #333;
+            border: 1px solid transparent;
+        }
+        /* Efek Hover */
+        .nav-profile-pill:hover, .nav-profile-pill[aria-expanded="true"] {
+            background-color: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-color: #e0e0e0;
+        }
+        
+        /* Foto Profil */
+        .profile-img-nav {
+            width: 40px; 
+            height: 40px; 
+            object-fit: cover; 
+            border-radius: 50%;
+            border: 2px solid #c38e44; /* Warna Emas */
+            padding: 2px;
+            background: #fff;
+        }
+
+        /* Teks Nama & Role */
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+        .profile-name { font-weight: 600; font-size: 0.9rem; color: #444; }
+        .profile-role { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Panah Chevron */
+        .profile-arrow { font-size: 0.8rem; color: #aaa; transition: transform 0.3s; }
+        .nav-profile-pill[aria-expanded="true"] .profile-arrow { transform: rotate(180deg); color: #c38e44; }
+
+        /* Sembunyikan teks di HP agar tidak berantakan */
+        @media (max-width: 768px) {
+            .profile-info, .profile-arrow { display: none; }
+            .nav-profile-pill { padding: 0; border: none; }
+            .nav-profile-pill:hover { background: none; box-shadow: none; }
+        }
     </style>
 </head>
 <body>
@@ -240,7 +289,7 @@
                         <i class="bi bi-moon-stars-fill" id="theme-icon-moon"></i>
                         <i class="bi bi-sun-fill" id="theme-icon-sun" style="display: none;"></i>
                     </button>
-                    <div class="dropdown">
+                    {{-- <div class="dropdown">
                         <button class="btn border-0 p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-gear-fill fs-5 text-secondary"></i>
                         </button>
@@ -248,16 +297,57 @@
                             <li><a class="dropdown-item" href="#">Ganti Password</a></li>
                             <li><a class="dropdown-item" href="#">Informasi Akun</a></li>
                         </ul>
-                    </div>
+                    </div> --}}
+                    {{-- 2. STRUKTUR HTML BARU --}}
                     <div class="dropdown">
-                         <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="/avatar.png" alt="Profil" class="profile-img-xs">
+                        
+                        {{-- A. TOMBOL PEMICU (TRIGGER) BERBENTUK KAPSUL --}}
+                        <a href="#" class="nav-profile-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="false">
+                            
+                            {{-- Foto Profil --}}
+                            @if(auth()->user()->profile_photo_path)
+                                <img src="{{ asset('storage/' . auth()->user()->profile_photo_path) }}" 
+                                    alt="Profil" class="profile-img-nav">
+                            @else
+                                <img src="/images/avatar.jpg" alt="Profil" class="profile-img-nav">
+                            @endif
+
+                            {{-- Nama & Role (Tampil di sebelah foto) --}}
+                            <div class="profile-info">
+                                <span class="profile-name">{{ Str::limit(auth()->user()->name, 15) }}</span>
+                                <span class="profile-role">{{ auth()->user()->roles->first()->label ?? 'User' }}</span>
+                            </div>
+
+                            {{-- Ikon Panah Bawah --}}
+                            {{-- <i class="bi bi-chevron-down profile-arrow"></i> --}}
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><h6 class="dropdown-header">{{ auth()->user()->name ?? 'Pengguna' }}</h6></li>
-                            <li><hr class="dropdown-divider"></li>
+
+
+                        {{-- B. ISI MENU DROPDOWN (ISI TETAP SAMA, HANYA DIPERCANTIK STYLE-NYA) --}}
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2" style="min-width: 220px;">
+                            
+                            {{-- Header Nama --}}
                             <li>
-                                <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <h6 class="dropdown-header fw-bold text-uppercase small text-muted">
+                                    {{ auth()->user()->name ?? 'Pengguna' }}
+                                </h6>
+                            </li>
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            
+                            {{-- Link Profil (Kondisional) --}}
+                            @if(!auth()->user()->hasRole('superadmin'))
+                            <li>
+                                <a class="dropdown-item py-2" href="{{ route(auth()->user()->roles->first()->name . '.profil') }}">
+                                    <i class="bi bi-person-gear me-2 text-warning"></i> Ganti Password & Info Akun
+                                </a>
+                            </li>
+                            @endif
+
+                            {{-- Link Logout --}}
+                            <li>
+                                <a class="dropdown-item py-2 text-danger fw-bold" href="#" 
+                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                     <i class="bi bi-box-arrow-right me-2"></i> Logout
                                 </a>
                                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
