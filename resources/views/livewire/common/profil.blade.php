@@ -1,5 +1,6 @@
 <div>
     <style>
+        /* --- STYLE DASAR (Light Mode) --- */
         :root {
             --primary-gold: #c38e44;
             --primary-gold-hover: #a67636;
@@ -87,6 +88,13 @@
             transition: all 0.2s;
         }
         
+        .info-box {
+            background-color: #fafafa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
         /* Form Styles */
         .form-control:focus {
             border-color: var(--primary-gold);
@@ -94,6 +102,42 @@
         }
         .input-group-text { background-color: #fff; border-right: none; color: #999; }
         .form-control { border-left: none; padding-left: 0; }
+
+
+        /* --- KHUSUS DARK MODE --- */
+        [data-bs-theme="dark"] .card-minimal {
+            background-color: #212529; /* Card Gelap */
+            border-color: #373b3e;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        [data-bs-theme="dark"] .text-dark {
+            color: #f8f9fa !important; /* Text hitam jadi putih */
+        }
+        [data-bs-theme="dark"] .info-box {
+            background-color: #2b3035; /* Kotak info jadi abu gelap */
+        }
+        [data-bs-theme="dark"] .input-group-text {
+            background-color: #2b3035;
+            border-color: #495057;
+            color: #adb5bd;
+        }
+        [data-bs-theme="dark"] .form-control {
+            background-color: #2b3035;
+            border-color: #495057;
+            color: #fff;
+        }
+        [data-bs-theme="dark"] .form-control::placeholder {
+            color: #6c757d;
+        }
+        [data-bs-theme="dark"] .avatar-edit-btn, 
+        [data-bs-theme="dark"] .delete-photo-btn {
+            border-color: #212529; /* Border tombol jadi gelap */
+        }
+        [data-bs-theme="dark"] .alert-success {
+            background-color: #2b3035 !important;
+            color: #fff;
+            border-color: #373b3e;
+        }
     </style>
 
     <div class="container-fluid px-4 py-4">
@@ -106,7 +150,7 @@
 
         @if (session()->has('message'))
             <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" 
-                 style="border-left: 5px solid var(--primary-gold) !important; background-color: white;" role="alert">
+                 style="border-left: 5px solid var(--primary-gold) !important;" role="alert">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-check-circle-fill text-gold fs-4 me-3"></i>
                     <div>
@@ -127,25 +171,19 @@
                         
                         {{-- Bagian Upload Foto --}}
                         <div class="avatar-upload-container mb-3">
-                            {{-- 1. Logic Gambar --}}
                             @if ($photo) 
-                                {{-- Pratinjau File Baru (Belum disimpan) --}}
                                 <img src="{{ $photo->temporaryUrl() }}" class="avatar-preview">
                             @elseif ($existingPhoto)
-                                {{-- Foto dari Database --}}
                                 <img src="{{ asset('storage/' . $existingPhoto) }}" class="avatar-preview">
                             @else
-                                {{-- Avatar Default --}}
                                 <img src="/images/avatar.jpg" class="avatar-preview">
                             @endif
 
-                            {{-- 2. Tombol Kamera (Trigger Input File) --}}
                             <label for="photoUpload" class="avatar-edit-btn" title="Ganti Foto">
                                 <i class="bi bi-camera-fill" style="font-size: 14px;"></i>
                             </label>
                             <input type="file" id="photoUpload" wire:model="photo" class="d-none" accept="image/*">
 
-                            {{-- 3. Tombol Hapus (Hanya muncul jika ada foto di DB & tidak sedang upload baru) --}}
                             @if ($existingPhoto && !$photo)
                                 <button wire:click="deletePhoto" 
                                         wire:confirm="Apakah Anda yakin ingin menghapus foto profil ini?"
@@ -154,40 +192,54 @@
                                 </button>
                             @endif
 
-                            {{-- Loading Indicator --}}
                             <div wire:loading wire:target="photo" class="position-absolute top-50 start-50 translate-middle">
                                 <div class="spinner-border text-gold" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
                             </div>
                         </div>
 
-                        {{-- Tombol Simpan Foto (Muncul hanya jika ada upload baru) --}}
+                        {{-- Tombol Simpan Foto --}}
                         @if ($photo)
                             <div class="mb-4 fade-in">
                                 <button wire:click="savePhoto" class="btn btn-gold btn-sm w-100 mb-2">
                                     <i class="bi bi-check-lg me-1"></i> Simpan Foto
                                 </button>
-                                <button wire:click="$set('photo', null)" class="btn btn-light btn-sm w-100 text-muted border">
+                                <button wire:click="$set('photo', null)" class="btn btn-outline-secondary btn-sm w-100 border">
                                     Batal
                                 </button>
                             </div>
                         @endif
 
                         {{-- Info User --}}
-                        <h4 class="fw-bold mb-1">{{ $name }}</h4>
-                        <span class="badge bg-light text-gold border border-warning rounded-pill px-3 py-2 mb-4">
-                            {{ $role_label }}
+                        <h4 class="fw-bold mb-1 text-dark">{{ $name }}</h4>
+
+                        @php
+                            $urlSegment = request()->segment(1);
+                            $displayRole = match($urlSegment) {
+                                'superadmin' => 'Super Admin',
+                                'admin'      => 'Administrator',
+                                'peninjau'   => 'Peninjau',
+                                'karyawan'   => 'Karyawan',
+                                default      => auth()->user()->roles->first()->label ?? 'Pengguna'
+                            };
+                        @endphp
+
+                        {{-- Badge Role (Update class agar adaptif) --}}
+                        <span class="badge bg-opacity-10 text-gold border border-warning rounded-pill px-3 py-2 mb-4 profile-role" 
+                              style="background-color: rgba(195, 142, 68, 0.1);">
+                            {{ $displayRole }}
                         </span>
 
                         <div class="text-start mt-3 px-2">
-                            <div class="p-3 rounded-3 mb-2" style="background-color: #fafafa;">
+                            {{-- Gunakan class 'info-box' agar bisa di-style dark mode --}}
+                            <div class="info-box">
                                 <small class="text-muted d-block text-uppercase" style="font-size: 10px; letter-spacing: 1px;">NIP / User ID</small>
                                 <span class="fw-bold text-dark">{{ $nip }}</span>
                             </div>
-                            <div class="p-3 rounded-3 mb-2" style="background-color: #fafafa;">
+                            <div class="info-box">
                                 <small class="text-muted d-block text-uppercase" style="font-size: 10px; letter-spacing: 1px;">Jabatan</small>
                                 <span class="fw-bold text-dark">{{ $jabatan }}</span>
                             </div>
-                            <div class="p-3 rounded-3" style="background-color: #fafafa;">
+                            <div class="info-box">
                                 <small class="text-muted d-block text-uppercase" style="font-size: 10px; letter-spacing: 1px;">Email</small>
                                 <span class="fw-bold text-dark text-break">{{ $email }}</span>
                             </div>
@@ -201,12 +253,12 @@
                 <div class="card card-minimal card-accent-top h-100">
                     <div class="card-body p-4 p-lg-5">
                         <div class="d-flex align-items-center mb-4">
-                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" 
-                                 style="width: 45px; height: 45px; color: var(--primary-gold);">
+                            <div class="bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 45px; height: 45px; color: var(--primary-gold); background-color: rgba(195, 142, 68, 0.1);">
                                 <i class="bi bi-lock-fill fs-4"></i>
                             </div>
                             <div>
-                                <h5 class="fw-bold mb-0">Ganti Password</h5>
+                                <h5 class="fw-bold mb-0 text-dark">Ganti Password</h5>
                                 <small class="text-muted">Perbarui kata sandi Anda secara berkala.</small>
                             </div>
                         </div>
@@ -215,8 +267,8 @@
                             <div class="mb-4">
                                 <label class="form-label text-muted small fw-bold">PASSWORD SAAT INI</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0 rounded-start-3 ps-3"><i class="bi bi-key"></i></span>
-                                    <input type="password" wire:model="current_password" class="form-control border-start-0 rounded-end-3 ps-2 py-2 @error('current_password') is-invalid @enderror"placeholder="Password Saat Ini">
+                                    <span class="input-group-text border-end-0 rounded-start-3 ps-3"><i class="bi bi-key"></i></span>
+                                    <input type="password" wire:model="current_password" class="form-control border-start-0 rounded-end-3 ps-2 py-2 @error('current_password') is-invalid @enderror" placeholder="Password Saat Ini">
                                 </div>
                                 @error('current_password') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
                             </div>
@@ -225,7 +277,7 @@
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label text-muted small fw-bold">PASSWORD BARU</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-white border-end-0 rounded-start-3 ps-3"><i class="bi bi-shield-lock"></i></span>
+                                        <span class="input-group-text border-end-0 rounded-start-3 ps-3"><i class="bi bi-shield-lock"></i></span>
                                         <input type="password" wire:model="new_password" class="form-control border-start-0 rounded-end-3 ps-2 py-2 @error('new_password') is-invalid @enderror" placeholder="Min. 6 karakter">
                                     </div>
                                     @error('new_password') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
@@ -234,8 +286,8 @@
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label text-muted small fw-bold">KONFIRMASI PASSWORD</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-white border-end-0 rounded-start-3 ps-3"><i class="bi bi-check2-circle"></i></span>
-                                        <input type="password" wire:model="new_password_confirmation" class="form-control border-start-0 rounded-end-3 ps-2 py-2"placeholder="Konfirmasi Password">
+                                        <span class="input-group-text border-end-0 rounded-start-3 ps-3"><i class="bi bi-check2-circle"></i></span>
+                                        <input type="password" wire:model="new_password_confirmation" class="form-control border-start-0 rounded-end-3 ps-2 py-2" placeholder="Konfirmasi Password">
                                     </div>
                                 </div>
                             </div>

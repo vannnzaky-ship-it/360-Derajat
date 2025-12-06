@@ -11,10 +11,4 @@
             <span class="sidebar-text">Data Pegawai</span>
         </a>
     </li>
-    <li class="sidebar-item">
-        <a class="sidebar-link" href="{{ route('superadmin.jabatan') }}">
-            <i class="bi bi-people-fill"></i> 
-            <span class="sidebar-text">Manajemen Struktur</span>
-        </a>
-    </li>
 </ul>

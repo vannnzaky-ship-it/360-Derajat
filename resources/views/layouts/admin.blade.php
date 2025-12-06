@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-polkam.png') }}">
 
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -41,7 +42,6 @@
 
         /* Tema Dark Mode */
         [data-bs-theme="dark"] {
-            /* Variabel Warna Sidebar (Dark Mode) */
             --sidebar-bg: #212D46;
             --sidebar-text-color: #adb5bd;
             --sidebar-text-hover: #ffffff;
@@ -87,7 +87,6 @@
             min-height: 100vh;
         }
 
-        /* --- (Sisa CSS Sidebar & Navbar biarkan seperti sebelumnya) --- */
         .sidebar {
             position: fixed; top: 0; left: 0; bottom: 0; width: 260px;
             background-color: var(--sidebar-bg); color: var(--sidebar-text-color);
@@ -143,13 +142,12 @@
         }
         .profile-img-xs { width: 32px; height: 32px; border-radius: 50%; }
 
-        /* --- ISI HALAMAN & LOGO BACKGROUND (PERBAIKAN DI SINI) --- */
+        /* --- ISI HALAMAN & LOGO BACKGROUND --- */
         .page-content {
             flex-grow: 1;
-            position: relative; /* Membuatnya menjadi 'parent' untuk posisi logo */
-            z-index: 1; /* Memastikan konten tetap di atas logo */
+            position: relative; 
+            z-index: 1; 
         }
-        /* Pseudo-element untuk logo background */
         .page-content::before {
             content: '';
             position: absolute;
@@ -160,11 +158,10 @@
             background-image: url('/images/logo-polkam.png');
             background-repeat: no-repeat;
             background-position: center;
-            background-size: 55%; /* Atur ukuran logo, misal 50% dari area konten */
-            opacity: 0.05; /* Opacity 10% */
-            z-index: -1; /* Meletakkan logo di belakang konten */
+            background-size: 55%; 
+            opacity: 0.05; 
+            z-index: -1; 
         }
-
 
         /* --- EFEK SIDEBAR MENGECIL --- */
         body.sidebar-mini .sidebar { width: 70px; }
@@ -175,7 +172,6 @@
         body.sidebar-mini .sidebar-logo { opacity: 0; visibility: hidden; width: 0; }
         body.sidebar-mini #sidebar-toggle { margin-left: -8px; }
         
-        /* --- (Sisa CSS Media Query biarkan seperti sebelumnya) --- */
         @media (max-width: 768px) {
             .sidebar { width: 70px; }
             .main-content { margin-left: 70px; }
@@ -190,59 +186,219 @@
             .sidebar-logo-mobile img { height: 40px; width: 40px; }
         }
 
-        .modal-backdrop {
-            display: none !important; /* Sembunyikan backdrop sepenuhnya */
-        }
+        .modal-backdrop { display: none !important; }
 
-            /* Style Container Kapsul (Pill) */
+        /* Style Container Kapsul (Pill) */
         .nav-profile-pill {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 5px 12px 5px 5px;
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: #333;
-            border: 1px solid transparent;
+            display: flex; align-items: center; gap: 10px;
+            padding: 5px 12px 5px 5px; border-radius: 50px;
+            transition: all 0.3s ease; text-decoration: none;
+            color: #333; border: 1px solid transparent;
         }
-        /* Efek Hover */
         .nav-profile-pill:hover, .nav-profile-pill[aria-expanded="true"] {
-            background-color: #fff;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            background-color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             border-color: #e0e0e0;
         }
         
-        /* Foto Profil */
         .profile-img-nav {
-            width: 40px; 
-            height: 40px; 
-            object-fit: cover; 
-            border-radius: 50%;
-            border: 2px solid #c38e44; /* Warna Emas */
-            padding: 2px;
-            background: #fff;
+            width: 40px; height: 40px; object-fit: cover; 
+            border-radius: 50%; border: 2px solid #c38e44; padding: 2px; background: #fff;
         }
 
-        /* Teks Nama & Role */
-        .profile-info {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.2;
-        }
+        .profile-info { display: flex; flex-direction: column; line-height: 1.2; }
         .profile-name { font-weight: 600; font-size: 0.9rem; color: #444; }
         .profile-role { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* Panah Chevron */
         .profile-arrow { font-size: 0.8rem; color: #aaa; transition: transform 0.3s; }
         .nav-profile-pill[aria-expanded="true"] .profile-arrow { transform: rotate(180deg); color: #c38e44; }
 
-        /* Sembunyikan teks di HP agar tidak berantakan */
         @media (max-width: 768px) {
             .profile-info, .profile-arrow { display: none; }
             .nav-profile-pill { padding: 0; border: none; }
             .nav-profile-pill:hover { background: none; box-shadow: none; }
         }
+
+        [data-bs-theme="dark"] .card,
+        [data-bs-theme="dark"] .list-group-item,
+        [data-bs-theme="dark"] .modal-content {
+            background-color: #212529 !important;
+            color: #ffffff !important;
+            border-color: #495057 !important;
+        }
+
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select {
+            background-color: #212529 !important;
+            color: #ffffff !important;
+            border-color: #495057 !important;
+        }
+
+        [data-bs-theme="dark"] .form-control::placeholder {
+            color: #adb5bd !important;
+        }
+
+        [data-bs-theme="dark"] .table {
+            --bs-table-bg: #212529 !important;
+            --bs-table-color: #ffffff !important;
+            color: #ffffff !important;
+        }
+
+        /* Tambahan khusus untuk tombol menu dashboard (Gambar 4) */
+        [data-bs-theme="dark"] .btn-light,
+        [data-bs-theme="dark"] .bg-white {
+            background-color: #212529 !important;
+            color: #fff !important;
+            border: 1px solid #495057 !important;
+        }
+
+        /* 1. Memaksa semua teks di dalam Card, List, dan Modal menjadi putih */
+        [data-bs-theme="dark"] .card h1, 
+        [data-bs-theme="dark"] .card h2, 
+        [data-bs-theme="dark"] .card h3, 
+        [data-bs-theme="dark"] .card h4, 
+        [data-bs-theme="dark"] .card h5, 
+        [data-bs-theme="dark"] .card h6, 
+        [data-bs-theme="dark"] .card p, 
+        [data-bs-theme="dark"] .card span, 
+        [data-bs-theme="dark"] .card div,
+        [data-bs-theme="dark"] .card small,
+        [data-bs-theme="dark"] .card strong,
+        [data-bs-theme="dark"] .card b {
+            color: #ffffff !important;
+        }
+
+        /* 2. Khusus untuk Ikon (<i> atau <svg>) agar putih */
+        [data-bs-theme="dark"] .card i,
+        [data-bs-theme="dark"] .card svg {
+            color: #ffffff !important;
+            fill: #ffffff !important;
+        }
+
+        /* 3. Memperbaiki Judul Halaman (seperti "Dashboard", "Selamat Datang...") */
+        [data-bs-theme="dark"] h1, 
+        [data-bs-theme="dark"] h2, 
+        [data-bs-theme="dark"] h3, 
+        [data-bs-theme="dark"] h4, 
+        [data-bs-theme="dark"] h5, 
+        [data-bs-theme="dark"] h6 {
+            color: #f8f9fa !important; /* Putih agak soft */
+        }
+
+        /* 4. Jika ada teks biasa di body yang masih gelap */
+        [data-bs-theme="dark"] body {
+            color: #e9ecef !important;
+        }
+        
+        /* Ini kuncinya: Memaksa class 'text-dark' berubah jadi putih saat mode gelap */
+        [data-bs-theme="dark"] .text-dark {
+            color: #f8f9fa !important; /* Warna putih terang */
+        }
+
+        /* Efek Hover Matahari: Muter sedikit & warna jadi Emas */
+        #theme-icon-sun:hover {
+            transform: rotate(90deg);
+            color: #C38E44; /* Warna Emas Tema Kamu */
+            fill: rgba(195, 142, 68, 0.2);
+        }
+        
+        /* Efek Hover Bulan: Goyang sedikit & warna jadi Biru/Abu */
+        #theme-icon-moon:hover {
+            transform: rotate(-15deg);
+            color: #adb5bd;
+            fill: rgba(255, 255, 255, 0.2);
+        }
+
+        /* --- STYLE PROFIL NAVBAR --- */
+
+        /* 1. Container Utama (Bentuk Kapsul) */
+        .nav-profile-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 12px 4px 4px; /* Padding kanan lebih lebar untuk panah */
+            border-radius: 50px; /* Bentuk bulat kapsul */
+            transition: all 0.3s ease;
+            text-decoration: none;
+            
+            /* Warna Default (Light Mode) */
+            background-color: #f8f9fa; /* Abu sangat terang */
+            border: 1px solid #dee2e6; /* Border halus */
+        }
+
+        /* Hover Effect (Light Mode) */
+        .nav-profile-pill:hover, 
+        .nav-profile-pill[aria-expanded="true"] {
+            background-color: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-color: #C38E44; /* Border jadi emas saat hover */
+        }
+
+        /* 2. Foto Profil */
+        .profile-img-nav {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff; /* Ring putih di foto */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* 3. Teks Info */
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+            text-align: left;
+        }
+
+        .profile-name {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #343a40; /* Teks gelap */
+        }
+
+        .profile-role {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #C38E44; /* Warna Emas Tema Kamu */
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* 4. Ikon Panah */
+        .profile-arrow {
+            font-size: 0.8rem;
+            color: #adb5bd;
+            transition: transform 0.3s;
+        }
+
+        /* Putar panah saat dropdown aktif */
+        .nav-profile-pill[aria-expanded="true"] .profile-arrow {
+            transform: rotate(180deg);
+            color: #C38E44;
+        }
+
+        /* --- KHUSUS DARK MODE (Automatic Switch) --- */
+        [data-bs-theme="dark"] .nav-profile-pill {
+            background-color: #2b3035; /* Background gelap */
+            border-color: #495057;
+        }
+
+        [data-bs-theme="dark"] .nav-profile-pill:hover,
+        [data-bs-theme="dark"] .nav-profile-pill[aria-expanded="true"] {
+            background-color: #343a40; /* Lebih terang dikit saat hover */
+            border-color: #C38E44;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        [data-bs-theme="dark"] .profile-img-nav {
+            border-color: #495057; /* Ring foto jadi abu gelap */
+        }
+
+        [data-bs-theme="dark"] .profile-name {
+            color: #e9ecef; /* Nama jadi putih */
+        }
+/* Role tetap emas (#C38E44) agar konsisten */
     </style>
 </head>
 <body>
@@ -262,46 +418,69 @@
                      <img src="/images/logo-polkam.png" alt="Logo Polkam">
                 </div>
             </div>
+            
             <nav class="sidebar-nav">
-            @if(session('selected_role') == 'karyawan')
-                @include('layouts.partials.sidebar-karyawan')
+                {{-- LOGIKA SIDEBAR OTOMATIS BERDASARKAN URL & SESSION --}}
+                @php
+                    $segment = request()->segment(1);
+                    $sessionRole = session('selected_role');
+                    
+                    // Prioritas: URL Segment > Session > Auth Role Default
+                    if (in_array($segment, ['superadmin', 'admin', 'peninjau', 'karyawan'])) {
+                        $currentContext = $segment;
+                    } else {
+                        $currentContext = $sessionRole ?? auth()->user()->roles->first()->name;
+                    }
+                @endphp
 
-            @elseif(session('selected_role') == 'superadmin')
-                @include('layouts.partials.sidebar-superadmin')
+                @if($currentContext == 'superadmin')
+                    @include('layouts.partials.sidebar-superadmin')
 
-            @elseif(session('selected_role') == 'admin')
-                @include('layouts.partials.sidebar-admin')
+                @elseif($currentContext == 'admin')
+                    @include('layouts.partials.sidebar-admin')
 
-            @elseif(session('selected_role') == 'peninjau')
-                @include('layouts.partials.sidebar-peninjau')
+                @elseif($currentContext == 'peninjau')
+                    @include('layouts.partials.sidebar-peninjau')
 
-            @else
-                <p class="text-center text-muted p-3">Tidak ada menu</p>
-            @endif
-        </nav>
+                @elseif($currentContext == 'karyawan')
+                    @include('layouts.partials.sidebar-karyawan')
+
+                @else
+                    {{-- Fallback jika tidak terdeteksi --}}
+                    @if(auth()->user()->hasRole('superadmin'))
+                        @include('layouts.partials.sidebar-superadmin')
+                    @elseif(auth()->user()->hasRole('admin'))
+                        @include('layouts.partials.sidebar-admin')
+                    @elseif(auth()->user()->hasRole('karyawan'))
+                        @include('layouts.partials.sidebar-karyawan')
+                    @endif
+                @endif
+            </nav>
         </aside>
 
-        <!-- ==== KONTEN UTAMA (HEADER + HALAMAN) ==== -->
+        <!-- ==== KONTEN UTAMA ==== -->
         <div class="main-content" id="main-content">
             <header class="top-navbar">
                 <div class="navbar-right-menu">
                     <button class="theme-toggle" id="theme-toggle">
-                        <i class="bi bi-moon-stars-fill" id="theme-icon-moon"></i>
-                        <i class="bi bi-sun-fill" id="theme-icon-sun" style="display: none;"></i>
+                        <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon" style="cursor: pointer; transition: transform 0.3s;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+
+                        <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun" style="display: none; cursor: pointer; transition: transform 0.3s;">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
                     </button>
-                    {{-- <div class="dropdown">
-                        <button class="btn border-0 p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-gear-fill fs-5 text-secondary"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#">Ganti Password</a></li>
-                            <li><a class="dropdown-item" href="#">Informasi Akun</a></li>
-                        </ul>
-                    </div> --}}
-                    {{-- 2. STRUKTUR HTML BARU --}}
+                    
                     <div class="dropdown">
-                        
-                        {{-- A. TOMBOL PEMICU (TRIGGER) BERBENTUK KAPSUL --}}
                         <a href="#" class="nav-profile-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="false">
                             
                             {{-- Foto Profil --}}
@@ -312,42 +491,62 @@
                                 <img src="/images/avatar.jpg" alt="Profil" class="profile-img-nav">
                             @endif
 
-                            {{-- Nama & Role (Tampil di sebelah foto) --}}
-                            <div class="profile-info">
+                            {{-- Info Teks --}}
+                            <div class="profile-info d-none d-sm-flex"> {{-- d-none d-sm-flex: Sembunyikan teks di HP biar rapi --}}
                                 <span class="profile-name">{{ Str::limit(auth()->user()->name, 15) }}</span>
-                                <span class="profile-role">{{ auth()->user()->roles->first()->label ?? 'User' }}</span>
-                            </div>
+                                
+                                @php
+                                    $urlSegment = request()->segment(1);
+                                    if ($urlSegment == 'profil') {
+                                        if (auth()->user()->hasRole('superadmin')) $displayRole = 'Super Admin';
+                                        elseif (auth()->user()->hasRole('admin')) $displayRole = 'Administrator';
+                                        elseif (auth()->user()->hasRole('peninjau')) $displayRole = 'Peninjau';
+                                        else $displayRole = 'Karyawan';
+                                    } else {
+                                        $displayRole = match($urlSegment) {
+                                            'superadmin' => 'Super Admin',
+                                            'admin'      => 'Administrator',
+                                            'peninjau'   => 'Peninjau',
+                                            'karyawan'   => 'Karyawan',
+                                            default      => auth()->user()->roles->first()->label ?? 'Pengguna'
+                                        };
+                                    }
+                                @endphp
 
-                            {{-- Ikon Panah Bawah --}}
-                            {{-- <i class="bi bi-chevron-down profile-arrow"></i> --}}
+                                <span class="profile-role">{{ $displayRole }}</span>
+                            </div>
+                            
+                            {{-- Ikon Panah (Ganti class bi profile-arrow jadi bi-chevron-down) --}}
+                            <i class="bi profile-arrow ms-2"></i>
                         </a>
 
-
-                        {{-- B. ISI MENU DROPDOWN (ISI TETAP SAMA, HANYA DIPERCANTIK STYLE-NYA) --}}
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2" style="min-width: 220px;">
-                            
-                            {{-- Header Nama --}}
                             <li>
                                 <h6 class="dropdown-header fw-bold text-uppercase small text-muted">
                                     {{ auth()->user()->name ?? 'Pengguna' }}
                                 </h6>
                             </li>
-                            
                             <li><hr class="dropdown-divider"></li>
                             
-                            {{-- Link Profil (Kondisional) --}}
                             @if(!auth()->user()->hasRole('superadmin'))
                             <li>
-                                <a class="dropdown-item py-2" href="{{ route(auth()->user()->roles->first()->name . '.profil') }}">
+                                {{-- LINK PROFIL DINAMIS --}}
+                                @php
+                                    $currentPrefix = request()->segment(1);
+                                    if (!in_array($currentPrefix, ['admin', 'karyawan', 'peninjau', 'superadmin'])) {
+                                        $currentPrefix = auth()->user()->roles->first()->name;
+                                    }
+                                @endphp
+
+                                <a class="dropdown-item py-2" href="{{ route($currentPrefix . '.profil') }}">
                                     <i class="bi bi-person-gear me-2 text-warning"></i> Ganti Password & Info Akun
                                 </a>
                             </li>
                             @endif
 
-                            {{-- Link Logout --}}
                             <li>
                                 <a class="dropdown-item py-2 text-danger fw-bold" href="#" 
-                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                     <i class="bi bi-box-arrow-right me-2"></i> Logout
                                 </a>
                                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -370,13 +569,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     @livewireScripts
-
     @stack('scripts')
 
-    <!-- ==== JAVASCRIPT KUSTOM ==== -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Script Sidebar Toggle
             const sidebarToggle = document.getElementById('sidebar-toggle');
             if (sidebarToggle) {
                 sidebarToggle.addEventListener('click', function(e) {
@@ -385,7 +581,6 @@
                 });
             }
 
-            // Script Dark Mode
             const themeToggle = document.getElementById('theme-toggle');
             const moonIcon = document.getElementById('theme-icon-moon');
             const sunIcon = document.getElementById('theme-icon-sun');
@@ -412,7 +607,6 @@
                 });
             }
 
-            // Script Sidebar Active Link
             const currentURL = window.location.href;
             const sidebarLinks = document.querySelectorAll('.sidebar-link');
             let bestMatch = null;

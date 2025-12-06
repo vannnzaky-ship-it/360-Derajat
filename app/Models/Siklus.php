@@ -21,4 +21,9 @@ class Siklus extends Model
         'persen_bawahan',
         'status',
     ];
+
+    public function skemaPenilaians()
+    {
+        return $this->hasMany(SkemaPenilaian::class);
+    }
 }

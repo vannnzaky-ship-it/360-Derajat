@@ -48,7 +48,6 @@
                             <th scope="col" class="text-center" style="width: 50px;">No</th>
                             <th scope="col">Tahun Ajaran</th>
                             <th scope="col">Semester</th>
-                            <th scope="col" style="width: 25%;">Penilaian (%)</th>
                             <th scope="col">Status</th>
                             <th scope="col" class="text-center">Action</th>
                         </tr>
@@ -59,12 +58,6 @@
                             <td class="text-center fw-bold">{{ $daftarSiklus->firstItem() + $index }}</td>
                             <td>{{ $siklus->tahun_ajaran }}</td>
                             <td>{{ $siklus->semester }}</td>
-                            <td>
-                                <small class="d-block">Diri Sendiri: {{ $siklus->persen_diri }}%</small>
-                                <small class="d-block">Atasan: {{ $siklus->persen_atasan }}%</small>
-                                <small class="d-block">Rekan: {{ $siklus->persen_rekan }}%</small>
-                                <small class="d-block">Bawahan: {{ $siklus->persen_bawahan }}%</small>
-                                </td>
                             <td>
                                 @if ($siklus->status == 'Aktif')
                                     <span class="fw-bold text-success"><i class="bi bi-check-circle-fill me-1"></i> Aktif</span>
@@ -134,34 +127,6 @@
                                 @error('semester') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
-
-                        <div class="row mb-3">
-                            <label class="form-label mb-1">Persentase Penilaian (%) <span class="text-danger">*</span></label>
-                            <small class="text-muted d-block mb-2">Total persentase keempat komponen harus 100%.</small>
-                            
-                            <div class="col-md-3">
-                                <label for="persen_diri" class="form-label small">Diri Sendiri</label>
-                                <input type="number" id="persen_diri" class="form-control @error('persen_diri') is-invalid @enderror @error('persen_total') is-invalid @enderror" wire:model.live="persen_diri" min="0" max="100">
-                                @error('persen_diri') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col-md-3">
-                                <label for="persen_atasan" class="form-label small">Atasan</label>
-                                <input type="number" id="persen_atasan" class="form-control @error('persen_atasan') is-invalid @enderror @error('persen_total') is-invalid @enderror" wire:model.live="persen_atasan" min="0" max="100">
-                                @error('persen_atasan') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                             <div class="col-md-3">
-                                <label for="persen_rekan" class="form-label small">Rekan Sejawat</label>
-                                <input type="number" id="persen_rekan" class="form-control @error('persen_rekan') is-invalid @enderror @error('persen_total') is-invalid @enderror" wire:model.live="persen_rekan" min="0" max="100">
-                                @error('persen_rekan') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                             <div class="col-md-3">
-                                <label for="persen_bawahan" class="form-label small">Bawahan</label>
-                                <input type="number" id="persen_bawahan" class="form-control @error('persen_bawahan') is-invalid @enderror @error('persen_total') is-invalid @enderror" wire:model.live="persen_bawahan" min="0" max="100">
-                                @error('persen_bawahan') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                             @error('persen_total') <div class="col-12 text-danger small mt-2">{{ $message }}</div> @enderror
-                        </div>
-
                          <div class="mb-3">
                             <label for="status" class="form-label">Status Siklus <span class="text-danger">*</span></label>
                             <select id="status" class="form-select @error('status') is-invalid @enderror" wire:model="status">

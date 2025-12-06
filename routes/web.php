@@ -8,6 +8,7 @@ use App\Livewire\Superadmin\ManajemenAdmin;
 use App\Livewire\Peninjau\Dashboard as PeninjauDashboard; // Pastikan ini ada
 use App\Livewire\Admin\SiklusSemester; // Import SiklusSemester
 use App\Livewire\Admin\pertanyaanCrud;
+use App\Livewire\Admin\ManajemenSkema;
 // use App\Livewire\Admin\Dashboard as AdminDashboard; // Import Dashboard Admin (jika ada)
 use App\Livewire\Karyawan\Dashboard as KaryawanDashboard;
 use App\Livewire\Karyawan\Penilaian as KaryawanPenilaian;
@@ -44,7 +45,6 @@ Route::prefix('superadmin')
         Route::redirect('/dashboard', '/superadmin/manajemen-admin')->name('dashboard');
         Route::get('/manajemen-admin', ManajemenAdmin::class)->name('manajemen-admin');
         Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
-        Route::get('/struktur-jabatan', ManajemenJabatan::class)->name('jabatan');
 });
 
 // GRUP ADMINISTRATOR (Blok Pertama Anda)
@@ -72,8 +72,10 @@ Route::prefix('admin')
         // ==========================================================
 
         // Rute lain tetap ada
-        Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai'); 
+        Route::get('/struktur-jabatan', ManajemenJabatan::class)->name('jabatan');
+         Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
         Route::get('/siklus-semester', SiklusSemester::class)->name('siklus-semester');
+        Route::get('/skema-penilaian', ManajemenSkema::class)->name('skema-penilaian');
         Route::get('/kompetensi', KompetensiCrud::class)->name('kompetensi'); // Nama rute 'kompetensi
         Route::get('/pertanyaan', PertanyaanCrud::class)->name('pertanyaan');
         Route::get('/profil', Profil::class)->name('profil');

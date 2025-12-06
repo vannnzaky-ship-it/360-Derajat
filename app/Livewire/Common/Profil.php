@@ -3,19 +3,17 @@
 namespace App\Livewire\Common;
 
 use Livewire\Component;
-use Livewire\WithFileUploads; // <--- Import Ini
-use Livewire\Attributes\Layout;
+use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage; // <--- Import Storage
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
 use App\Models\User;
 
-#[Layout('layouts.admin')]
 class Profil extends Component
 {
-    use WithFileUploads; // <--- Gunakan Trait Ini
+    use WithFileUploads;
 
     // Data Akun
     public $name;
@@ -25,8 +23,8 @@ class Profil extends Component
     public $role_label = '-';
 
     // Foto Profil
-    public $photo; // Menampung file upload sementara
-    public $existingPhoto; // Menampung path foto dari DB
+    public $photo; 
+    public $existingPhoto;
 
     // Password
     public $current_password;
@@ -45,29 +43,31 @@ class Profil extends Component
         $this->name = $user->name;
         $this->email = $user->email;
         $this->role_label = $user->roles->first()->label ?? $user->roles->first()->name;
-        $this->existingPhoto = $user->profile_photo_path; // Ambil foto dari DB
+        $this->existingPhoto = $user->profile_photo_path;
 
         $pegawai = DB::table('pegawai')->where('user_id', $user->id)->first();
 
         if ($pegawai) {
             $this->nip = $pegawai->nip ?? '-';
-            $jabatanData = DB::table('jabatan')
+
+            $jabatanList = DB::table('jabatan')
                 ->join('pegawai_jabatan', 'jabatan.id', '=', 'pegawai_jabatan.jabatan_id')
                 ->where('pegawai_jabatan.pegawai_id', $pegawai->id)
-                ->select('jabatan.nama_jabatan')
-                ->first();
+                ->pluck('jabatan.nama_jabatan')
+                ->toArray();
             
-            if ($jabatanData) {
-                $this->jabatan = $jabatanData->nama_jabatan;
+            if (!empty($jabatanList)) {
+                $this->jabatan = implode(', ', $jabatanList);
+            } else {
+                $this->jabatan = '-';
             }
         }
     }
 
-    // Fungsi validasi real-time saat user memilih file
     public function updatedPhoto()
     {
         $this->validate([
-            'photo' => 'image|max:2048|mimes:jpg,jpeg,png,webp', // Max 2MB
+            'photo' => 'image|max:2048|mimes:jpg,jpeg,png,webp',
         ]);
     }
 
@@ -79,21 +79,15 @@ class Profil extends Component
 
         $user = User::find(Auth::id());
 
-        // 1. Hapus foto lama jika ada (Cleanup)
         if ($user->profile_photo_path) {
             Storage::disk('public')->delete($user->profile_photo_path);
         }
 
-        // 2. Simpan foto baru
-        // Foto akan disimpan di storage/app/public/profile-photos
         $path = $this->photo->store('profile-photos', 'public');
-
-        // 3. Update Database
         $user->update(['profile_photo_path' => $path]);
 
-        // 4. Refresh tampilan
         $this->existingPhoto = $path;
-        $this->photo = null; // Reset input file
+        $this->photo = null;
 
         session()->flash('message', 'Foto profil berhasil diperbarui!');
     }
@@ -110,12 +104,11 @@ class Profil extends Component
         $this->existingPhoto = null;
         $this->photo = null;
         
-        session()->flash('message', 'Foto profil berhasil dihapus. Kembali ke avatar default.');
+        session()->flash('message', 'Foto profil berhasil dihapus.');
     }
 
     public function updatePassword()
     {
-        // ... (Logika password tetap sama seperti sebelumnya) ...
         $this->validate([
             'current_password' => 'required',
             'new_password' => 'required|min:6|confirmed|different:current_password',
@@ -148,6 +141,11 @@ class Profil extends Component
 
     public function render()
     {
-        return view('livewire.common.profil');
+        // KARENA ANDA HANYA PAKAI 1 LAYOUT UNTUK SEMUA ROLE (admin.blade.php)
+        // Maka kita langsung tembak saja ke layout tersebut.
+        // Tidak perlu logika match/if yang mencari file layout lain.
+        
+        return view('livewire.common.profil')
+            ->layout('layouts.admin');
     }
 }
