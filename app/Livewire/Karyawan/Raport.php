@@ -5,41 +5,46 @@ namespace App\Livewire\Karyawan;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Siklus;
+use App\Models\PenilaianSession;
+use App\Models\Pegawai;
+use App\Services\HitungSkorService;
+use Barryvdh\DomPDF\Facade\Pdf; // <--- PENTING: Import Library PDF
 
 #[Layout('layouts.admin')] 
 class Raport extends Component
 {
     // Data Pengguna
     public $namaUser, $nipUser, $jabatanUser;
+    public $pegawaiId, $jabatanId; // Simpan ID untuk query
 
     // Pilihan Semester
     public $listSemester = [];
-    public $selectedSemester;
+    public $selectedSemester; // Ini akan menyimpan ID Siklus
 
-    // Data Raport (Dummy)
+    // Data Raport
     public $chartData = [];
     public $tableData = [];
-    public $ranking = '';
+    public $ranking = '-';
+    public $finalScore = 0; // Tambahan untuk nilai akhir total
 
-    /**
-     * Mount dijalankan saat komponen dimuat
-     */
     public function mount()
     {
-        // Ambil data user
         $user = Auth::user();
-        /** @var \App\Models\User|null $user */ 
 
-        // Cek jika user ada sebelum load
         if ($user) {
-            // PERBAIKAN 1: Gunakan 'jabatans' (plural)
+            // Load relasi pegawai dan jabatan
             $user->load('pegawai.jabatans'); 
             
             $this->namaUser = $user->name;
             $this->nipUser = $user->pegawai?->nip ?? 'N/A';
+            $this->pegawaiId = $user->pegawai?->id;
 
-            // PERBAIKAN 2: 
-            // Ambil semua nama jabatan dari koleksi, lalu gabungkan dengan koma
+            // Ambil jabatan pertama (Primary) untuk penilaian
+            // Jika user punya banyak jabatan, idealnya ada dropdown pilih jabatan
+            $firstJabatan = $user->pegawai?->jabatans->first();
+            $this->jabatanId = $firstJabatan?->id;
+
             if ($user->pegawai && $user->pegawai->jabatans->isNotEmpty()) {
                 $this->jabatanUser = $user->pegawai->jabatans->pluck('nama_jabatan')->implode(', ');
             } else {
@@ -47,79 +52,139 @@ class Raport extends Component
             }
 
         } else {
-            // Handle jika user tidak ditemukan
             return redirect('/login'); 
         }
 
-        // Isi list semester (contoh)
-        $this->listSemester = [
-            '20242' => '2024/2025 Genap',
-            '20241' => '2024/2025 Ganjil',
-            '20232' => '2023/2024 Genap',
-        ];
-        $this->selectedSemester = array_key_first($this->listSemester); 
+        // 1. Ambil List Semester (Siklus) dari Database
+        $sikluses = Siklus::orderBy('tahun_ajaran', 'desc')->orderBy('semester', 'desc')->get();
+        
+        foreach($sikluses as $siklus) {
+            // Format: "2024/2025 Ganjil" -> Key-nya pakai ID Siklus biar mudah
+            $this->listSemester[$siklus->id] = $siklus->tahun_ajaran . ' ' . $siklus->semester;
+        }
+
+        // Set default ke semester pertama (paling baru)
+        if (count($this->listSemester) > 0) {
+            $this->selectedSemester = array_key_first($this->listSemester);
+        }
+        
         $this->loadRaportData();
     }
 
-    /**
-     * Dipanggil otomatis saat $selectedSemester berubah
-     */
     public function updatedSelectedSemester()
     {
-        // Muat ulang data raport berdasarkan semester baru
         $this->loadRaportData();
-        
-        // (Opsional) Kirim event ke JS jika chart perlu di-update
-        // $this->dispatch('semesterChanged', data: $this->chartData);
     }
 
-    /**
-     * Fungsi untuk memuat data raport (masih dummy)
-     */
     public function loadRaportData()
     {
-        // Nanti, query ke database berdasarkan $this->selectedSemester
+        // Reset dulu
+        $this->chartData = ['labels' => [], 'scores' => []];
+        $this->tableData = [];
+        $this->ranking = '-';
+        $this->finalScore = 0;
 
-        // Contoh data dummy untuk chart & tabel
-        // Sesuaikan label dan nilai berdasarkan semester (jika perlu)
-        if ($this->selectedSemester == '20242') {
-             $this->chartData = [
-                 'labels' => ['Kepribadian', 'Kompetensi Pedagogik', 'Kompetensi Profesional', 'Kompetensi Sosial', 'Kinerja'],
-                 'scores' => [85, 90, 78, 92, 88] 
-             ];
-             $this->tableData = [
-                 'Kepribadian' => 850,
-                 'Kompetensi Pedagogik' => 900,
-                 'Kompetensi Profesional' => 780,
-                 'Kompetensi Sosial' => 920,
-                 'Kinerja' => 880,
-             ];
-             $this->ranking = 'Posisi ke-5 dari 50 pegawai';
-        } else {
-             $this->chartData = [
-                 'labels' => ['Kepribadian', 'Kompetensi Pedagogik', 'Kompetensi Profesional', 'Kompetensi Sosial', 'Kinerja'],
-                 'scores' => [80, 85, 82, 88, 81] 
-             ];
-             $this->tableData = [
-                 'Kepribadian' => 800,
-                 'Kompetensi Pedagogik' => 850,
-                 'Kompetensi Profesional' => 820,
-                 'Kompetensi Sosial' => 880,
-                 'Kinerja' => 810,
-             ];
-             $this->ranking = 'Posisi ke-8 dari 48 pegawai';
+        if (!$this->selectedSemester || !$this->jabatanId) return;
+
+        // 1. Cari Sesi Penilaian berdasarkan Siklus yang dipilih
+        $session = PenilaianSession::where('siklus_id', $this->selectedSemester)->latest()->first();
+
+        if ($session) {
+            $service = new HitungSkorService();
+
+            // 2. Hitung Nilai Per Kompetensi (Untuk Chart & Tabel)
+            // Hasilnya array ['Kedisiplinan' => 90, 'Etika' => 85, ...]
+            $rekapKompetensi = $service->getRekapKompetensi(Auth::id(), $session->id, $this->jabatanId);
+
+            if (!empty($rekapKompetensi)) {
+                $this->tableData = $rekapKompetensi;
+                
+                // Siapkan data Chart
+                $this->chartData = [
+                    'labels' => array_keys($rekapKompetensi),
+                    'scores' => array_values($rekapKompetensi)
+                ];
+
+                // 3. Hitung Nilai Akhir Total (Skala 100)
+                $totalSkor = array_sum($rekapKompetensi);
+                $jumlahItem = count($rekapKompetensi);
+                $this->finalScore = $jumlahItem > 0 ? round($totalSkor / $jumlahItem) : 0;
+
+                // 4. Hitung Ranking (Opsional - Sederhana)
+                $this->hitungRanking($session->id, $this->finalScore);
+            }
         }
     }
 
-    /**
-     * Fungsi untuk export (placeholder)
-     */
-    public function export($type)
+    private function hitungRanking($sessionId, $myScore)
     {
-        // Logika export PDF atau Excel akan ditambahkan di sini
-        session()->flash('info', "Fitur Export $type belum diimplementasikan.");
+        // Placeholder Ranking
+        // Sementara kita gunakan Predikat sebagai status ranking agar tidak berat query-nya
+        $this->ranking = $this->getPredikat($myScore);
     }
 
+    // --- FUNGSI EXPORT YANG SUDAH JADI ---
+    public function export($type)
+    {
+        // Siapkan Data untuk dikirim ke PDF/Excel
+        $data = [
+            'namaUser' => $this->namaUser,
+            'nipUser' => $this->nipUser,
+            'jabatanUser' => $this->jabatanUser,
+            'tableData' => $this->tableData,
+            'finalScore' => $this->finalScore,
+            'predikat' => $this->getPredikat($this->finalScore),
+            'siklus' => $this->listSemester[$this->selectedSemester] ?? '-'
+        ];
+
+        // 1. Export PDF
+        if ($type == 'pdf') {
+            // Pastikan file view 'livewire.karyawan.cetak-raport-pdf' SUDAH DIBUAT
+            $pdf = Pdf::loadView('livewire.karyawan.cetak-raport-pdf', $data);
+            $filename = 'Raport-' . str_replace(' ', '-', $this->namaUser) . '.pdf';
+            
+            return response()->streamDownload(function () use ($pdf) {
+                echo $pdf->output();
+            }, $filename);
+        }
+
+        // 2. Export Excel (CSV Native)
+        if ($type == 'excel') {
+            $filename = 'Raport-' . str_replace(' ', '-', $this->namaUser) . '.csv';
+            
+            return response()->streamDownload(function () use ($data) {
+                $file = fopen('php://output', 'w');
+                
+                // Header CSV
+                fputcsv($file, ['RAPORT KINERJA 360']);
+                fputcsv($file, ['Siklus', $data['siklus']]);
+                fputcsv($file, []); // Baris kosong
+                fputcsv($file, ['Nama', $data['namaUser']]);
+                fputcsv($file, ['NIP', $data['nipUser']]);
+                fputcsv($file, ['Jabatan', $data['jabatanUser']]);
+                fputcsv($file, []); 
+                fputcsv($file, ['SKOR AKHIR', $data['finalScore']]);
+                fputcsv($file, ['PREDIKAT', $data['predikat']]);
+                fputcsv($file, []); 
+
+                // Tabel Data
+                fputcsv($file, ['Kompetensi', 'Nilai (0-100)']);
+                foreach ($data['tableData'] as $kategori => $nilai) {
+                    fputcsv($file, [$kategori, $nilai]);
+                }
+
+                fclose($file);
+            }, $filename);
+        }
+    }
+
+    // Helper Predikat (Digunakan untuk menentukan Baik/Buruk)
+    private function getPredikat($score) {
+        if($score >= 90) return 'Sangat Baik';
+        if($score >= 76) return 'Baik';
+        if($score >= 60) return 'Cukup';
+        return 'Kurang';
+    }
 
     public function render()
     {

@@ -2,43 +2,51 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PenilaianAlokasi extends Model
 {
+    use HasFactory;
+
     protected $table = 'penilaian_alokasi';
     protected $guarded = ['id'];
 
     // Relasi ke User Penilai
-    public function penilai(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relasi ke User yang Dinilai (Target)
-    public function target(): BelongsTo
+    // Relasi ke User Target
+    public function target()
     {
         return $this->belongsTo(User::class, 'target_user_id');
     }
 
-    // --- TAMBAHKAN BAGIAN INI ---
-    // Relasi ke Sesi Penilaian (Untuk cek status Open/Closed)
-    public function penilaianSession(): BelongsTo
+    // Relasi ke Jabatan Target
+    public function jabatan()
+    {
+        return $this->belongsTo(Jabatan::class, 'jabatan_id');
+    }
+    
+    // Relasi ke Jabatan Penilai
+    public function penilaiJabatan()
+    {
+        return $this->belongsTo(Jabatan::class, 'penilai_jabatan_id');
+    }
+
+    // Relasi ke Sesi
+    public function penilaianSession()
     {
         return $this->belongsTo(PenilaianSession::class, 'penilaian_session_id');
     }
 
-    // app/Models/PenilaianAlokasi.php
-
-public function jabatan()
-{
-    return $this->belongsTo(Jabatan::class, 'jabatan_id');
-}
-
-// Relasi ke Jabatan si Penilai (Untuk membedakan Ka BAK vs Ka Prodi)
-public function penilaiJabatan()
-{
-    return $this->belongsTo(Jabatan::class, 'penilai_jabatan_id');
-}
+    // ==== TAMBAHKAN KODE INI (YANG HILANG) ====
+    public function skors()
+    {
+        // Ini menghubungkan Alokasi ke tabel 'penilaian_skor'
+        return $this->hasMany(PenilaianSkor::class, 'penilaian_alokasi_id');
+    }
+    // ===========================================
 }
