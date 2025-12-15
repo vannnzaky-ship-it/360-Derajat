@@ -79,6 +79,8 @@ Route::prefix('admin')
         Route::get('/kompetensi', KompetensiCrud::class)->name('kompetensi'); // Nama rute 'kompetensi
         Route::get('/pertanyaan', PertanyaanCrud::class)->name('pertanyaan');
         Route::get('/profil', Profil::class)->name('profil');
+        // ... di dalam Route group 'admin' ...
+        Route::get('/random-penilai', \App\Livewire\Admin\RandomPenilai::class)->name('random-penilai');
 });
 
 // GRUP PENINJAU (Ditambahkan kembali)
@@ -100,6 +102,10 @@ Route::prefix('karyawan')
         Route::get('/penilaian', KaryawanPenilaian::class)->name('penilaian');
         Route::get('/raport', KaryawanRaport::class)->name('raport');
         Route::get('/profil', Profil::class)->name('profil');
+        // Route List Penilaian
+    
+    // Route Form Isi (Parameter ID Alokasi)
+    Route::get('/penilaian/{id}', \App\Livewire\Karyawan\IsiPenilaian::class)->name('isi-penilaian');
     });
 
 

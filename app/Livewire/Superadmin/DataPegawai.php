@@ -72,8 +72,10 @@ class DataPegawai extends Component
         // Query utama Pegawai
         $pegawaiQuery = Pegawai::with(['user.roles', 'jabatans']) 
             ->whereHas('user', function ($query) {
+                // Sembunyikan Superadmin dari list & diri sendiri
                 $query->whereDoesntHave('roles', fn($q) => $q->where('name', 'superadmin'));
                 $query->where('id', '!=', Auth::id()); 
+                
                 if ($this->search) { 
                      $query->where(function($subQuery) {
                          $subQuery->where('name', 'like', '%'.$this->search.'%')
@@ -97,8 +99,10 @@ class DataPegawai extends Component
         $currentUser = Auth::user(); 
         $isAdminAccessing = false; 
         if ($currentUser && !$currentUser->hasRole('superadmin')) { $isAdminAccessing = true; }
+        
         $availableRolesQuery = Role::where('name', '!=', 'superadmin');
         if ($isAdminAccessing) { $availableRolesQuery->where('name', '!=', 'admin'); }
+        
         $roleList = $availableRolesQuery->get();
         
         return view('livewire.superadmin.data-pegawai', [
@@ -116,7 +120,6 @@ class DataPegawai extends Component
         $idsInList = $list->pluck('id')->toArray();
 
         // 1. Cari "Root Lokal" (Jabatan paling atas di bidang ini)
-        // Yaitu jabatan yang parent_id-nya NULL atau parent_id-nya TIDAK ADA di list bidang ini
         $roots = $list->filter(function ($item) use ($idsInList) {
             return is_null($item->parent_id) || !in_array($item->parent_id, $idsInList);
         })->sortBy('level')->sortBy('urutan');
@@ -131,11 +134,9 @@ class DataPegawai extends Component
 
     private function traverseChildren($node, $allList, &$result, $depth)
     {
-        // Set kedalaman untuk indentasi di View nanti
         $node->indent_level = $depth; 
         $result->push($node);
 
-        // Cari anak dari node ini yang ada di list yang sama
         $children = $allList->where('parent_id', $node->id)->sortBy('urutan');
 
         foreach ($children as $child) {
@@ -215,15 +216,65 @@ class DataPegawai extends Component
         $this->updateTakenSingletons(); 
     }
     
-    #[On('deleteConfirmed')] 
-    public function destroy($userId) { 
-        $user = User::findOrFail($userId);
-        if($user->pegawai) {
-            $user->pegawai()->delete();
-        }
-        $user->delete();
-        session()->flash('message', 'Pegawai berhasil dihapus');
+    // --- [FIX] BAGIAN INI YANG SEBELUMNYA HILANG ---
+
+    /**
+     * Function ini dipanggil saat tombol hapus (HTML) diklik.
+     * Tugas: Memicu SweetAlert di browser.
+     */
+    public function confirmDelete($userId)
+    {
+        // Mengirim event ke Browser (JavaScript)
+        // Nama event: 'show-delete-confirmation'
+        $this->dispatch('show-delete-confirmation', $userId);
     }
+
+    /**
+     * Function ini dipanggil OLEH JAVASCRIPT setelah user klik "Ya, Hapus".
+     * Tugas: Menghapus data dari database.
+     */
+    /**
+     * Function ini dipanggil OLEH JAVASCRIPT setelah user klik "Ya, Hapus".
+     * Tugas: Menghapus data dari database.
+     */
+    #[On('deleteConfirmed')] // Menangkap event jika ada
+    public function destroy($userId) 
+    { 
+        // --- [FIX PERBAIKAN UTAMA DISINI] ---
+        // Kadang Livewire/SweetAlert mengirim ID dalam bentuk Array (contoh: ['id' => 5]).
+        // Kita harus ubah jadi angka biasa agar User::find() mengembalikan 1 User, bukan Collection.
+        
+        if (is_array($userId)) {
+            // Ambil value pertama dari array tersebut (biasanya ID-nya)
+            $userId = reset($userId); 
+        }
+
+        // Pastikan userId sekarang adalah angka/string, bukan array lagi
+        // -------------------------------------
+
+        $user = User::find($userId); 
+
+        if ($user) {
+            // 1. Hapus foto profil jika ada
+            if ($user->profile_photo_path) {
+                // \Illuminate\Support\Facades\Storage::delete($user->profile_photo_path);
+            }
+
+            // 2. Hapus relasi pegawai jika ada
+            if($user->pegawai) {
+                $user->pegawai()->delete();
+            }
+
+            // 3. Hapus user login
+            $user->delete();
+            
+            session()->flash('message', 'Pegawai berhasil dihapus');
+        } else {
+            // Jika user tidak ditemukan (mungkin sudah terhapus)
+            session()->flash('error', 'Data pegawai tidak ditemukan atau sudah terhapus.');
+        }
+    }
+    // ----------------------------------------------------
 
     public function closeModal() { $this->showModal = false; $this->resetForm(); }
     

@@ -493,25 +493,27 @@
     </div>
     
     @push('scripts')
-    <script>
-        document.addEventListener('livewire:initialized', () => {
-            @this.on('confirmDelete', (event) => {
-                Swal.fire({
-                    title: 'Yakin hapus pegawai?',
-                    text: "Data yang dihapus tidak bisa dikembalikan!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        @this.call('destroy', event); 
-                    }
-                });
+<script>
+    document.addEventListener('livewire:initialized', () => {
+        // Mendengarkan event dari PHP: 'show-delete-confirmation'
+        @this.on('show-delete-confirmation', (id) => {
+            Swal.fire({
+                title: 'Yakin hapus pegawai?',
+                text: "Data akun dan kepegawaian akan dihapus permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Panggil function destroy di PHP
+                    @this.call('destroy', id); 
+                }
             });
         });
-    </script>
-    @endpush
+    });
+</script>
+@endpush
 </div>

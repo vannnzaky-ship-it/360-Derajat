@@ -111,9 +111,9 @@
                 </a>
             </li>
 
-            <li class="sidebar-item">
-                <a class="sidebar-link" href="#">
-                    <i class="bi bi-shuffle" style="width: 20px;"></i>
+            <li class="sidebar-item {{ Request::routeIs('admin.random-penilai') ? 'active' : '' }}">
+                <a href="{{ route('admin.random-penilai') }}" class="sidebar-link">
+                    <i class="bi bi-shuffle"></i>
                     <span class="sidebar-text">Random Penilai</span>
                 </a>
             </li>
