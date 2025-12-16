@@ -22,10 +22,10 @@ class DetailProgress extends Component
         
         $sessionId = $this->siklus->penilaianSession->id;
 
-        // Ambil data orang-orang yang harus dinilai oleh User ini
-        $alokasi = PenilaianAlokasi::with(['targetUser.pegawai', 'targetJabatan']) // Load target data
+        // Ambil data
+        $alokasi = PenilaianAlokasi::with(['targetUser.pegawai', 'targetJabatan']) 
                     ->where('penilaian_session_id', $sessionId)
-                    ->where('user_id', $userId) // User ini sebagai PENILAI
+                    ->where('user_id', $userId) 
                     ->get();
 
         // Hitung Statistik
@@ -35,20 +35,38 @@ class DetailProgress extends Component
             'persen' => $alokasi->count() > 0 ? round(($alokasi->where('status_nilai', 'Sudah')->count() / $alokasi->count()) * 100) : 0,
         ];
 
-        // Grouping berdasarkan 'sebagai' (Atasan, Bawahan, Rekan, Diri Sendiri)
-        // DAN SENSOR NAMA TARGET
-        $this->groupedTargets = $alokasi->groupBy('sebagai')->map(function ($items) {
+        // --- [PERBAIKAN LOGIKA DISINI] ---
+        // Kita kelompokkan ulang secara manual agar Label Tampilan sesuai logika manusia
+        // Data di DB -> Masuk ke Folder Mana?
+        
+        $rawGrouped = $alokasi->groupBy('sebagai');
+
+        $finalGroups = [
+            // Judul 'Atasan' diisi oleh data dimana User bertindak sbg 'Bawahan' (Menilai Bos)
+            'Atasan'       => $rawGrouped->get('Bawahan', collect([])), 
+            
+            // Judul 'Bawahan' diisi oleh data dimana User bertindak sbg 'Atasan' (Menilai Staf)
+            'Bawahan'      => $rawGrouped->get('Atasan', collect([])),
+            
+            // Rekan & Diri Sendiri tetap
+            'Rekan'        => $rawGrouped->get('Rekan', collect([])),
+            'Diri Sendiri' => $rawGrouped->get('Diri Sendiri', collect([])),
+        ];
+
+        // Formatting Data untuk View (Termasuk Sensor Nama)
+        $this->groupedTargets = collect($finalGroups)->map(function ($items) {
             return $items->map(function ($item) {
                 return [
                     'id' => $item->id,
-                    // SENSOR NAMA: Ganti dengan ******
+                    // TETAP DISENSOR SESUAI PERMINTAAN
                     'nama_sensor' => '****** (Disamarkan)', 
                     'jabatan' => $item->targetJabatan->nama_jabatan ?? '-',
                     'status' => $item->status_nilai,
                     'tanggal' => $item->updated_at ? $item->updated_at->format('d M Y H:i') : '-',
                 ];
             });
-        });
+        })->filter(fn($items) => $items->isNotEmpty())->toArray(); 
+        // Filter agar kategori kosong tidak muncul
     }
 
     public function render()

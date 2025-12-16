@@ -18,33 +18,43 @@
             text-align: center;
             position: relative;
             padding: 0;
-            overflow: visible;
+            overflow: visible; /* Agar avatar bisa keluar dikit jika mau */
             display: flex;
             flex-direction: column;
             border: 1px solid #f0f0f0;
         }
 
-        /* --- UKURAN & POSISI --- */
+        /* --- UKURAN & POSISI (FIX PENYET) --- */
         /* Juara 1 (Tengah) */
-        .rank-1-wrapper { order: 2; width: 280px; z-index: 2; }
+        .rank-1-wrapper {
+            order: 2;
+            width: 280px; /* Lebih lebar */
+            z-index: 2;
+        }
         .rank-card-1 {
-            min-height: 320px;
-            border-top: 8px solid #FFD700; /* Emas */
-            transform: scale(1.05);
+            min-height: 320px; /* Tinggi proporsional */
+            border-top: 8px solid #FFD700; /* Aksen Emas */
+            transform: scale(1.05); /* Sedikit lebih besar */
         }
 
         /* Juara 2 (Kiri) */
-        .rank-2-wrapper { order: 1; width: 240px; }
+        .rank-2-wrapper {
+            order: 1;
+            width: 240px;
+        }
         .rank-card-2 {
-            min-height: 280px;
-            border-top: 8px solid #C0C0C0; /* Perak */
+            min-height: 280px; /* Lebih rendah dari rank 1 */
+            border-top: 8px solid #C0C0C0; /* Aksen Perak */
         }
 
         /* Juara 3 (Kanan) */
-        .rank-3-wrapper { order: 3; width: 240px; }
+        .rank-3-wrapper {
+            order: 3;
+            width: 240px;
+        }
         .rank-card-3 {
-            min-height: 260px;
-            border-top: 8px solid #CD7F32; /* Perunggu */
+            min-height: 260px; /* Paling rendah */
+            border-top: 8px solid #CD7F32; /* Aksen Perunggu */
         }
 
         /* --- COMPONENTS --- */
@@ -64,7 +74,8 @@
         .badge-3 { background: #CD7F32; border: 3px solid white; }
 
         .rank-avatar-box {
-            margin-top: 35px; margin-bottom: 15px;
+            margin-top: 35px;
+            margin-bottom: 15px;
             display: flex; justify-content: center;
         }
         .rank-avatar {
@@ -76,6 +87,7 @@
             display: flex; align-items: center; justify-content: center;
             border: 2px solid #eee;
         }
+        /* Border warna avatar sesuai juara */
         .rank-1-wrapper .rank-avatar { border-color: #FFD700; color: #b8860b; background-color: #fffbf0; }
         .rank-2-wrapper .rank-avatar { border-color: #C0C0C0; color: #7f8c8d; }
         .rank-3-wrapper .rank-avatar { border-color: #CD7F32; color: #a0522d; }
@@ -84,10 +96,10 @@
         .rank-jabatan { font-size: 0.75rem; color: #888; margin-bottom: 20px; padding: 0 15px; min-height: 30px; }
         
         .rank-score-box {
-            margin-top: auto;
+            margin-top: auto; /* Dorong ke bawah */
             background: #fafafa;
             padding: 15px;
-            border-radius: 0 0 15px 15px;
+            border-radius: 0 0 15px 15px; /* Radius bawah mengikuti card */
             border-top: 1px solid #eee;
         }
         .rank-score-val { font-size: 1.5rem; font-weight: 800; color: #333; }
@@ -104,10 +116,8 @@
     {{-- HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <a href="{{ route('admin.siklus-semester') }}" class="text-decoration-none text-muted small mb-1 d-block">
-                <i class="bi bi-arrow-left"></i> Kembali ke Siklus
-            </a>
-            <h2 class="h3 fw-bold text-dark mb-1">Rekap Nilai Kinerja</h2>
+            <a href="{{ route('peninjau.laporan') }}" class="text-decoration-none text-muted small mb-1 d-block"><i class="bi bi-arrow-left"></i> Kembali</a>
+            <h2 class="h3 fw-bold text-dark mb-1">Peringkat Kinerja</h2>
             <p class="text-muted mb-0">Periode: <span class="fw-bold" style="color: #c38e44;">{{ $siklus->tahun_ajaran }} {{ $siklus->semester }}</span></p>
         </div>
         <div class="dropdown">
@@ -121,7 +131,7 @@
         </div>
     </div>
 
-    {{-- 🏆 PODIUM 3 BESAR --}}
+    {{-- 🏆 PODIUM 3 BESAR (STATIK / HANYA TAMPILAN) --}}
     @if(count($dataPegawai) > 0)
         <div class="podium-container">
             
@@ -246,7 +256,7 @@
                                 <span class="badge {{ $class }} rounded-pill fw-normal px-3">{{ $row['predikat'] }}</span>
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('admin.detail-nilai', ['siklusId' => $siklus->id, 'userId' => $row['user_id']]) }}" 
+                                <a href="{{ route('peninjau.laporan.detail', ['siklusId' => $siklus->id, 'userId' => $row['user_id']]) }}" 
                                    class="btn btn-sm btn-light border rounded-3 px-3 text-muted" title="Lihat Detail">
                                     <i class="bi bi-chevron-right"></i>
                                 </a>

@@ -19,7 +19,7 @@ class HitungSkorService
         $skema = SkemaPenilaian::where('siklus_id', $siklusId)
             ->get()
             ->filter(function ($s) use ($jabatan) {
-                // PERBAIKAN: Cek apakah sudah array atau masih string
+                // Pastikan tipe data array agar tidak error
                 $levels = is_array($s->level_target) ? $s->level_target : json_decode($s->level_target, true);
                 $levels = $levels ?? [];
                 return in_array((string)$jabatan->level, $levels);
@@ -27,29 +27,35 @@ class HitungSkorService
 
         if (!$skema) return ['skor_akhir' => 0, 'mutu' => 'No Schema', 'jabatan' => $jabatan->nama_jabatan, 'skema' => '-', 'detail' => [], 'bobot_used' => []];
 
-        // ... (sisanya sama, tidak perlu diubah) ...
-        
+        // 1. Hitung Rata-rata per Peran (Hasilnya masih Skala 1-5)
         $rataAtasan  = $this->getAverageByRole($targetUserId, $sessionId, $jabatanId, 'Bawahan'); 
         $rataBawahan = $this->getAverageByRole($targetUserId, $sessionId, $jabatanId, 'Atasan'); 
         $rataRekan   = $this->getAverageByRole($targetUserId, $sessionId, $jabatanId, 'Rekan');
         $rataDiri    = $this->getAverageByRole($targetUserId, $sessionId, $jabatanId, 'Diri Sendiri');
 
+        // 2. Kalkulasi Bobot (Hasilnya masih Skala 1-5, misal: 1.25)
         $skorAkhir = 
             ($rataDiri    * ($skema->persen_diri / 100)) +
             ($rataAtasan  * ($skema->persen_atasan / 100)) +
             ($rataRekan   * ($skema->persen_rekan / 100)) +
             ($rataBawahan * ($skema->persen_bawahan / 100));
 
+        // 3. Tentukan Mutu (Logic getMutu menggunakan skala 1-5)
         $mutu = $this->getMutu($skorAkhir);
+
+        // 4. [PERBAIKAN UTAMA] KONVERSI KE SKALA 100 (Dikali 20)
+        // Contoh: 1.25 * 20 = 25
+        $skorAkhir100 = $skorAkhir * 20;
 
         return [
             'jabatan' => $jabatan->nama_jabatan,
             'skema' => $skema->nama_skema,
             'detail' => [
-                'diri' => number_format($rataDiri, 2),
-                'atasan' => number_format($rataAtasan, 2),
-                'rekan' => number_format($rataRekan, 2),
-                'bawahan' => number_format($rataBawahan, 2),
+                // Detail juga dikonversi ke skala 100 agar konsisten di tampilan
+                'diri' => number_format($rataDiri * 20, 2),
+                'atasan' => number_format($rataAtasan * 20, 2),
+                'rekan' => number_format($rataRekan * 20, 2),
+                'bawahan' => number_format($rataBawahan * 20, 2),
             ],
             'bobot_used' => [
                 'diri' => $skema->persen_diri . '%',
@@ -57,7 +63,8 @@ class HitungSkorService
                 'rekan' => $skema->persen_rekan . '%',
                 'bawahan' => $skema->persen_bawahan . '%',
             ],
-            'skor_akhir' => number_format($skorAkhir, 2),
+            // Mengembalikan nilai yang SUDAH DIKALI 20 (Skala 100)
+            'skor_akhir' => number_format($skorAkhir100, 2), 
             'mutu' => $mutu
         ];
     }
@@ -72,9 +79,6 @@ class HitungSkorService
         $skema = SkemaPenilaian::where('siklus_id', $siklusId)
             ->get()
             ->filter(function ($s) use ($jabatan) {
-                // PERBAIKAN DI SINI JUGA (PENTING!)
-                // Penyebab Error: Argument #1 ($json) must be of type string, array given
-                // Solusi: Cek tipe data dulu
                 $levels = is_array($s->level_target) ? $s->level_target : json_decode($s->level_target, true);
                 $levels = $levels ?? [];
                 return in_array((string)$jabatan->level, $levels);
@@ -97,13 +101,13 @@ class HitungSkorService
                 ($rataRekan   * ($skema->persen_rekan / 100)) +
                 ($rataBawahan * ($skema->persen_bawahan / 100));
             
+            // Bagian ini sudah benar (Scale 100)
             $hasil[$kompetensi->nama_kompetensi] = round($skorAkhirKompetensi * 20, 0);
         }
 
         return $hasil;
     }
 
-    // ... (Method private di bawahnya biarkan saja, sudah aman) ...
     private function getAverageByRole($targetUserId, $sessionId, $jabatanId, $sebagai)
     {
         $alokasis = PenilaianAlokasi::where('penilaian_session_id', $sessionId)
@@ -166,6 +170,7 @@ class HitungSkorService
 
     private function getMutu($nilai)
     {
+        // Mutu dihitung berdasarkan skala 1-5
         if ($nilai >= 4.51) return 'Sangat Baik';
         if ($nilai >= 3.51) return 'Baik';
         if ($nilai >= 2.51) return 'Cukup';

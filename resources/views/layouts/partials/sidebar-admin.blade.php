@@ -97,22 +97,37 @@
     </li>
 
     {{-- 4. GROUP PELAKSANAAN (Proses & Random) --}}
+    {{-- Cek apakah salah satu menu anak sedang aktif --}}
+    @php
+        $isPelaksanaanActive = request()->routeIs('admin.progress-penilaian', 'admin.random-penilai');
+    @endphp
+
     <li class="sidebar-item">
-        <a class="sidebar-link collapsed" data-bs-target="#pelaksanaan" data-bs-toggle="collapse" href="#">
+        <a class="sidebar-link {{ $isPelaksanaanActive ? '' : 'collapsed' }}" 
+           data-bs-target="#pelaksanaan" 
+           data-bs-toggle="collapse" 
+           href="#"
+           aria-expanded="{{ $isPelaksanaanActive ? 'true' : 'false' }}">
             <i class="bi bi-clipboard-check-fill" style="width: 20px;"></i>
             <span class="sidebar-text">Pelaksanaan</span>
         </a>
-        <ul id="pelaksanaan" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebarNavAccordion">
+        
+        {{-- Tambahkan class 'show' jika salah satu menu anak aktif --}}
+        <ul id="pelaksanaan" 
+            class="sidebar-dropdown list-unstyled collapse {{ $isPelaksanaanActive ? 'show' : '' }}" 
+            data-bs-parent="#sidebarNavAccordion">
             
-            <li class="sidebar-item {{ Request::routeIs('admin.progress-penilaian') ? 'active' : '' }}">
-                <a class="sidebar-link" href="{{ route('admin.progress-penilaian') }}">
+            <li class="sidebar-item">
+                <a class="sidebar-link {{ request()->routeIs('admin.progress-penilaian') ? 'active' : '' }}" 
+                   href="{{ route('admin.progress-penilaian') }}">
                     <i class="bi bi-person-check-fill" style="width: 20px;"></i>
                     <span class="sidebar-text">Proses Penilai</span>
                 </a>
             </li>
 
-            <li class="sidebar-item {{ Request::routeIs('admin.random-penilai') ? 'active' : '' }}">
-                <a href="{{ route('admin.random-penilai') }}" class="sidebar-link">
+            <li class="sidebar-item">
+                <a class="sidebar-link {{ request()->routeIs('admin.random-penilai') ? 'active' : '' }}" 
+                   href="{{ route('admin.random-penilai') }}">
                     <i class="bi bi-shuffle"></i>
                     <span class="sidebar-text">Random Penilai</span>
                 </a>

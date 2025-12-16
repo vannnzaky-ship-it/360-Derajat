@@ -3,21 +3,26 @@
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Login360;
 use App\Livewire\PilihRole;
+// Import Middleware PreventBackHistory
+use App\Http\Middleware\PreventBackHistory as MiddlewarePreventBackHistory; 
+
 use App\Livewire\Superadmin\DataPegawai as SuperadminDataPegawai;
 use App\Livewire\Superadmin\ManajemenAdmin;
-use App\Livewire\Peninjau\Dashboard as PeninjauDashboard; // Pastikan ini ada
-use App\Livewire\Admin\SiklusSemester; // Import SiklusSemester
+use App\Livewire\Peninjau\Dashboard as PeninjauDashboard;
+use App\Livewire\Admin\SiklusSemester;
 use App\Livewire\Admin\pertanyaanCrud;
 use App\Livewire\Admin\ManajemenSkema;
-// use App\Livewire\Admin\Dashboard as AdminDashboard; // Import Dashboard Admin (jika ada)
 use App\Livewire\Karyawan\Dashboard as KaryawanDashboard;
 use App\Livewire\Karyawan\Penilaian as KaryawanPenilaian;
 use App\Livewire\Karyawan\Raport as KaryawanRaport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
-use App\Livewire\Admin\KompetensiCrud; // <-- Tambahkan ini
+use App\Livewire\Admin\KompetensiCrud;
 use App\Livewire\Common\Profil;
 use App\Livewire\Superadmin\ManajemenJabatan;
+use App\Livewire\Peninjau\LaporanHasil;
+use App\Livewire\Peninjau\RankingPeninjau;
+use App\Livewire\Peninjau\DetailPeninjau;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,10 +32,15 @@ use App\Livewire\Superadmin\ManajemenJabatan;
 
 // --- RUTE AUTENTIKASI KUSTOM ---
 Route::get('/login', Login360::class)->name('login')->middleware('guest');
-Route::get('/pilih-role', PilihRole::class)->name('pilih-role')->middleware('auth');
+
+Route::get('/pilih-role', PilihRole::class)
+    ->name('pilih-role')
+    ->middleware(['auth', MiddlewarePreventBackHistory::class]);
+
 Route::post('/logout', function () {
     Auth::logout();
-    Session::flush();
+    request()->session()->invalidate(); // Invalidate session biar bersih
+    request()->session()->regenerateToken();
     return redirect('/login');
 })->name('logout');
 
@@ -39,104 +49,120 @@ Route::post('/logout', function () {
 
 // GRUP SUPER ADMIN
 Route::prefix('superadmin')
-    ->middleware(['auth', 'role:superadmin'])
+    // TAMBAHKAN MiddlewarePreventBackHistory DISINI
+    ->middleware(['auth', 'role:superadmin', MiddlewarePreventBackHistory::class]) 
     ->name('superadmin.')
     ->group(function () {
         Route::redirect('/dashboard', '/superadmin/manajemen-admin')->name('dashboard');
         Route::get('/manajemen-admin', ManajemenAdmin::class)->name('manajemen-admin');
         Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
-});
+    });
 
-// GRUP ADMINISTRATOR (Blok Pertama Anda)
-// Route::prefix('admin')
-//     ->middleware(['auth', 'role:admin'])
-//     ->name('admin.')
-//     ->group(function () {
-//         Route::redirect('/dashboard', '/admin/data-pegawai')->name('dashboard'); // Redirect ini tetap ada
-//         Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
-//         // Tambahkan siklus-semester dan pertanyaan di sini
-//         Route::get('/siklus-semester', SiklusSemester::class)->name('siklus-semester');
-//         Route::get('/pertanyaan', \App\Livewire\Admin\Pertanyaan::class)->name('pertanyaan'); // Gunakan class yang benar
-// });
-
-// GRUP ADMINISTRATOR (Blok Kedua Anda - Duplikasi)
+// GRUP ADMINISTRATOR
 Route::prefix('admin')
-    ->middleware(['auth', 'role:admin'])
+    // TAMBAHKAN MiddlewarePreventBackHistory DISINI
+    ->middleware(['auth', 'role:admin', MiddlewarePreventBackHistory::class])
     ->name('admin.')
     ->group(function () {
-        // HAPUS REDIRECT INI:
-        // Route::redirect('/dashboard', '/admin/siklus-semester')->name('dashboard'); 
-
-        // ==== TAMBAHKAN RUTE INI UNTUK KOMPONEN DASHBOARD ANDA ====
+        
+        // Dashboard Admin
         Route::get('/dashboard', \App\Livewire\Admin\Dashboard::class)->name('dashboard'); 
-        // ==========================================================
 
-        // Rute lain tetap ada
         Route::get('/struktur-jabatan', ManajemenJabatan::class)->name('jabatan');
-         Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
+        Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
         Route::get('/siklus-semester', SiklusSemester::class)->name('siklus-semester');
         Route::get('/skema-penilaian', ManajemenSkema::class)->name('skema-penilaian');
-        Route::get('/kompetensi', KompetensiCrud::class)->name('kompetensi'); // Nama rute 'kompetensi
+        Route::get('/kompetensi', KompetensiCrud::class)->name('kompetensi');
         Route::get('/pertanyaan', PertanyaanCrud::class)->name('pertanyaan');
         Route::get('/profil', Profil::class)->name('profil');
-        // ... di dalam Route group 'admin' ...
+        
         Route::get('/random-penilai', \App\Livewire\Admin\RandomPenilai::class)->name('random-penilai');
         Route::get('/siklus/{siklusId}/rekap', \App\Livewire\Admin\RekapSiklus::class)->name('rekap-siklus');
 
-// 2. Halaman Detail Nilai Per Orang (Tampilan Raport untuk Admin)
+        // Halaman Detail Nilai Per Orang
         Route::get('/siklus/{siklusId}/pegawai/{userId}', \App\Livewire\Admin\DetailNilai::class)->name('detail-nilai');
-        // Halaman List Progress (Daftar Pegawai)
-        // Halaman Utama (List Progress) - Tidak butuh ID di URL lagi
-Route::get('/proses-penilai', \App\Livewire\Admin\ProgressPenilaian::class)->name('progress-penilaian');
-
-// Halaman Detail (Tetap butuh ID agar tau siapa yang dilihat)
-Route::get('/proses-penilai/{siklusId}/detail/{userId}', \App\Livewire\Admin\DetailProgress::class)->name('detail-progress');
         
-});
+        // Halaman List Progress
+        Route::get('/proses-penilai', \App\Livewire\Admin\ProgressPenilaian::class)->name('progress-penilaian');
 
-// GRUP PENINJAU (Ditambahkan kembali)
+        // Halaman Detail Progress
+        Route::get('/proses-penilai/{siklusId}/detail/{userId}', \App\Livewire\Admin\DetailProgress::class)->name('detail-progress');
+    });
+
+// GRUP PENINJAU
 Route::prefix('peninjau')
-    ->middleware(['auth', 'role:peninjau'])
+    // TAMBAHKAN MiddlewarePreventBackHistory DISINI
+    ->middleware(['auth', 'role:peninjau', MiddlewarePreventBackHistory::class])
     ->name('peninjau.')
     ->group(function () {
-        Route::get('/dashboard', PeninjauDashboard::class)->name('dashboard');
+        // Route::get('/dashboard', PeninjauDashboard::class)->name('dashboard');
         Route::get('/profil', Profil::class)->name('profil');
-});
+        // 1. Halaman List Siklus
+        Route::get('/laporan', LaporanHasil::class)->name('laporan');
+        
+        // 2. Halaman Ranking
+        Route::get('/laporan/{siklusId}/ranking', RankingPeninjau::class)->name('laporan.ranking');
+        
+        // 3. Halaman Detail Raport Pegawai
+        Route::get('/laporan/{siklusId}/pegawai/{userId}', DetailPeninjau::class)->name('laporan.detail');
+    });
 
 
 // GRUP KARYAWAN
 Route::prefix('karyawan')
-    ->middleware(['auth', 'role:karyawan'])
+    // TAMBAHKAN MiddlewarePreventBackHistory DISINI
+    ->middleware(['auth', 'role:karyawan', MiddlewarePreventBackHistory::class])
     ->name('karyawan.')
     ->group(function () {
         Route::get('/dashboard', KaryawanDashboard::class)->name('dashboard');
         Route::get('/penilaian', KaryawanPenilaian::class)->name('penilaian');
         Route::get('/raport', KaryawanRaport::class)->name('raport');
         Route::get('/profil', Profil::class)->name('profil');
-        // Route List Penilaian
-    
-    // Route Form Isi (Parameter ID Alokasi)
-    Route::get('/penilaian/{id}', \App\Livewire\Karyawan\IsiPenilaian::class)->name('isi-penilaian');
+        
+        // Route Form Isi
+        Route::get('/penilaian/{id}', \App\Livewire\Karyawan\IsiPenilaian::class)->name('isi-penilaian');
     });
 
 
 // --- RUTE ROOT (HALAMAN UTAMA /) ---
 Route::get('/', function () {
     if (Auth::guest()) { return redirect()->route('login'); }
+    
+    // --- UBAH DISINI: LOGIKA AUTO LOGOUT SAAT BACK ---
+    // Jika user kembali ke halaman ROOT '/' tapi di session masih ada 'selected_role',
+    // Artinya user menekan tombol BACK dari Dashboard.
+    // Maka: Force Logout & Redirect Login.
+    if (Session::has('selected_role')) {
+        Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        
+        return redirect()->route('login');
+    }
+    // --------------------------------------------------
+
     $user = Auth::user();
     /** @var \App\Models\User $user */
     $roles = $user->roles;
     $nonKaryawanRoles = $roles->where('name', '!=', 'karyawan');
-    if ($nonKaryawanRoles->count() > 0 && $roles->count() > 1) { return redirect()->route('pilih-role'); }
-    elseif ($roles->isNotEmpty()) {
+    
+    if ($nonKaryawanRoles->count() > 0 && $roles->count() > 1) { 
+        return redirect()->route('pilih-role'); 
+    } elseif ($roles->isNotEmpty()) {
         $roleName = $roles->first()->name;
+        // Simpan session otomatis jika cuma 1 role
+        Session::put('selected_role', $roleName); 
+
         $redirectPath = match ($roleName) {
-            'superadmin' => '/superadmin/dashboard', 'admin' => '/admin/dashboard', // Akan mengikuti redirect pertama
-            'peninjau' => '/peninjau/dashboard', 'karyawan' => '/karyawan/dashboard',
-            default => '/login',
+            'superadmin' => '/superadmin/dashboard', 
+            'admin'      => '/admin/dashboard',
+            'peninjau'   => '/peninjau/dashboard', 
+            'karyawan'   => '/karyawan/dashboard',
+            default      => '/login',
         };
         return redirect($redirectPath);
     } else {
-        Auth::logout(); return redirect('/login')->withErrors('Akun Anda tidak memiliki peran.');
+        Auth::logout(); 
+        return redirect('/login')->withErrors('Akun Anda tidak memiliki peran.');
     }
-})->middleware('auth')->name('home');
+})->middleware(['auth', MiddlewarePreventBackHistory::class])->name('home');
