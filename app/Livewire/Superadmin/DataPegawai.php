@@ -21,7 +21,8 @@ class DataPegawai extends Component
     use WithPagination;
 
     // Properti Form
-    public $name, $email, $password, $nip;
+    protected $paginationTheme = 'bootstrap';
+    public $name, $email, $password, $nip, $no_hp;
     public $selectedRoles = []; 
     public $selectedJabatans = []; 
 
@@ -54,48 +55,52 @@ class DataPegawai extends Component
              ->toArray();
     }
 
+    // ==========================================
+    // [BAGIAN INI YANG DIPERBAIKI TOTAL]
+    // ==========================================
     public function render()
     {
-        // 1. AMBIL DATA JABATAN (Raw Data)
-        // Urutkan berdasarkan Bidang -> Level -> Urutan
+        // 1. AMBIL DATA JABATAN (Untuk Dropdown & Grouping)
         $allJabatans = Jabatan::orderBy('bidang', 'asc')
             ->orderBy('level', 'asc') 
             ->orderBy('urutan', 'asc')
             ->get();
 
-        // 2. GROUPING & SORTING HIERARKI
-        // Data dikelompokkan per bidang, lalu diurutkan Parent -> Child di dalamnya
         $groupedJabatans = $allJabatans->groupBy('bidang')->map(function ($list) {
             return $this->sortListHierarchically($list);
         });
 
-        // Query utama Pegawai
+        // 2. QUERY UTAMA PEGAWAI
         $pegawaiQuery = Pegawai::with(['user.roles', 'jabatans']) 
             ->whereHas('user', function ($query) {
-                // Sembunyikan Superadmin dari list & diri sendiri
+                // Filter Wajib: Bukan Superadmin & Bukan Diri Sendiri
                 $query->whereDoesntHave('roles', fn($q) => $q->where('name', 'superadmin'));
                 $query->where('id', '!=', Auth::id()); 
-                
-                if ($this->search) { 
-                     $query->where(function($subQuery) {
-                         $subQuery->where('name', 'like', '%'.$this->search.'%')
-                                  ->orWhere('email', 'like', '%'.$this->search.'%');
-                    });
-                }
             });
-            
+
+        // 3. LOGIKA SEARCH (DIPERBAIKI & DISATUKAN)
         if ($this->search) {
              $pegawaiQuery->where(function ($query) { 
-                 $query->orWhere('nip', 'like', '%'.$this->search.'%')
-                       ->orWhereHas('jabatans', function ($qJab) { 
-                           $qJab->where('nama_jabatan', 'like', '%'.$this->search.'%');
-                       });
+                 // Cari Nama atau Email
+                 $query->whereHas('user', function ($qUser) {
+                     $qUser->where('name', 'like', '%'.$this->search.'%')
+                           ->orWhere('email', 'like', '%'.$this->search.'%');
+                 })
+                 // ATAU Cari NIP
+                 ->orWhere('nip', 'like', '%'.$this->search.'%')
+                 // ATAU Cari Nama Jabatan
+                 ->orWhereHas('jabatans', function ($qJab) { 
+                     $qJab->where('nama_jabatan', 'like', '%'.$this->search.'%');
+                 });
              });
         }
 
-        $pegawai = $pegawaiQuery->paginate(10);
+        // 4. EKSEKUSI QUERY (FIX SORTING & DISTINCT)
+        // distinct(): Mencegah duplikasi jika satu pegawai cocok dengan banyak kriteria jabatan
+        // orderBy('created_at', 'desc'): Data baru selalu muncul di atas (Halaman 1)
+        $pegawai = $pegawaiQuery->distinct()->orderBy('created_at', 'desc')->paginate(10);
 
-        // Data Role untuk Form
+        // Data Role untuk Form Modal
         $currentUser = Auth::user(); 
         $isAdminAccessing = false; 
         if ($currentUser && !$currentUser->hasRole('superadmin')) { $isAdminAccessing = true; }
@@ -111,6 +116,7 @@ class DataPegawai extends Component
             'groupedJabatans' => $groupedJabatans, 
         ]); 
     }
+    // ==========================================
 
     // --- FUNGSI HELPER UNTUK SORTING POHON (HIERARKI) ---
 
@@ -119,12 +125,10 @@ class DataPegawai extends Component
         $sorted = new Collection();
         $idsInList = $list->pluck('id')->toArray();
 
-        // 1. Cari "Root Lokal" (Jabatan paling atas di bidang ini)
         $roots = $list->filter(function ($item) use ($idsInList) {
             return is_null($item->parent_id) || !in_array($item->parent_id, $idsInList);
         })->sortBy('level')->sortBy('urutan');
 
-        // 2. Loop setiap root dan cari anak-anaknya secara rekursif
         foreach ($roots as $root) {
             $this->traverseChildren($root, $list, $sorted, 0);
         }
@@ -156,6 +160,7 @@ class DataPegawai extends Component
         $this->name = $pegawai->user->name;
         $this->email = $pegawai->user->email;
         $this->nip = $pegawai->nip;
+        $this->no_hp = $pegawai->no_hp;
         $this->selectedRoles = $pegawai->user->roles->pluck('id')->toArray();
         $this->selectedJabatans = $pegawai->jabatans->pluck('id')->toArray(); 
         $this->password = ''; 
@@ -180,6 +185,7 @@ class DataPegawai extends Component
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($this->userId)],
             'nip' => ['required', 'string', Rule::unique('pegawai', 'nip')->ignore($this->pegawaiId)], 
+            'no_hp' => 'nullable|numeric|digits_between:10,15',
             'selectedRoles' => 'required|array|min:1',
             'selectedJabatans' => 'required|array|min:1', 
             'selectedJabatans.*' => 'exists:jabatan,id', 
@@ -204,7 +210,8 @@ class DataPegawai extends Component
 
         $pegawai = Pegawai::updateOrCreate(
             ['user_id' => $user->id], 
-            ['nip' => $this->nip] 
+            ['nip' => $this->nip,
+            'no_hp' => $this->no_hp]
         );
         $this->pegawaiId = $pegawai->id; 
 
@@ -216,71 +223,42 @@ class DataPegawai extends Component
         $this->updateTakenSingletons(); 
     }
     
-    // --- [FIX] BAGIAN INI YANG SEBELUMNYA HILANG ---
-
-    /**
-     * Function ini dipanggil saat tombol hapus (HTML) diklik.
-     * Tugas: Memicu SweetAlert di browser.
-     */
     public function confirmDelete($userId)
     {
-        // Mengirim event ke Browser (JavaScript)
-        // Nama event: 'show-delete-confirmation'
         $this->dispatch('show-delete-confirmation', $userId);
     }
 
-    /**
-     * Function ini dipanggil OLEH JAVASCRIPT setelah user klik "Ya, Hapus".
-     * Tugas: Menghapus data dari database.
-     */
-    /**
-     * Function ini dipanggil OLEH JAVASCRIPT setelah user klik "Ya, Hapus".
-     * Tugas: Menghapus data dari database.
-     */
-    #[On('deleteConfirmed')] // Menangkap event jika ada
+    #[On('deleteConfirmed')] 
     public function destroy($userId) 
     { 
-        // --- [FIX PERBAIKAN UTAMA DISINI] ---
-        // Kadang Livewire/SweetAlert mengirim ID dalam bentuk Array (contoh: ['id' => 5]).
-        // Kita harus ubah jadi angka biasa agar User::find() mengembalikan 1 User, bukan Collection.
-        
         if (is_array($userId)) {
-            // Ambil value pertama dari array tersebut (biasanya ID-nya)
             $userId = reset($userId); 
         }
-
-        // Pastikan userId sekarang adalah angka/string, bukan array lagi
-        // -------------------------------------
 
         $user = User::find($userId); 
 
         if ($user) {
-            // 1. Hapus foto profil jika ada
             if ($user->profile_photo_path) {
                 // \Illuminate\Support\Facades\Storage::delete($user->profile_photo_path);
             }
 
-            // 2. Hapus relasi pegawai jika ada
             if($user->pegawai) {
                 $user->pegawai()->delete();
             }
 
-            // 3. Hapus user login
             $user->delete();
             
             session()->flash('message', 'Pegawai berhasil dihapus');
         } else {
-            // Jika user tidak ditemukan (mungkin sudah terhapus)
             session()->flash('error', 'Data pegawai tidak ditemukan atau sudah terhapus.');
         }
     }
-    // ----------------------------------------------------
 
     public function closeModal() { $this->showModal = false; $this->resetForm(); }
     
     public function resetForm()
     {
-        $this->reset(['name', 'email', 'password', 'nip', 'selectedRoles', 'selectedJabatans', 'pegawaiId', 'userId', 'isEditMode']);
+        $this->reset(['name', 'email', 'password', 'nip','no_hp', 'selectedRoles', 'selectedJabatans', 'pegawaiId', 'userId', 'isEditMode']);
         $this->resetErrorBag(); 
         $this->resetValidation(); 
     }

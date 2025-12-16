@@ -81,6 +81,17 @@ Route::prefix('admin')
         Route::get('/profil', Profil::class)->name('profil');
         // ... di dalam Route group 'admin' ...
         Route::get('/random-penilai', \App\Livewire\Admin\RandomPenilai::class)->name('random-penilai');
+        Route::get('/siklus/{siklusId}/rekap', \App\Livewire\Admin\RekapSiklus::class)->name('rekap-siklus');
+
+// 2. Halaman Detail Nilai Per Orang (Tampilan Raport untuk Admin)
+        Route::get('/siklus/{siklusId}/pegawai/{userId}', \App\Livewire\Admin\DetailNilai::class)->name('detail-nilai');
+        // Halaman List Progress (Daftar Pegawai)
+        // Halaman Utama (List Progress) - Tidak butuh ID di URL lagi
+Route::get('/proses-penilai', \App\Livewire\Admin\ProgressPenilaian::class)->name('progress-penilaian');
+
+// Halaman Detail (Tetap butuh ID agar tau siapa yang dilihat)
+Route::get('/proses-penilai/{siklusId}/detail/{userId}', \App\Livewire\Admin\DetailProgress::class)->name('detail-progress');
+        
 });
 
 // GRUP PENINJAU (Ditambahkan kembali)

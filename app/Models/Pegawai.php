@@ -11,7 +11,7 @@ class Pegawai extends Model
 {
     use HasFactory;
     protected $table = 'pegawai';
-    protected $fillable = ['user_id', 'nip']; // Hapus 'jabatan_id'
+    protected $fillable = ['user_id', 'nip','no_hp']; // Hapus 'jabatan_id'
 
     public function user(): BelongsTo
     {

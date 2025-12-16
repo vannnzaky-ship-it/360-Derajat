@@ -5,7 +5,7 @@ namespace App\Livewire\Karyawan;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PenilaianAlokasi;
-use App\Models\Siklus;
+use App\Models\PenilaianSession;
 
 class Penilaian extends Component
 {
@@ -13,30 +13,34 @@ class Penilaian extends Component
     {
         $userId = Auth::id();
         
-        // Cek Sesi Aktif untuk menampilkan Alert Batas Waktu
-        // Kita ambil sesi terakhir yang melibatkan user ini
-        $activeSession = \App\Models\PenilaianSession::whereHas('alokasis', function($q) use ($userId) {
+        // 1. Cek Sesi Aktif (Untuk Alert & Validasi Waktu)
+        $activeSession = PenilaianSession::whereHas('alokasis', function($q) use ($userId) {
             $q->where('user_id', $userId);
         })->where('status', 'Open')->latest()->first();
 
-        // FILTER UTAMA: Hanya ambil data jika Sesi Masih OPEN dan Waktu BELUM HABIS
-        // where('batas_waktu', '>', now()) adalah kuncinya!
+        // 2. Ambil Data Penilaian (Hanya jika Sesi Masih Buka & Belum Expired)
         $activeAssignments = PenilaianAlokasi::with(['target.pegawai.jabatans', 'jabatan', 'penilaiJabatan'])
             ->where('user_id', $userId)
             ->whereHas('penilaianSession', function($q) {
                 $q->where('status', 'Open')
-                  ->where('batas_waktu', '>', now()); // <--- INI FILTER WAKTUNYA
+                  ->where('batas_waktu', '>', now()); 
             })
             ->get();
 
         return view('livewire.karyawan.penilaian', [
-            'atasan' => $activeAssignments->where('sebagai', 'Atasan'),
+            // [LOGIKA DITUKAR DISINI AGAR TAMPILAN BENAR]
+            
+            // Tab "Penilaian Atasan" -> Isinya orang yang saya nilai sebagai 'Bawahan' (Bos Saya)
+            'atasan' => $activeAssignments->where('sebagai', 'Bawahan'),
+
+            // Tab "Penilaian Bawahan" -> Isinya orang yang saya nilai sebagai 'Atasan' (Anak Buah Saya)
+            'bawahan' => $activeAssignments->where('sebagai', 'Atasan'),
+
+            // Rekan & Diri Sendiri (Tidak berubah)
             'rekan' => $activeAssignments->where('sebagai', 'Rekan'),
-            'bawahan' => $activeAssignments->where('sebagai', 'Bawahan'),
             'diri' => $activeAssignments->where('sebagai', 'Diri Sendiri'),
             
-            // Kirim data sesi ke view untuk Alert
             'sessionInfo' => $activeSession 
-        ])->layout('layouts.admin');
+        ])->layout('layouts.admin'); // Sesuaikan jika Anda punya layouts.karyawan
     }
 }

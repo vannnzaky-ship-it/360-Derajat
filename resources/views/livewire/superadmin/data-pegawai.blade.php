@@ -231,6 +231,12 @@
                                 <span class="text-muted small" style="font-size: 0.8rem;">
                                     {{ $pegawai->user->email }}
                                 </span>
+                                {{-- Tampilkan HP jika ada --}}
+                                @if($pegawai->no_hp)
+                                    <span class="text-muted small" style="font-size: 0.75rem;">
+                                        <i class="bi bi-telephone me-1"></i> {{ $pegawai->no_hp }}
+                                    </span>
+                                @endif
                             </div>
                         </div>
                     </td>
@@ -337,10 +343,19 @@
                             <input type="text" wire:model="name" class="form-control form-control-sm" placeholder="Nama...">
                             @error('name') <span class="text-danger" style="font-size: 0.65rem;">{{ $message }}</span> @enderror
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label-sm">NIP / ID <span class="text-danger">*</span></label>
-                            <input type="text" wire:model="nip" class="form-control form-control-sm" placeholder="NIP...">
-                            @error('nip') <span class="text-danger" style="font-size: 0.65rem;">{{ $message }}</span> @enderror
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label-sm">NIP / ID <span class="text-danger">*</span></label>
+                                <input type="text" wire:model="nip" class="form-control form-control-sm" placeholder="NIP...">
+                                @error('nip') <span class="text-danger" style="font-size: 0.65rem;">{{ $message }}</span> @enderror
+                            </div>
+                            
+                            {{-- Input No HP Baru --}}
+                            <div class="col-md-6">
+                                <label class="form-label-sm">No. Handphone <span class="text-muted fst-italic fw-normal">(Opsional)</span></label>
+                                <input type="text" wire:model="no_hp" class="form-control form-control-sm" placeholder="Contoh: 08123456789">
+                                @error('no_hp') <span class="text-danger" style="font-size: 0.65rem;">{{ $message }}</span> @enderror
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-sm">Email <span class="text-danger">*</span></label>

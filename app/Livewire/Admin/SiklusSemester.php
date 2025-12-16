@@ -30,15 +30,13 @@ class SiklusSemester extends Component
     #[Rule('required|in:Aktif,Tidak Aktif', message: 'Status wajib dipilih.')]
     public $status = 'Tidak Aktif';
 
-    /**
-     * Fungsi utama untuk menyimpan (Create atau Update)
-     */
+    // --- (HAPUS SEMUA VARIABEL REKAP DATA & MODAL DISINI) ---
+
     public function saveSiklus()
     {
-        // 1. Validasi dasar
         $validatedData = $this->validate();
 
-        // 2. Validasi custom: Hanya boleh ada 1 Siklus Aktif
+        // Validasi Siklus Aktif
         if ($this->status == 'Aktif') {
              $query = Siklus::where('status', 'Aktif');
              if ($this->isEditMode && $this->siklusId) {
@@ -50,7 +48,7 @@ class SiklusSemester extends Component
              }
         }
         
-        // 3. Validasi unique kombinasi tahun & semester
+        // Validasi Unik Tahun+Semester
         $queryUnique = Siklus::where('tahun_ajaran', $this->tahun_ajaran)
                              ->where('semester', $this->semester);
         if ($this->isEditMode && $this->siklusId) {
@@ -62,12 +60,10 @@ class SiklusSemester extends Component
             return;
         }
 
-        // 4. Simpan atau Update ke Database
         Siklus::updateOrCreate(['id' => $this->siklusId], $validatedData);
 
-        // 5. Tutup modal & kirim notifikasi
         $this->closeModal();
-        $this->dispatch('close-modal', '#siklusModal'); 
+        $this->dispatch('close-modal'); 
         session()->flash('message', $this->isEditMode ? 'Data siklus berhasil diperbarui!' : 'Data siklus berhasil ditambahkan!');
         $this->resetPage();
     }
@@ -109,9 +105,14 @@ class SiklusSemester extends Component
     {
         $siklus = Siklus::find($this->siklusId);
         if ($siklus) {
+            // Validasi: Tidak boleh hapus jika sudah dipakai Random Penilai
+            if ($siklus->penilaianSession()->exists()) {
+                session()->flash('error', 'Gagal hapus! Siklus ini sudah digunakan untuk penilaian.');
+                return;
+            }
+            // Validasi: Tidak boleh hapus yang Aktif
             if ($siklus->status == 'Aktif') {
                  session()->flash('error', 'Tidak dapat menghapus Siklus Semester yang sedang Aktif.');
-                 $this->siklusId = null;
                  return;
             }
             $siklus->delete();
@@ -136,9 +137,13 @@ class SiklusSemester extends Component
         $this->resetValidation();
     }
 
+    // --- (HAPUS SEMUA FUNGSI EXPORT/REKAP DISINI) ---
+
     public function render()
     {
-        $daftarSiklus = Siklus::withCount('skemaPenilaians') // Menghitung berapa skema yang ada (opsional)
+        // Tetap pakai with('penilaianSession') untuk cek tombol mata/hapus
+        $daftarSiklus = Siklus::with('penilaianSession')
+                            ->withCount('skemaPenilaians')
                             ->where(function($query) {
                                 $query->where('tahun_ajaran', 'like', '%'.$this->search.'%')
                                       ->orWhere('semester', 'like', '%'.$this->search.'%');

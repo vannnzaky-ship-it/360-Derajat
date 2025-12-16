@@ -18,18 +18,35 @@ class PenilaianAlokasi extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relasi ke User Target
+    // ==========================================================
+    // BAGIAN INI SANGAT PENTING (DUA-DUANYA HARUS ADA)
+    // ==========================================================
+
+    // 1. UNTUK FITUR LAMA (JANGAN DIHAPUS)
+    // Digunakan oleh form penilaian karyawan / random generator
     public function target()
     {
         return $this->belongsTo(User::class, 'target_user_id');
     }
 
-    // Relasi ke Jabatan Target
     public function jabatan()
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_id');
     }
-    
+
+    // 2. UNTUK FITUR BARU (MONITORING ADMIN)
+    // Digunakan oleh Controller DetailProgress.php
+    public function targetUser()
+    {
+        return $this->belongsTo(User::class, 'target_user_id');
+    }
+
+    public function targetJabatan()
+    {
+        return $this->belongsTo(Jabatan::class, 'jabatan_id');
+    }
+    // ==========================================================
+
     // Relasi ke Jabatan Penilai
     public function penilaiJabatan()
     {
@@ -42,11 +59,9 @@ class PenilaianAlokasi extends Model
         return $this->belongsTo(PenilaianSession::class, 'penilaian_session_id');
     }
 
-    // ==== TAMBAHKAN KODE INI (YANG HILANG) ====
+    // Relasi ke Skor
     public function skors()
     {
-        // Ini menghubungkan Alokasi ke tabel 'penilaian_skor'
         return $this->hasMany(PenilaianSkor::class, 'penilaian_alokasi_id');
     }
-    // ===========================================
 }

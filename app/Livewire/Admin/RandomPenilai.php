@@ -38,7 +38,6 @@ class RandomPenilai extends Component
     public function mount()
     {
         // 1. Cari Siklus yang 'Aktif' tapi BELUM punya sesi (Prioritas untuk Generate Baru)
-        // Kita cari siklus aktif yang belum ada di tabel penilaian_sessions
         $freshSiklus = Siklus::where('status', 'Aktif')
             ->whereDoesntHave('penilaianSession')
             ->first();
@@ -107,7 +106,7 @@ class RandomPenilai extends Component
                 'status' => 'Open'
             ]);
 
-            // 2. LOGIKA GENERATE (Pakai Logic Terbaru yang sudah fix Wadir 2x)
+            // 2. LOGIKA GENERATE
             $allTargets = Pegawai::with(['user', 'jabatans'])->get();
             $dataAlokasi = [];
 
@@ -121,7 +120,8 @@ class RandomPenilai extends Component
                         $this->tambahAlokasi($dataAlokasi, $session->id, $target->user_id, $jabatanTarget->id, $target->user_id, $jabatanTarget->id, 'Diri Sendiri');
                     }
 
-                    // B. Atasan
+                    // B. ATASAN
+                    // Logika: Cari Parent dari Jabatan Target. Orang yang memegang Parent Jabatan itu adalah ATASAN si Target.
                     if (in_array('Atasan', $this->pilihan_kategori) && $jabatanTarget->parent_id) {
                         $atasanList = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('jabatan.id', $jabatanTarget->parent_id);
@@ -131,13 +131,16 @@ class RandomPenilai extends Component
                             if(!$atasan->user_id) continue;
                             foreach($atasan->jabatans as $jabatanAtasan) {
                                 if($jabatanAtasan->id == $jabatanTarget->parent_id) {
-                                    $this->tambahAlokasi($dataAlokasi, $session->id, $atasan->user_id, $jabatanAtasan->id, $target->user_id, $jabatanTarget->id, 'Bawahan');
+                                    // [PERBAIKAN LOGIKA DISINI]
+                                    // Si Penilai ($atasan) bertindak SEBAGAI ATASAN bagi si Target
+                                    $this->tambahAlokasi($dataAlokasi, $session->id, $atasan->user_id, $jabatanAtasan->id, $target->user_id, $jabatanTarget->id, 'Atasan');
                                 }
                             }
                         }
                     }
 
-                    // C. Bawahan
+                    // C. BAWAHAN
+                    // Logika: Cari Jabatan yang Parent-nya adalah Jabatan Target. Orang itu adalah BAWAHAN si Target.
                     if (in_array('Bawahan', $this->pilihan_kategori)) {
                         $bawahanList = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('parent_id', $jabatanTarget->id);
@@ -147,44 +150,39 @@ class RandomPenilai extends Component
                             if(!$bawahan->user_id) continue;
                             foreach($bawahan->jabatans as $jabatanBawahan) {
                                 if($jabatanBawahan->parent_id == $jabatanTarget->id) {
-                                    $this->tambahAlokasi($dataAlokasi, $session->id, $bawahan->user_id, $jabatanBawahan->id, $target->user_id, $jabatanTarget->id, 'Atasan');
+                                    // [PERBAIKAN LOGIKA DISINI]
+                                    // Si Penilai ($bawahan) bertindak SEBAGAI BAWAHAN bagi si Target
+                                    $this->tambahAlokasi($dataAlokasi, $session->id, $bawahan->user_id, $jabatanBawahan->id, $target->user_id, $jabatanTarget->id, 'Bawahan');
                                 }
                             }
                         }
                     }
 
-                    // D. Rekan
-                    // --- D. REKAN SEJAWAT ---
-                    // --- D. REKAN SEJAWAT ---
-// --- D. REKAN SEJAWAT ---
-if (in_array('Rekan', $this->pilihan_kategori) && $jabatanTarget->parent_id) {
-    
-    // PERBAIKAN: Tambahkan where('level', ...) di dalam Query Database
-    // Agar Ka Lab tidak ikut terambil saat jatah kuota Dosen
-    $rekanCandidates = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
-        $q->where('parent_id', $jabatanTarget->parent_id)
-          ->where('level', $jabatanTarget->level); // <--- KUNCI SOLUSINYA
-    })->where('id', '!=', $target->id)->with('user', 'jabatans')->get();
+                    // D. REKAN SEJAWAT
+                    if (in_array('Rekan', $this->pilihan_kategori) && $jabatanTarget->parent_id) {
+                        
+                        // Tambahkan where('level', ...) agar Ka Lab tidak menilai Dosen sebagai Rekan (Beda Level)
+                        $rekanCandidates = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
+                            $q->where('parent_id', $jabatanTarget->parent_id)
+                              ->where('level', $jabatanTarget->level); 
+                        })->where('id', '!=', $target->id)->with('user', 'jabatans')->get();
 
-    // Sekarang semua isi $rekanCandidates DIJAMIN Levelnya sama.
-    // Jadi saat kita take(limit), kita benar-benar mengambil rekan yang valid.
-    $rekanList = $rekanCandidates->shuffle()->take($this->limit_rekan);
+                        $rekanList = $rekanCandidates->shuffle()->take($this->limit_rekan);
 
-    foreach ($rekanList as $rekan) {
-        if(!$rekan->user_id) continue;
-        
-        foreach($rekan->jabatans as $jabatanRekan) {
-            // Kita tetap pasang double check di sini untuk memastikan mapping jabatannya tepat
-            if(
-                $jabatanRekan->parent_id == $jabatanTarget->parent_id && 
-                $jabatanRekan->level == $jabatanTarget->level 
-            ) {
-                 $this->tambahAlokasi($dataAlokasi, $session->id, $rekan->user_id, $jabatanRekan->id, $target->user_id, $jabatanTarget->id, 'Rekan');
-                 break; 
-            }
-        }
-    }
-}
+                        foreach ($rekanList as $rekan) {
+                            if(!$rekan->user_id) continue;
+                            
+                            foreach($rekan->jabatans as $jabatanRekan) {
+                                if(
+                                    $jabatanRekan->parent_id == $jabatanTarget->parent_id && 
+                                    $jabatanRekan->level == $jabatanTarget->level 
+                                ) {
+                                     $this->tambahAlokasi($dataAlokasi, $session->id, $rekan->user_id, $jabatanRekan->id, $target->user_id, $jabatanTarget->id, 'Rekan');
+                                     break; 
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -227,7 +225,6 @@ if (in_array('Rekan', $this->pilihan_kategori) && $jabatanTarget->parent_id) {
     public function render()
     {
         return view('livewire.admin.random-penilai', [
-            // Kirim data siklus + status apakah sudah ada sesinya
             'sikluses' => Siklus::where('status', 'Aktif')->with('penilaianSession')->get(),
             'histories' => PenilaianSession::with('siklus')->latest()->paginate(5)
         ])->layout('layouts.admin');

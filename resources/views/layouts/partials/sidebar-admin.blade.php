@@ -104,8 +104,8 @@
         </a>
         <ul id="pelaksanaan" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebarNavAccordion">
             
-            <li class="sidebar-item">
-                <a class="sidebar-link" href="#">
+            <li class="sidebar-item {{ Request::routeIs('admin.progress-penilaian') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('admin.progress-penilaian') }}">
                     <i class="bi bi-person-check-fill" style="width: 20px;"></i>
                     <span class="sidebar-text">Proses Penilai</span>
                 </a>
