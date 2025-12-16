@@ -28,6 +28,9 @@ class RandomPenilai extends Component
     public $isExpired = false;       // Apakah sudah lewat waktu?
     public $isProcessing = false;
 
+    // [BARU] Properti untuk Modal Detail
+    public $selectedHistory = null;
+
     protected $rules = [
         'siklus_id' => 'required|exists:siklus,id',
         'batas_waktu' => 'required|date|after:today',
@@ -84,6 +87,22 @@ class RandomPenilai extends Component
         }
     }
 
+    // [BARU] Method untuk Menampilkan Detail di Modal
+    public function showDetail($sessionId)
+    {
+        // Reset dulu biar bersih
+        $this->selectedHistory = null;
+
+        // Ambil data sesi beserta relasi yang dibutuhkan untuk tabel detail
+        // Pastikan Model PenilaianAlokasi punya relasi 'user', 'targetUser', 'targetJabatan'
+        $this->selectedHistory = PenilaianSession::with([
+            'siklus', 
+            'alokasis.user',           // Penilai
+            'alokasis.targetUser',     // Yang Dinilai
+            'alokasis.targetJabatan'   // Jabatan Yang Dinilai
+        ])->find($sessionId);
+    }
+
     public function generate()
     {
         $this->validate();
@@ -121,7 +140,6 @@ class RandomPenilai extends Component
                     }
 
                     // B. ATASAN
-                    // Logika: Cari Parent dari Jabatan Target. Orang yang memegang Parent Jabatan itu adalah ATASAN si Target.
                     if (in_array('Atasan', $this->pilihan_kategori) && $jabatanTarget->parent_id) {
                         $atasanList = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('jabatan.id', $jabatanTarget->parent_id);
@@ -131,8 +149,6 @@ class RandomPenilai extends Component
                             if(!$atasan->user_id) continue;
                             foreach($atasan->jabatans as $jabatanAtasan) {
                                 if($jabatanAtasan->id == $jabatanTarget->parent_id) {
-                                    // [PERBAIKAN LOGIKA DISINI]
-                                    // Si Penilai ($atasan) bertindak SEBAGAI ATASAN bagi si Target
                                     $this->tambahAlokasi($dataAlokasi, $session->id, $atasan->user_id, $jabatanAtasan->id, $target->user_id, $jabatanTarget->id, 'Atasan');
                                 }
                             }
@@ -140,7 +156,6 @@ class RandomPenilai extends Component
                     }
 
                     // C. BAWAHAN
-                    // Logika: Cari Jabatan yang Parent-nya adalah Jabatan Target. Orang itu adalah BAWAHAN si Target.
                     if (in_array('Bawahan', $this->pilihan_kategori)) {
                         $bawahanList = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('parent_id', $jabatanTarget->id);
@@ -150,8 +165,6 @@ class RandomPenilai extends Component
                             if(!$bawahan->user_id) continue;
                             foreach($bawahan->jabatans as $jabatanBawahan) {
                                 if($jabatanBawahan->parent_id == $jabatanTarget->id) {
-                                    // [PERBAIKAN LOGIKA DISINI]
-                                    // Si Penilai ($bawahan) bertindak SEBAGAI BAWAHAN bagi si Target
                                     $this->tambahAlokasi($dataAlokasi, $session->id, $bawahan->user_id, $jabatanBawahan->id, $target->user_id, $jabatanTarget->id, 'Bawahan');
                                 }
                             }
@@ -160,8 +173,6 @@ class RandomPenilai extends Component
 
                     // D. REKAN SEJAWAT
                     if (in_array('Rekan', $this->pilihan_kategori) && $jabatanTarget->parent_id) {
-                        
-                        // Tambahkan where('level', ...) agar Ka Lab tidak menilai Dosen sebagai Rekan (Beda Level)
                         $rekanCandidates = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('parent_id', $jabatanTarget->parent_id)
                               ->where('level', $jabatanTarget->level); 
@@ -171,12 +182,8 @@ class RandomPenilai extends Component
 
                         foreach ($rekanList as $rekan) {
                             if(!$rekan->user_id) continue;
-                            
                             foreach($rekan->jabatans as $jabatanRekan) {
-                                if(
-                                    $jabatanRekan->parent_id == $jabatanTarget->parent_id && 
-                                    $jabatanRekan->level == $jabatanTarget->level 
-                                ) {
+                                if($jabatanRekan->parent_id == $jabatanTarget->parent_id && $jabatanRekan->level == $jabatanTarget->level) {
                                      $this->tambahAlokasi($dataAlokasi, $session->id, $rekan->user_id, $jabatanRekan->id, $target->user_id, $jabatanTarget->id, 'Rekan');
                                      break; 
                                 }

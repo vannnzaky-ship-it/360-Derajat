@@ -24,7 +24,7 @@
 
 <ul class="sidebar-nav" id="sidebarNavAccordion">
     
-    {{-- 1. DASHBOARD (Tetap Sendiri) --}}
+    {{-- 1. DASHBOARD --}}
     <li class="sidebar-item">
         <a class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"> 
             <i class="bi bi-grid-fill" style="width: 20px;"></i>
@@ -32,12 +32,19 @@
         </a>
     </li>
 
-    {{-- 2. GROUP MASTER DATA (Struktur & Pegawai) --}}
+    {{-- 2. GROUP MASTER DATA --}}
     <li class="sidebar-item">
-        <a class="sidebar-link collapsed" data-bs-target="#masterData" data-bs-toggle="collapse" href="#">
+        {{-- Logika agar panah tidak menutup jika anak menu aktif --}}
+        <a class="sidebar-link {{ request()->routeIs('admin.jabatan', 'admin.data-pegawai') ? '' : 'collapsed' }}" 
+           data-bs-target="#masterData" 
+           data-bs-toggle="collapse" 
+           href="#"
+           aria-expanded="{{ request()->routeIs('admin.jabatan', 'admin.data-pegawai') ? 'true' : 'false' }}">
             <i class="bi bi-database-fill" style="width: 20px;"></i>
             <span class="sidebar-text">Master Data</span>
         </a>
+        
+        {{-- Logika agar dropdown tetap terbuka (show) jika anak menu aktif --}}
         <ul id="masterData" class="sidebar-dropdown list-unstyled collapse {{ request()->routeIs('admin.jabatan', 'admin.data-pegawai') ? 'show' : '' }}" data-bs-parent="#sidebarNavAccordion">
             
             <li class="sidebar-item">
@@ -57,12 +64,17 @@
         </ul>
     </li>
 
-    {{-- 3. GROUP KONFIGURASI PENILAIAN (Bobot, Siklus, Skema, Pertanyaan) --}}
+    {{-- 3. GROUP KONFIGURASI PENILAIAN --}}
     <li class="sidebar-item">
-        <a class="sidebar-link collapsed" data-bs-target="#configPenilaian" data-bs-toggle="collapse" href="#">
+        <a class="sidebar-link {{ request()->routeIs('admin.kompetensi', 'admin.siklus-semester', 'admin.skema-penilaian', 'admin.pertanyaan') ? '' : 'collapsed' }}" 
+           data-bs-target="#configPenilaian" 
+           data-bs-toggle="collapse" 
+           href="#"
+           aria-expanded="{{ request()->routeIs('admin.kompetensi', 'admin.siklus-semester', 'admin.skema-penilaian', 'admin.pertanyaan') ? 'true' : 'false' }}">
             <i class="bi bi-gear-wide-connected" style="width: 20px;"></i>
             <span class="sidebar-text">Konfigurasi Penilaian</span>
         </a>
+
         <ul id="configPenilaian" class="sidebar-dropdown list-unstyled collapse {{ request()->routeIs('admin.kompetensi', 'admin.siklus-semester', 'admin.skema-penilaian', 'admin.pertanyaan') ? 'show' : '' }}" data-bs-parent="#sidebarNavAccordion">
             
             <li class="sidebar-item">
@@ -96,6 +108,7 @@
         </ul>
     </li>
 
+<<<<<<< Updated upstream
     {{-- 4. GROUP PELAKSANAAN (Proses & Random) --}}
     {{-- Cek apakah salah satu menu anak sedang aktif --}}
     @php
@@ -120,15 +133,39 @@
             <li class="sidebar-item">
                 <a class="sidebar-link {{ request()->routeIs('admin.progress-penilaian') ? 'active' : '' }}" 
                    href="{{ route('admin.progress-penilaian') }}">
+=======
+    {{-- 4. GROUP PELAKSANAAN (YANG DIPERBAIKI) --}}
+    <li class="sidebar-item">
+        {{-- Tambahkan logika active/collapsed di parent menu ini --}}
+        <a class="sidebar-link {{ request()->routeIs('admin.progress-penilaian', 'admin.random-penilai') ? '' : 'collapsed' }}" 
+           data-bs-target="#pelaksanaan" 
+           data-bs-toggle="collapse" 
+           href="#"
+           aria-expanded="{{ request()->routeIs('admin.progress-penilaian', 'admin.random-penilai') ? 'true' : 'false' }}">
+            <i class="bi bi-clipboard-check-fill" style="width: 20px;"></i>
+            <span class="sidebar-text">Pelaksanaan</span>
+        </a>
+
+        {{-- Tambahkan class 'show' jika route sesuai --}}
+        <ul id="pelaksanaan" class="sidebar-dropdown list-unstyled collapse {{ request()->routeIs('admin.progress-penilaian', 'admin.random-penilai') ? 'show' : '' }}" data-bs-parent="#sidebarNavAccordion">
+            
+            <li class="sidebar-item">
+                <a class="sidebar-link {{ request()->routeIs('admin.progress-penilaian') ? 'active' : '' }}" href="{{ route('admin.progress-penilaian') }}">
+>>>>>>> Stashed changes
                     <i class="bi bi-person-check-fill" style="width: 20px;"></i>
                     <span class="sidebar-text">Proses Penilai</span>
                 </a>
             </li>
 
             <li class="sidebar-item">
+<<<<<<< Updated upstream
                 <a class="sidebar-link {{ request()->routeIs('admin.random-penilai') ? 'active' : '' }}" 
                    href="{{ route('admin.random-penilai') }}">
                     <i class="bi bi-shuffle"></i>
+=======
+                <a class="sidebar-link {{ request()->routeIs('admin.random-penilai') ? 'active' : '' }}" href="{{ route('admin.random-penilai') }}">
+                    <i class="bi bi-shuffle" style="width: 20px;"></i>
+>>>>>>> Stashed changes
                     <span class="sidebar-text">Random Penilai</span>
                 </a>
             </li>

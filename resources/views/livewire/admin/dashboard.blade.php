@@ -73,7 +73,7 @@
         </div>
         
         <div class="col-xl-4 col-md-6">
-            <a href="#" class="card shadow-sm border-0 bg-white dashboard-card" style="border-left: 5px solid #dc3545 !important;">
+            <a href="{{ route('admin.progress-penilaian') }}" class="card shadow-sm border-0 bg-white dashboard-card" style="border-left: 5px solid #dc3545 !important;">
                 <div class="card-body d-flex align-items-center justify-content-between p-3">
                     <h5 class="mb-0 text-dark fw-normal">Proses Penilai</h5>
                     <i class="bi bi-bell-fill fs-3 text-secondary"></i>
@@ -82,7 +82,7 @@
         </div>
         
         <div class="col-xl-4 col-md-6">
-            <a href="#" class="card shadow-sm border-0 bg-white dashboard-card" style="border-left: 5px solid #e83e8c !important;">
+            <a href="{{ route('admin.random-penilai') }}" class="card shadow-sm border-0 bg-white dashboard-card" style="border-left: 5px solid #e83e8c !important;">
                 <div class="card-body d-flex align-items-center justify-content-between p-3">
                     <h5 class="mb-0 text-dark fw-normal">Random Penilai</h5>
                     <i class="bi bi-hand-index-thumb-fill fs-3 text-secondary"></i>

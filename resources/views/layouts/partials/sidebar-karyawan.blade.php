@@ -22,12 +22,4 @@
             <span class="sidebar-text">Raport</span>
         </a>
     </li>
-
-    {{-- MENU RANKING --}}
-    <li class="sidebar-item">
-        <a class="sidebar-link" href="javascript:void(0);">
-            <i class="bi bi-trophy-fill"></i>
-            <span class="sidebar-text">Ranking</span>
-        </a>
-    </li>
 </ul>
