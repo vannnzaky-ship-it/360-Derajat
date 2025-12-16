@@ -108,32 +108,6 @@
         </ul>
     </li>
 
-<<<<<<< Updated upstream
-    {{-- 4. GROUP PELAKSANAAN (Proses & Random) --}}
-    {{-- Cek apakah salah satu menu anak sedang aktif --}}
-    @php
-        $isPelaksanaanActive = request()->routeIs('admin.progress-penilaian', 'admin.random-penilai');
-    @endphp
-
-    <li class="sidebar-item">
-        <a class="sidebar-link {{ $isPelaksanaanActive ? '' : 'collapsed' }}" 
-           data-bs-target="#pelaksanaan" 
-           data-bs-toggle="collapse" 
-           href="#"
-           aria-expanded="{{ $isPelaksanaanActive ? 'true' : 'false' }}">
-            <i class="bi bi-clipboard-check-fill" style="width: 20px;"></i>
-            <span class="sidebar-text">Pelaksanaan</span>
-        </a>
-        
-        {{-- Tambahkan class 'show' jika salah satu menu anak aktif --}}
-        <ul id="pelaksanaan" 
-            class="sidebar-dropdown list-unstyled collapse {{ $isPelaksanaanActive ? 'show' : '' }}" 
-            data-bs-parent="#sidebarNavAccordion">
-            
-            <li class="sidebar-item">
-                <a class="sidebar-link {{ request()->routeIs('admin.progress-penilaian') ? 'active' : '' }}" 
-                   href="{{ route('admin.progress-penilaian') }}">
-=======
     {{-- 4. GROUP PELAKSANAAN (YANG DIPERBAIKI) --}}
     <li class="sidebar-item">
         {{-- Tambahkan logika active/collapsed di parent menu ini --}}
@@ -151,21 +125,14 @@
             
             <li class="sidebar-item">
                 <a class="sidebar-link {{ request()->routeIs('admin.progress-penilaian') ? 'active' : '' }}" href="{{ route('admin.progress-penilaian') }}">
->>>>>>> Stashed changes
                     <i class="bi bi-person-check-fill" style="width: 20px;"></i>
                     <span class="sidebar-text">Proses Penilai</span>
                 </a>
             </li>
 
             <li class="sidebar-item">
-<<<<<<< Updated upstream
-                <a class="sidebar-link {{ request()->routeIs('admin.random-penilai') ? 'active' : '' }}" 
-                   href="{{ route('admin.random-penilai') }}">
-                    <i class="bi bi-shuffle"></i>
-=======
                 <a class="sidebar-link {{ request()->routeIs('admin.random-penilai') ? 'active' : '' }}" href="{{ route('admin.random-penilai') }}">
                     <i class="bi bi-shuffle" style="width: 20px;"></i>
->>>>>>> Stashed changes
                     <span class="sidebar-text">Random Penilai</span>
                 </a>
             </li>
