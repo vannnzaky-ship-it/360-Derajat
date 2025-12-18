@@ -6,7 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Siklus;
 use App\Models\User;
-use App\Models\PenilaianAlokasi; // Import wajib
+use App\Models\PenilaianAlokasi; 
 use App\Services\HitungSkorService;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -20,6 +20,11 @@ class RankingPeninjau extends Component
     public function mount($siklusId)
     {
         $this->siklus = Siklus::with('penilaianSession')->findOrFail($siklusId);
+        
+        if (!$this->siklus->penilaianSession) {
+            return redirect()->route('peninjau.dashboard')->with('error', 'Sesi penilaian belum ada.');
+        }
+
         $this->hitungRanking();
     }
 
@@ -36,18 +41,25 @@ class RankingPeninjau extends Component
         $service = new HitungSkorService();
         $tempData = [];
 
+        // --- [CONFIG] BAYESIAN AVERAGE SETTINGS ---
+        // C = Baseline/Nilai Standar (Misal KKM = 70). 
+        // Nilai pegawai yang suaranya sedikit akan ditarik mendekati angka ini.
+        $C = 70; 
+        
+        // m = Minimum Vote (Threshold). 
+        // Berapa suara minimal biar nilainya dianggap murni? (Misal 10 orang).
+        $m = 10; 
+
         foreach ($users as $user) {
             // Filter Search
             if ($this->search && stripos($user->name, $this->search) === false) {
                 continue;
             }
 
-            // Hitung Skor (Multi Jabatan)
             $totalSkor = 0;
             $jumlahJabatan = 0;
-            $skorAkhir = 0;
-            $predikat = 'Belum Dinilai';
-
+            
+            // --- HITUNG SKOR MURNI ---
             if ($user->pegawai && $user->pegawai->jabatans->isNotEmpty()) {
                 foreach ($user->pegawai->jabatans as $jabatan) {
                     $hasil = $service->hitungNilaiAkhir($user->id, $sessionId, $jabatan->id);
@@ -56,38 +68,61 @@ class RankingPeninjau extends Component
                         $jumlahJabatan++;
                     }
                 }
-
-                if ($jumlahJabatan > 0) {
-                    $skorAkhir = round($totalSkor / $jumlahJabatan, 2);
-                    $predikat = $this->getPredikat($skorAkhir);
-                }
             }
 
-            // [BARU] Hitung Jumlah Suara (Validitas)
-            $jumlahSuara = PenilaianAlokasi::where('target_user_id', $user->id)
+            if ($jumlahJabatan > 0) {
+                $skorMurni = round($totalSkor / $jumlahJabatan, 2);
+                $predikat = $this->getPredikat($skorMurni);
+            } else {
+                $skorMurni = 0;
+                $predikat = 'Belum Dinilai';
+            }
+
+            // --- HITUNG JUMLAH PENILAI (v) ---
+            $v = PenilaianAlokasi::where('target_user_id', $user->id)
                             ->where('penilaian_session_id', $sessionId)
                             ->where('status_nilai', 'Sudah')
                             ->count();
+
+            // --- HITUNG SKOR RANKING (BAYESIAN) ---
+            // Rumus: (v / (v+m)) * R + (m / (v+m)) * C
+            if ($v > 0) {
+                $skorRanking = ( ($v / ($v + $m)) * $skorMurni ) + ( ($m / ($v + $m)) * $C );
+            } else {
+                $skorRanking = 0;
+            }
 
             $tempData[] = [
                 'user_id' => $user->id,
                 'nama' => $user->name,
                 'nip' => $user->pegawai->nip ?? '-',
                 'jabatan' => $user->pegawai->jabatans->pluck('nama_jabatan')->implode(', ') ?: '-',
-                'skor_akhir' => $skorAkhir,
-                'skor_raw' => (float) $skorAkhir, 
+                
+                // TAMPILAN DI LAYAR TETAP SKOR MURNI (ASLI)
+                'skor_akhir' => (float) $skorMurni,
+                'skor_raw' => (float) $skorMurni, // Alias untuk kompatibilitas view lama
+                
+                // TAPI URUTAN BERDASARKAN SKOR TERUJI (BAYESIAN)
+                'skor_ranking' => (float) $skorRanking, 
+                
                 'predikat' => $predikat,
-                'total_penilai' => $jumlahSuara, // Data Penting Baru
+                'total_penilai' => (int) $v,
                 'foto' => $user->profile_photo_path ?? null 
             ];
         }
 
-        // [LOGIKA RANKING] Sortir Skor Tinggi -> Suara Terbanyak
+        // --- SORTING BERDASARKAN SKOR RANKING (BAYESIAN) ---
         usort($tempData, function ($a, $b) {
-            if ($a['skor_raw'] == $b['skor_raw']) {
-                return $b['total_penilai'] <=> $a['total_penilai'];
+            // 1. Bandingkan Skor Bayesian (Kualitas Teruji)
+            if (abs($b['skor_ranking'] - $a['skor_ranking']) > 0.001) {
+                return $b['skor_ranking'] <=> $a['skor_ranking'];
             }
-            return $b['skor_raw'] <=> $a['skor_raw'];
+            // 2. Jika Skor Ranking sama, cek Skor Murni
+            if ($b['skor_akhir'] != $a['skor_akhir']) {
+                return $b['skor_akhir'] <=> $a['skor_akhir'];
+            }
+            // 3. Terakhir nama
+            return strcmp($a['nama'], $b['nama']);
         });
 
         $this->dataPegawai = $tempData;
@@ -103,14 +138,16 @@ class RankingPeninjau extends Component
 
     public function updatedSearch() { $this->hitungRanking(); }
 
-    public function exportPdf()
+   public function exportPdf()
     {
         $data = [
-            'siklus' => $this->siklus,
-            'dataPegawai' => $this->dataPegawai, 
+            
+            'siklus' => $this->siklus, 
+            
+            'pegawais' => $this->dataPegawai, 
             'tanggal' => now()->format('d F Y')
         ];
-        // Pastikan view PDF disesuaikan jika ingin menampilkan jumlah penilai
+        
         $pdf = Pdf::loadView('livewire.peninjau.cetak-ranking-pdf', $data)->setPaper('a4', 'landscape');
         return response()->streamDownload(function() use ($pdf) { echo $pdf->output(); }, 'Laporan-Ranking.pdf');
     }
@@ -122,14 +159,13 @@ class RankingPeninjau extends Component
             fputcsv($file, ['RANKING KINERJA PEGAWAI']);
             fputcsv($file, ['Siklus', $this->siklus->tahun_ajaran . ' ' . $this->siklus->semester]);
             fputcsv($file, []);
-            // Header Excel
             fputcsv($file, ['Rank', 'Nama', 'NIP', 'Jabatan', 'Skor Akhir', 'Jml Penilai', 'Predikat']);
 
             foreach ($this->dataPegawai as $index => $row) {
                 fputcsv($file, [
                     $index + 1, $row['nama'], $row['nip'], $row['jabatan'], 
                     $row['skor_akhir'], 
-                    $row['total_penilai'], // Data Baru
+                    $row['total_penilai'],
                     $row['predikat']
                 ]);
             }
