@@ -77,7 +77,8 @@ class RankingPeninjau extends Component
                 'skor_akhir' => $skorAkhir,
                 'skor_raw' => (float) $skorAkhir, 
                 'predikat' => $predikat,
-                'total_penilai' => $jumlahSuara // Data Penting Baru
+                'total_penilai' => $jumlahSuara, // Data Penting Baru
+                'foto' => $user->profile_photo_path ?? null 
             ];
         }
 

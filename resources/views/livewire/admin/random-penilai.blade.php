@@ -35,6 +35,83 @@
             font-weight: 600;
             color: #212529;
         }
+
+        /* 1. Background Card & Putih jadi Hitam Abu */
+        [data-bs-theme="dark"] .bg-white,
+        [data-bs-theme="dark"] .card {
+            background-color: #212529 !important; /* Abu Gelap Standar Bootstrap */
+            border-color: #373b3e !important;      /* Border Abu halus */
+            color: #ffffff !important;
+        }
+
+        /* 2. Background Terang jadi Abu Sedang */
+        [data-bs-theme="dark"] .bg-light {
+            background-color: #2c3034 !important; /* Abu-abu netral */
+            border-color: #373b3e !important;
+            color: #e0e0e0 !important;
+        }
+
+        /* 3. Teks Warna */
+        [data-bs-theme="dark"] .text-dark {
+            color: #ffffff !important;
+        }
+
+        [data-bs-theme="dark"] .text-muted {
+            color: #adb5bd !important; /* Abu terang */
+        }
+
+        /* 4. Input Form & Select */
+        [data-bs-theme="dark"] .form-select,
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .input-group-text {
+            background-color: #2b3035 !important; /* Abu sedikit lebih terang dr card */
+            border-color: #495057 !important;
+            color: #ffffff !important;
+        }
+        
+        /* 5. Fix Jam Digital di Dark Mode */
+        [data-bs-theme="dark"] .live-clock {
+            background: linear-gradient(to right, #2c3034, #212529) !important;
+            border-left-color: #adb5bd !important;
+            border: 1px solid #373b3e;
+        }
+
+        /* 6. Table Dark Mode */
+        [data-bs-theme="dark"] .table {
+            color: #e0e0e0 !important;
+            border-color: #373b3e !important;
+        }
+        [data-bs-theme="dark"] .table thead th {
+            background-color: #2c3034 !important; /* Header tabel abu */
+            color: #adb5bd !important;
+        }
+        [data-bs-theme="dark"] .table tbody td {
+            background-color: #212529 !important; /* Body tabel hitam abu */
+            border-bottom: 1px solid #373b3e !important;
+        }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover {
+            background-color: #2c3034 !important; /* Hover abu */
+        }
+
+        /* 7. Modal Dark Mode */
+        [data-bs-theme="dark"] .modal-content {
+            background-color: #212529 !important;
+            border: 1px solid #495057 !important;
+        }
+        [data-bs-theme="dark"] .modal-header-gold {
+            background-color: #2c3034 !important;
+            border-bottom: 2px solid var(--polkam-gold) !important;
+        }
+        [data-bs-theme="dark"] .detail-label {
+            color: #adb5bd !important;
+        }
+        [data-bs-theme="dark"] .detail-value {
+            color: #ffffff !important;
+        }
+        /* Tombol Close di Modal agar terlihat putih */
+        [data-bs-theme="dark"] .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
     </style>
 
     {{-- HEADER --}}

@@ -84,7 +84,8 @@ class RekapSiklus extends Component
                 'jabatan' => $namaJabatanFull,
                 'skor_akhir' => $skorAkhir,
                 'predikat' => $predikat,
-                'total_penilai' => $jumlahSuara // Data Penting Baru
+                'total_penilai' => $jumlahSuara, // Data Penting Baru
+                'foto' => $peg->user->profile_photo_path ?? null 
             ];
         }
 

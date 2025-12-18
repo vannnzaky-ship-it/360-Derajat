@@ -32,6 +32,91 @@
             background-color: #e0e0e0;
             border-radius: 4px;
         }
+
+
+    /* 1. Background Light jadi Abu Netral */
+        [data-bs-theme="dark"] .bg-light {
+            background-color: #2c3034 !important; /* Abu-abu netral */
+            color: #ffffff !important; 
+            border: 1px solid #373b3e !important; /* Border abu halus */
+        }
+
+        /* 2. Card Background jadi Hitam Abu */
+        [data-bs-theme="dark"] .card {
+            background-color: #212529 !important; /* Abu Gelap Pekat */
+            border-color: #373b3e !important;
+        }
+
+        /* 3. Judul & Teks */
+        [data-bs-theme="dark"] h1, 
+        [data-bs-theme="dark"] h2, 
+        [data-bs-theme="dark"] h3, 
+        [data-bs-theme="dark"] h4, 
+        [data-bs-theme="dark"] h5, 
+        [data-bs-theme="dark"] h6,
+        [data-bs-theme="dark"] .fw-bold {
+            color: #ffffff !important;
+        }
+
+        [data-bs-theme="dark"] .text-muted {
+            color: #adb5bd !important; /* Abu terang standar */
+        }
+        
+        [data-bs-theme="dark"] .text-dark {
+            color: #ffffff !important;
+        }
+        
+        [data-bs-theme="dark"] .bg-white {
+            background-color: #212529 !important;
+        }
+
+        /* 4. List Group / Item List */
+        [data-bs-theme="dark"] .list-group-item {
+            background-color: #212529 !important;
+            border-color: #373b3e !important;
+            color: #ffffff !important;
+        }
+
+        /* 5. Tombol Light di Mode Gelap */
+        [data-bs-theme="dark"] .btn-light,
+        [data-bs-theme="dark"] .btn-outline-secondary {
+            background-color: #2c3034 !important;
+            border-color: #373b3e !important;
+            color: #ffffff !important;
+        }
+        
+        [data-bs-theme="dark"] .btn-light:hover,
+        [data-bs-theme="dark"] .btn-outline-secondary:hover {
+            background-color: #373b3e !important;
+        }
+        
+        /* 6. Tabel di Mode Gelap */
+        [data-bs-theme="dark"] .table {
+            color: #e0e0e0 !important;
+            border-color: #373b3e !important;
+        }
+        [data-bs-theme="dark"] .table td {
+            background-color: #212529 !important;
+            border-bottom: 1px solid #373b3e !important;
+            color: #ffffff !important;
+        }
+
+        /* 7. Dropdown Menu */
+        [data-bs-theme="dark"] .dropdown-menu {
+            background-color: #212529 !important;
+            border: 1px solid #373b3e !important;
+        }
+        [data-bs-theme="dark"] .dropdown-item {
+            color: #e0e0e0 !important;
+        }
+        [data-bs-theme="dark"] .dropdown-item:hover {
+            background-color: #2c3034 !important;
+        }
+
+        /* 8. Chart Text Fix */
+        [data-bs-theme="dark"] text {
+            fill: #adb5bd !important; /* Warna teks chart abu terang */
+        }
     </style>
     
     <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">

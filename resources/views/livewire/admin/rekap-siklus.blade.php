@@ -95,6 +95,85 @@
             display: inline-block;
             font-weight: 600;
         }
+       /* --- DARK MODE FIXES (NEUTRAL BLACK/GREY) --- */
+
+        /* 1. Ubah Kartu Podium jadi Abu Gelap Standar */
+        [data-bs-theme="dark"] .rank-card {
+            background-color: #212529 !important; /* Abu Gelap Pekat */
+            border-color: #373b3e !important;      /* Border Abu Halus */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); /* Shadow lebih kuat di dark mode */
+        }
+
+        /* 2. Warna Teks */
+        [data-bs-theme="dark"] .rank-name {
+            color: #ffffff !important; /* Nama Putih Bersih */
+        }
+
+        [data-bs-theme="dark"] .rank-jabatan {
+            color: #adb5bd !important; /* Jabatan Abu Terang */
+        }
+
+        /* 3. Kotak Skor di Bawah Kartu */
+        [data-bs-theme="dark"] .rank-score-box {
+            background-color: #2c3034 !important; /* Abu Sedikit Lebih Terang */
+            border-top: 1px solid #373b3e !important;
+        }
+
+        [data-bs-theme="dark"] .rank-score-val {
+            color: #ffffff !important; /* Angka Putih */
+        }
+
+        /* 4. Avatar (Bulatan Inisial/Foto) */
+        [data-bs-theme="dark"] .rank-avatar {
+            background-color: #2c3034 !important;
+            border-color: #495057 !important;
+            color: #ffffff !important;
+        }
+
+        /* 5. Perbaikan Tabel & Card Utama */
+        [data-bs-theme="dark"] .card {
+            background-color: #212529 !important;
+            border: 1px solid #373b3e !important;
+        }
+        [data-bs-theme="dark"] .card-header {
+            background-color: #212529 !important;
+            border-bottom: 1px solid #373b3e !important;
+        }
+        [data-bs-theme="dark"] .card-header h6 {
+            color: #ffffff !important;
+        }
+        
+        /* 6. Styling Tabel Netral */
+        [data-bs-theme="dark"] .table {
+            color: #e0e0e0 !important;
+            border-color: #373b3e !important;
+        }
+        [data-bs-theme="dark"] .table thead th {
+            background-color: #2c3034 !important; /* Header Tabel Abu */
+            color: #adb5bd !important;
+        }
+        [data-bs-theme="dark"] .table tbody td {
+            background-color: #212529 !important; /* Body Tabel Hitam/Abu */
+            border-bottom: 1px solid #373b3e !important;
+        }
+        
+        /* 7. Elemen Background Light jadi Abu */
+        [data-bs-theme="dark"] .bg-light {
+            background-color: #2c3034 !important; /* Ubah bg-light jadi abu netral */
+            border-color: #373b3e !important;
+            color: #e0e0e0 !important;
+        }
+        [data-bs-theme="dark"] .bg-white {
+            background-color: #212529 !important;
+        }
+        
+        /* 8. Text Colors */
+        [data-bs-theme="dark"] .text-dark {
+            color: #ffffff !important; /* Paksa text-dark jadi putih */
+        }
+        [data-bs-theme="dark"] .text-secondary {
+            color: #adb5bd !important;
+        }
     </style>
 
     {{-- HEADER --}}
@@ -127,7 +206,21 @@
                 <div class="rank-card rank-card-2">
                     <div class="rank-badge-floating badge-2">2</div>
                     <div class="rank-avatar-box">
-                        <div class="rank-avatar">{{ substr($dataPegawai[1]['nama'], 0, 1) }}</div>
+                        @if(isset($dataPegawai[1]))
+                            <div class="rank-avatar-container">
+                                @if(!empty($dataPegawai[1]['foto']))
+                                    {{-- JIKA ADA FOTO --}}
+                                    <img src="{{ asset('storage/' . $dataPegawai[1]['foto']) }}" 
+                                        class="rank-avatar object-fit-cover rounded-circle" 
+                                        alt="{{ $dataPegawai[1]['nama'] }}">
+                                @else
+                                    {{-- JIKA TIDAK ADA FOTO (Pakai Inisial) --}}
+                                    <div class="rank-avatar d-flex align-items-center justify-content-center">
+                                        {{ substr($dataPegawai[1]['nama'], 0, 1) }}
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                     <div class="rank-name">{{ Str::limit($dataPegawai[1]['nama'], 20) }}</div>
                     <div class="rank-jabatan">{{ Str::limit($dataPegawai[1]['jabatan'], 30) }}</div>
@@ -153,7 +246,22 @@
                 <div class="rank-card rank-card-1">
                     <div class="rank-badge-floating badge-1"><i class="bi bi-trophy-fill"></i></div>
                     <div class="rank-avatar-box">
-                        <div class="rank-avatar">{{ substr($dataPegawai[0]['nama'], 0, 1) }}</div>
+                       {{-- Cek dulu apakah ada data pegawai minimal 1 orang --}}
+                        @if(isset($dataPegawai[0]))
+                            <div class="rank-avatar-container">
+                                @if(!empty($dataPegawai[0]['foto']))
+                                    {{-- JIKA ADA FOTO --}}
+                                    <img src="{{ asset('storage/' . $dataPegawai[0]['foto']) }}" 
+                                        class="rank-avatar object-fit-cover rounded-circle" 
+                                        alt="{{ $dataPegawai[0]['nama'] }}">
+                                @else
+                                    {{-- JIKA TIDAK ADA FOTO (Pakai Inisial) --}}
+                                    <div class="rank-avatar d-flex align-items-center justify-content-center">
+                                        {{ substr($dataPegawai[0]['nama'], 0, 1) }}
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                     <div class="rank-name fs-5">{{ Str::limit($dataPegawai[0]['nama'], 20) }}</div>
                     <div class="rank-jabatan">{{ Str::limit($dataPegawai[0]['jabatan'], 35) }}</div>
@@ -179,7 +287,21 @@
                 <div class="rank-card rank-card-3">
                     <div class="rank-badge-floating badge-3">3</div>
                     <div class="rank-avatar-box">
-                        <div class="rank-avatar">{{ substr($dataPegawai[2]['nama'], 0, 1) }}</div>
+                        @if(isset($dataPegawai[2])) 
+                            <div class="rank-avatar-container">
+                                @if(!empty($dataPegawai[2]['foto']))
+                                    {{-- JIKA ADA FOTO --}}
+                                    <img src="{{ asset('storage/' . $dataPegawai[2]['foto']) }}" 
+                                        class="rank-avatar object-fit-cover rounded-circle" 
+                                        alt="{{ $dataPegawai[2]['nama'] }}">
+                                @else
+                                    {{-- JIKA TIDAK ADA FOTO (Pakai Inisial) --}}
+                                    <div class="rank-avatar d-flex align-items-center justify-content-center">
+                                        {{ substr($dataPegawai[2]['nama'], 0, 1) }}
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                     <div class="rank-name">{{ Str::limit($dataPegawai[2]['nama'], 20) }}</div>
                     <div class="rank-jabatan">{{ Str::limit($dataPegawai[2]['jabatan'], 30) }}</div>

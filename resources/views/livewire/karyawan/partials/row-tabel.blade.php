@@ -12,7 +12,7 @@
                 
                 {{-- PERBAIKAN DI SINI: --}}
                 {{-- Jika menilai ATASAN, kasih tahu user dia menilai sebagai jabatan apa --}}
-                @if($alokasi->sebagai == 'Atasan' && $alokasi->penilaiJabatan)
+                @if($alokasi->sebagai == 'Bawahan' && $alokasi->penilaiJabatan)
                     <div class="small text-danger fst-italic" style="font-size: 0.75rem;">
                         <i class="bi bi-arrow-return-right"></i> 
                         Atasan dari: <strong>{{ $alokasi->penilaiJabatan->nama_jabatan }}</strong>

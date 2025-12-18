@@ -3,6 +3,65 @@
     <style>
         .text-custom { color: #c38e44 !important; }
         .bg-custom { background-color: #c38e44 !important; color: white; }
+        /* --- STYLE TAMBAHAN MODE GELAP (DARK MODE) --- */
+        
+        /* 1. Form Input & Group */
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .input-group-text {
+            background-color: #2b3035 !important; /* Abu-abu gelap */
+            border-color: #373b3e !important;
+            color: #ffffff !important;
+        }
+        
+        /* Placeholder warna abu terang */
+        [data-bs-theme="dark"] ::placeholder {
+            color: #adb5bd !important;
+            opacity: 1;
+        }
+
+        /* 2. Card Background */
+        [data-bs-theme="dark"] .card {
+            background-color: #212529 !important;
+            border-color: #373b3e !important;
+        }
+        
+        [data-bs-theme="dark"] .card-header {
+            background-color: #212529 !important;
+            border-bottom: 1px solid #373b3e !important;
+        }
+
+        /* 3. Teks */
+        [data-bs-theme="dark"] .text-dark { color: #ffffff !important; }
+        [data-bs-theme="dark"] .text-muted { color: #adb5bd !important; }
+        [data-bs-theme="dark"] .text-secondary { color: #adb5bd !important; }
+
+        /* 4. Tabel */
+        [data-bs-theme="dark"] .table {
+            color: #e0e0e0 !important;
+            border-color: #373b3e !important;
+        }
+        [data-bs-theme="dark"] .table tbody td {
+            background-color: #212529 !important;
+            border-bottom: 1px solid #373b3e !important;
+        }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover {
+            background-color: #2c3034 !important;
+        }
+
+        /* 5. Progress Bar Background */
+        [data-bs-theme="dark"] .progress {
+            background-color: #373b3e !important; /* Track progress jadi gelap */
+        }
+
+        /* 6. Tombol */
+        [data-bs-theme="dark"] .btn-outline-secondary {
+            color: #adb5bd !important;
+            border-color: #6c757d !important;
+        }
+        [data-bs-theme="dark"] .btn-outline-secondary:hover {
+            background-color: #373b3e !important;
+            color: #fff !important;
+        }
     </style>
 
     {{-- HEADER --}}
