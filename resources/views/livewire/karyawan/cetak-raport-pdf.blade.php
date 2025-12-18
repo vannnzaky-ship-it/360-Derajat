@@ -17,34 +17,37 @@
         .text-right { text-align: right; }
         .fw-bold { font-weight: bold; }
         
-        .score-box { border: 1px solid #333; padding: 15px; text-align: center; margin-bottom: 20px; width: 200px; margin-left: auto; margin-right: auto; }
-        .score-val { font-size: 32px; font-weight: bold; margin: 10px 0; display: block; }
-        .predikat { background-color: #333; color: #fff; padding: 3px 10px; border-radius: 10px; font-size: 10px; }
+        .score-box { border: 1px solid #333; padding: 15px; text-align: center; margin-bottom: 20px; width: 220px; margin-left: auto; margin-right: auto; }
+        .score-val { font-size: 32px; font-weight: bold; margin: 5px 0; display: block; }
+        .predikat { background-color: #333; color: #fff; padding: 4px 12px; border-radius: 10px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        
+        .ranking-info { margin-top: 10px; font-size: 11px; color: #555; font-style: italic; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>Raport Kinerja 360°</h1>
-        <p>Siklus: {{ $siklus }}</p>
+        <h1>Raport Kinerja Pegawai (360°)</h1>
+        <p>Tahun Ajaran / Semester: {{ $siklus }}</p>
     </div>
 
     {{-- Info Pegawai --}}
     <table class="table-info">
         <tr>
-            <td width="100">Nama Pegawai</td>
+            <td width="120">Nama Pegawai</td>
             <td width="10">:</td>
             <td class="fw-bold">{{ $namaUser }}</td>
         </tr>
         <tr>
-            <td>NIP</td>
+            <td>NIP / ID</td>
             <td>:</td>
             <td>{{ $nipUser }}</td>
         </tr>
         <tr>
-            <td>Jabatan</td>
+            <td>Status Jabatan</td>
             <td>:</td>
-            <td>{{ $jabatanUser }}</td>
+            {{-- MENGGUNAKAN labelJabatan AGAR SINKRON DENGAN PILIHAN DROPDOWN --}}
+            <td class="fw-bold" style="color: #8E652E;">{{ $labelJabatan }}</td>
         </tr>
     </table>
 
@@ -52,44 +55,50 @@
 
     {{-- Kotak Nilai Utama --}}
     <div class="score-box">
-        <div>SKOR AKHIR</div>
-        <span class="score-val">{{ $finalScore }}</span>
+        <div style="font-size: 10px; letter-spacing: 1px;">TOTAL SKOR AKHIR</div>
+        <span class="score-val">{{ number_format($finalScore, 2) }}</span>
         <span class="predikat">{{ $predikat }}</span>
+        
+        {{-- Menampilkan Ranking di PDF --}}
+        <div class="ranking-info">
+            Peringkat: {{ $ranking }} dari {{ $totalPegawai }} Pegawai
+        </div>
     </div>
 
     {{-- Tabel Rincian --}}
-    <h3>Rincian Penilaian</h3>
+    <h3 style="font-size: 14px; border-left: 4px solid #333; padding-left: 10px;">Rincian Penilaian Kompetensi</h3>
     <table class="table-nilai">
         <thead>
             <tr>
                 <th>Kompetensi / Kategori</th>
-                <th width="100" class="text-center">Nilai (0-100)</th>
+                <th width="120" class="text-center">Nilai Rata-rata</th>
             </tr>
         </thead>
         <tbody>
             @foreach($tableData as $kategori => $nilai)
             <tr>
                 <td>{{ $kategori }}</td>
-                <td class="text-center fw-bold">{{ $nilai }}</td>
+                <td class="text-center fw-bold">{{ number_format($nilai, 2) }}</td>
             </tr>
             @endforeach
-            <tr style="background-color: #fafafa;">
-                <td class="text-right fw-bold">RATA-RATA AKHIR</td>
-                <td class="text-center fw-bold">{{ $finalScore }}</td>
+            <tr style="background-color: #f9f9f9;">
+                <td class="text-right fw-bold">SKOR AKHIR (PEMBULATAN)</td>
+                <td class="text-center fw-bold" style="font-size: 14px;">{{ number_format($finalScore, 2) }}</td>
             </tr>
         </tbody>
     </table>
 
-    {{-- Tanda Tangan (Opsional) --}}
-    <br><br>
-    <table style="width: 100%; margin-top: 30px;">
+    <p style="font-size: 10px; color: #777;">* Raport ini dicetak otomatis oleh Sistem Penilaian Kinerja 360°.</p>
+
+    {{-- Tanda Tangan --}}
+    <table style="width: 100%; margin-top: 50px;">
         <tr>
             <td width="60%"></td>
             <td width="40%" class="text-center">
-                <p>Dicetak pada: {{ date('d/m/Y') }}</p>
-                <br><br><br>
-                <p style="text-decoration: underline; font-weight: bold;">{{ $namaUser }}</p>
-                <p>Karyawan</p>
+                <p>Dicetak pada: {{ date('d F Y') }}</p>
+                <br><br><br><br>
+                <p style="text-decoration: underline; font-weight: bold; margin-bottom: 0;">{{ $namaUser }}</p>
+                <p style="margin-top: 2px;">Pegawai Terkait</p>
             </td>
         </tr>
     </table>

@@ -23,24 +23,23 @@ class RandomPenilai extends Component
     public $pilihan_kategori = ['Atasan', 'Bawahan', 'Rekan', 'Diri Sendiri']; 
 
     // Status State
-    public $isSessionExists = false; // Apakah sesi sudah dibuat?
-    public $existingSession = null;  // Data sesi jika ada
-    public $isExpired = false;       // Apakah sudah lewat waktu?
+    public $isSessionExists = false; 
+    public $existingSession = null;  
+    public $isExpired = false;       
     public $isProcessing = false;
 
-    // [BARU] Properti untuk Modal Detail
     public $selectedHistory = null;
 
     protected $rules = [
         'siklus_id' => 'required|exists:siklus,id',
-        'batas_waktu' => 'required|date|after:today',
+        // BERUBAH: Menggunakan after_or_equal agar hari ini bisa dipilih
+        'batas_waktu' => 'required|date|after_or_equal:today',
         'limit_rekan' => 'required|integer|min:1|max:50',
         'pilihan_kategori' => 'required|array|min:1',
     ];
 
     public function mount()
     {
-        // 1. Cari Siklus yang 'Aktif' tapi BELUM punya sesi (Prioritas untuk Generate Baru)
         $freshSiklus = Siklus::where('status', 'Aktif')
             ->whereDoesntHave('penilaianSession')
             ->first();
@@ -48,7 +47,6 @@ class RandomPenilai extends Component
         if ($freshSiklus) {
             $this->siklus_id = $freshSiklus->id;
         } else {
-            // Kalau semua sudah digenerate, ambil sembarang siklus aktif
             $anySiklus = Siklus::where('status', 'Aktif')->first();
             if($anySiklus) $this->siklus_id = $anySiklus->id;
         }
@@ -58,7 +56,6 @@ class RandomPenilai extends Component
 
     public function updatedSiklusId()
     {
-        // Setiap kali dropdown berubah, cek statusnya
         $this->checkSessionStatus();
     }
 
@@ -67,39 +64,26 @@ class RandomPenilai extends Component
         $this->existingSession = PenilaianSession::where('siklus_id', $this->siklus_id)->first();
         
         if ($this->existingSession) {
-            // KONDISI: SUDAH PERNAH DIGENERATE (Data Ada)
             $this->isSessionExists = true;
-            
-            // Cek apakah expired
             $this->isExpired = now() > $this->existingSession->batas_waktu;
-            
-            // Isi variabel tampilan sekedar untuk info (Read Only)
             $this->batas_waktu = \Carbon\Carbon::parse($this->existingSession->batas_waktu)->format('Y-m-d\TH:i');
         } else {
-            // KONDISI: BELUM PERNAH DIGENERATE (Siap Input Baru)
             $this->isSessionExists = false;
             $this->isExpired = false;
-            
-            // Reset form agar bersih untuk input baru
             $this->batas_waktu = null;
             $this->limit_rekan = 5;
             $this->pilihan_kategori = ['Atasan', 'Bawahan', 'Rekan', 'Diri Sendiri'];
         }
     }
 
-    // [BARU] Method untuk Menampilkan Detail di Modal
     public function showDetail($sessionId)
     {
-        // Reset dulu biar bersih
         $this->selectedHistory = null;
-
-        // Ambil data sesi beserta relasi yang dibutuhkan untuk tabel detail
-        // Pastikan Model PenilaianAlokasi punya relasi 'user', 'targetUser', 'targetJabatan'
         $this->selectedHistory = PenilaianSession::with([
             'siklus', 
-            'alokasis.user',           // Penilai
-            'alokasis.targetUser',     // Yang Dinilai
-            'alokasis.targetJabatan'   // Jabatan Yang Dinilai
+            'alokasis.user', 
+            'alokasis.targetUser', 
+            'alokasis.targetJabatan' 
         ])->find($sessionId);
     }
 
@@ -107,16 +91,14 @@ class RandomPenilai extends Component
     {
         $this->validate();
         
-        // Proteksi Ganda: Jangan generate kalau sesi sudah ada
         if ($this->isSessionExists) {
-             session()->flash('error', 'Siklus ini sudah memiliki data penilaian. Silakan pilih siklus lain.'); 
+             session()->flash('error', 'Siklus ini sudah memiliki data penilaian.'); 
              return;
         }
 
         $this->isProcessing = true;
         DB::beginTransaction();
         try {
-            // 1. Buat Sesi Baru
             $session = PenilaianSession::create([
                 'siklus_id' => $this->siklus_id,
                 'tanggal_mulai' => now(),
@@ -125,7 +107,6 @@ class RandomPenilai extends Component
                 'status' => 'Open'
             ]);
 
-            // 2. LOGIKA GENERATE
             $allTargets = Pegawai::with(['user', 'jabatans'])->get();
             $dataAlokasi = [];
 
@@ -133,13 +114,10 @@ class RandomPenilai extends Component
                 if (!$target->user) continue;
 
                 foreach ($target->jabatans as $jabatanTarget) {
-                    
-                    // A. Diri Sendiri
                     if (in_array('Diri Sendiri', $this->pilihan_kategori)) {
                         $this->tambahAlokasi($dataAlokasi, $session->id, $target->user_id, $jabatanTarget->id, $target->user_id, $jabatanTarget->id, 'Diri Sendiri');
                     }
 
-                    // B. ATASAN
                     if (in_array('Atasan', $this->pilihan_kategori) && $jabatanTarget->parent_id) {
                         $atasanList = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('jabatan.id', $jabatanTarget->parent_id);
@@ -155,7 +133,6 @@ class RandomPenilai extends Component
                         }
                     }
 
-                    // C. BAWAHAN
                     if (in_array('Bawahan', $this->pilihan_kategori)) {
                         $bawahanList = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('parent_id', $jabatanTarget->id);
@@ -171,7 +148,6 @@ class RandomPenilai extends Component
                         }
                     }
 
-                    // D. REKAN SEJAWAT
                     if (in_array('Rekan', $this->pilihan_kategori) && $jabatanTarget->parent_id) {
                         $rekanCandidates = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('parent_id', $jabatanTarget->parent_id)
@@ -198,8 +174,8 @@ class RandomPenilai extends Component
             }
 
             DB::commit();
-            $this->checkSessionStatus(); // Refresh status jadi 'Exists'
-            session()->flash('message', "Berhasil! Penilaian untuk siklus ini telah digenerate.");
+            $this->checkSessionStatus();
+            session()->flash('message', "Berhasil Generate!");
 
         } catch (\Exception $e) {
             DB::rollBack();
