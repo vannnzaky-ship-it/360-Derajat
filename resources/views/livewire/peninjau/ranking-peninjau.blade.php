@@ -4,7 +4,7 @@
         .podium-container {
             display: flex;
             justify-content: center;
-            align-items: flex-end; /* Ratakan bawah */
+            align-items: flex-end;
             gap: 25px;
             margin-bottom: 50px;
             padding-top: 20px;
@@ -18,44 +18,27 @@
             text-align: center;
             position: relative;
             padding: 0;
-            overflow: visible; /* Agar avatar bisa keluar dikit jika mau */
+            overflow: visible;
             display: flex;
             flex-direction: column;
             border: 1px solid #f0f0f0;
+            transition: transform 0.3s;
         }
+        .rank-card:hover { transform: translateY(-5px); }
 
-        /* --- UKURAN & POSISI (FIX PENYET) --- */
-        /* Juara 1 (Tengah) */
-        .rank-1-wrapper {
-            order: 2;
-            width: 280px; /* Lebih lebar */
-            z-index: 2;
-        }
+        /* --- UKURAN & POSISI --- */
+        .rank-1-wrapper { order: 2; width: 280px; z-index: 2; }
         .rank-card-1 {
-            min-height: 320px; /* Tinggi proporsional */
-            border-top: 8px solid #FFD700; /* Aksen Emas */
-            transform: scale(1.05); /* Sedikit lebih besar */
+            min-height: 340px;
+            border-top: 8px solid #FFD700;
+            transform: scale(1.05);
         }
 
-        /* Juara 2 (Kiri) */
-        .rank-2-wrapper {
-            order: 1;
-            width: 240px;
-        }
-        .rank-card-2 {
-            min-height: 280px; /* Lebih rendah dari rank 1 */
-            border-top: 8px solid #C0C0C0; /* Aksen Perak */
-        }
+        .rank-2-wrapper { order: 1; width: 240px; }
+        .rank-card-2 { min-height: 300px; border-top: 8px solid #C0C0C0; }
 
-        /* Juara 3 (Kanan) */
-        .rank-3-wrapper {
-            order: 3;
-            width: 240px;
-        }
-        .rank-card-3 {
-            min-height: 260px; /* Paling rendah */
-            border-top: 8px solid #CD7F32; /* Aksen Perunggu */
-        }
+        .rank-3-wrapper { order: 3; width: 240px; }
+        .rank-card-3 { min-height: 280px; border-top: 8px solid #CD7F32; }
 
         /* --- COMPONENTS --- */
         .rank-badge-floating {
@@ -74,8 +57,7 @@
         .badge-3 { background: #CD7F32; border: 3px solid white; }
 
         .rank-avatar-box {
-            margin-top: 35px;
-            margin-bottom: 15px;
+            margin-top: 35px; margin-bottom: 15px;
             display: flex; justify-content: center;
         }
         .rank-avatar {
@@ -87,36 +69,39 @@
             display: flex; align-items: center; justify-content: center;
             border: 2px solid #eee;
         }
-        /* Border warna avatar sesuai juara */
         .rank-1-wrapper .rank-avatar { border-color: #FFD700; color: #b8860b; background-color: #fffbf0; }
-        .rank-2-wrapper .rank-avatar { border-color: #C0C0C0; color: #7f8c8d; }
-        .rank-3-wrapper .rank-avatar { border-color: #CD7F32; color: #a0522d; }
-
+        
         .rank-name { font-size: 1.1rem; font-weight: 700; color: #333; margin-bottom: 5px; padding: 0 15px; }
-        .rank-jabatan { font-size: 0.75rem; color: #888; margin-bottom: 20px; padding: 0 15px; min-height: 30px; }
+        .rank-jabatan { font-size: 0.75rem; color: #888; margin-bottom: 10px; padding: 0 15px; min-height: 30px; }
         
         .rank-score-box {
-            margin-top: auto; /* Dorong ke bawah */
+            margin-top: auto;
             background: #fafafa;
             padding: 15px;
-            border-radius: 0 0 15px 15px; /* Radius bawah mengikuti card */
+            border-radius: 0 0 15px 15px;
             border-top: 1px solid #eee;
         }
         .rank-score-val { font-size: 1.5rem; font-weight: 800; color: #333; }
         .rank-score-lbl { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
 
-        /* Dark Mode */
-        [data-bs-theme="dark"] .rank-card { background: #212529; border-color: #373b3e; }
-        [data-bs-theme="dark"] .rank-name { color: #f8f9fa; }
-        [data-bs-theme="dark"] .rank-score-box { background: #2b3035; border-color: #373b3e; }
-        [data-bs-theme="dark"] .rank-score-val { color: #f8f9fa; }
-        [data-bs-theme="dark"] .rank-avatar { background: #2b3035; }
+        .badge-suara {
+            font-size: 0.75rem;
+            background: rgba(0,0,0,0.04);
+            color: #666;
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            display: inline-block;
+            font-weight: 600;
+        }
     </style>
 
     {{-- HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <a href="{{ route('peninjau.laporan') }}" class="text-decoration-none text-muted small mb-1 d-block"><i class="bi bi-arrow-left"></i> Kembali</a>
+            <a href="{{ route('peninjau.laporan') }}" class="text-decoration-none text-muted small mb-1 d-block">
+                <i class="bi bi-arrow-left"></i> Kembali ke Laporan
+            </a>
             <h2 class="h3 fw-bold text-dark mb-1">Peringkat Kinerja</h2>
             <p class="text-muted mb-0">Periode: <span class="fw-bold" style="color: #c38e44;">{{ $siklus->tahun_ajaran }} {{ $siklus->semester }}</span></p>
         </div>
@@ -131,7 +116,7 @@
         </div>
     </div>
 
-    {{-- 🏆 PODIUM 3 BESAR (STATIK / HANYA TAMPILAN) --}}
+    {{-- 🏆 PODIUM 3 BESAR --}}
     @if(count($dataPegawai) > 0)
         <div class="podium-container">
             
@@ -141,15 +126,20 @@
                 <div class="rank-card rank-card-2">
                     <div class="rank-badge-floating badge-2">2</div>
                     <div class="rank-avatar-box">
-                        <div class="rank-avatar">
-                            {{ substr($dataPegawai[1]['nama'], 0, 1) }}
-                        </div>
+                        <div class="rank-avatar">{{ substr($dataPegawai[1]['nama'], 0, 1) }}</div>
                     </div>
                     <div class="rank-name">{{ Str::limit($dataPegawai[1]['nama'], 20) }}</div>
                     <div class="rank-jabatan">{{ Str::limit($dataPegawai[1]['jabatan'], 30) }}</div>
+                    
+                    {{-- Badge Suara --}}
+                    <div>
+                        <span class="badge-suara">
+                            <i class="bi bi-people-fill me-1"></i> {{ $dataPegawai[1]['total_penilai'] }} Penilai
+                        </span>
+                    </div>
+
                     <div class="rank-score-box">
-                        @php $skor2 = $dataPegawai[1]['skor_akhir'] <= 5 ? $dataPegawai[1]['skor_akhir'] * 20 : $dataPegawai[1]['skor_akhir']; @endphp
-                        <div class="rank-score-val">{{ number_format($skor2, 0) }}</div>
+                        <div class="rank-score-val">{{ number_format($dataPegawai[1]['skor_akhir'], 2) }}</div>
                         <div class="rank-score-lbl">Total Skor</div>
                     </div>
                 </div>
@@ -160,19 +150,22 @@
             @if(isset($dataPegawai[0]))
             <div class="rank-1-wrapper">
                 <div class="rank-card rank-card-1">
-                    <div class="rank-badge-floating badge-1">
-                        <i class="bi bi-trophy-fill" style="font-size: 0.9rem;"></i>
-                    </div>
+                    <div class="rank-badge-floating badge-1"><i class="bi bi-trophy-fill"></i></div>
                     <div class="rank-avatar-box">
-                        <div class="rank-avatar">
-                            {{ substr($dataPegawai[0]['nama'], 0, 1) }}
-                        </div>
+                        <div class="rank-avatar">{{ substr($dataPegawai[0]['nama'], 0, 1) }}</div>
                     </div>
                     <div class="rank-name fs-5">{{ Str::limit($dataPegawai[0]['nama'], 20) }}</div>
                     <div class="rank-jabatan">{{ Str::limit($dataPegawai[0]['jabatan'], 35) }}</div>
+                    
+                    {{-- Badge Suara (Highlighted) --}}
+                    <div>
+                        <span class="badge-suara bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">
+                            <i class="bi bi-people-fill me-1"></i> {{ $dataPegawai[0]['total_penilai'] }} Penilai
+                        </span>
+                    </div>
+
                     <div class="rank-score-box" style="background: #fffdf5;">
-                        @php $skor1 = $dataPegawai[0]['skor_akhir'] <= 5 ? $dataPegawai[0]['skor_akhir'] * 20 : $dataPegawai[0]['skor_akhir']; @endphp
-                        <div class="rank-score-val" style="color: #d4a017;">{{ number_format($skor1, 0) }}</div>
+                        <div class="rank-score-val" style="color: #d4a017;">{{ number_format($dataPegawai[0]['skor_akhir'], 2) }}</div>
                         <div class="rank-score-lbl text-warning">Total Skor</div>
                     </div>
                 </div>
@@ -185,15 +178,20 @@
                 <div class="rank-card rank-card-3">
                     <div class="rank-badge-floating badge-3">3</div>
                     <div class="rank-avatar-box">
-                        <div class="rank-avatar">
-                            {{ substr($dataPegawai[2]['nama'], 0, 1) }}
-                        </div>
+                        <div class="rank-avatar">{{ substr($dataPegawai[2]['nama'], 0, 1) }}</div>
                     </div>
                     <div class="rank-name">{{ Str::limit($dataPegawai[2]['nama'], 20) }}</div>
                     <div class="rank-jabatan">{{ Str::limit($dataPegawai[2]['jabatan'], 30) }}</div>
+
+                    {{-- Badge Suara --}}
+                    <div>
+                        <span class="badge-suara">
+                            <i class="bi bi-people-fill me-1"></i> {{ $dataPegawai[2]['total_penilai'] }} Penilai
+                        </span>
+                    </div>
+
                     <div class="rank-score-box">
-                        @php $skor3 = $dataPegawai[2]['skor_akhir'] <= 5 ? $dataPegawai[2]['skor_akhir'] * 20 : $dataPegawai[2]['skor_akhir']; @endphp
-                        <div class="rank-score-val">{{ number_format($skor3, 0) }}</div>
+                        <div class="rank-score-val">{{ number_format($dataPegawai[2]['skor_akhir'], 2) }}</div>
                         <div class="rank-score-lbl">Total Skor</div>
                     </div>
                 </div>
@@ -217,10 +215,11 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light text-secondary">
                     <tr>
-                        <th class="py-3 text-center ps-4" width="8%">#</th>
+                        <th class="py-3 text-center ps-4" width="5%">#</th>
                         <th class="py-3">Pegawai</th>
                         <th class="py-3">Jabatan</th>
-                        <th class="text-center py-3">Skor</th>
+                        <th class="text-center py-3">Skor Akhir</th>
+                        <th class="text-center py-3">Validitas</th> {{-- Kolom Baru --}}
                         <th class="text-center py-3">Predikat</th>
                         <th class="text-center py-3" width="10%">Detail</th>
                     </tr>
@@ -238,12 +237,20 @@
                                 <div class="small text-muted">{{ $row['nip'] }}</div>
                             </td>
                             <td><span class="text-secondary small">{{ Str::limit($row['jabatan'], 40) }}</span></td>
+                            
+                            {{-- SKOR --}}
                             <td class="text-center">
-                                @php
-                                    $skorTampil = $row['skor_akhir'] <= 5 ? $row['skor_akhir'] * 20 : $row['skor_akhir'];
-                                @endphp
-                                <span class="fw-bold text-dark">{{ number_format($skorTampil, 0) }}</span>
+                                <span class="fw-bold fs-6 text-dark">{{ number_format($row['skor_akhir'], 2) }}</span>
                             </td>
+
+                            {{-- VALIDITAS SUARA --}}
+                            <td class="text-center">
+                                <span class="badge bg-light text-secondary border rounded-pill fw-normal px-3">
+                                    <i class="bi bi-person-check-fill me-1"></i> {{ $row['total_penilai'] }} Suara
+                                </span>
+                            </td>
+
+                            {{-- PREDIKAT --}}
                             <td class="text-center">
                                 @php
                                     $class = match($row['predikat']) {
@@ -255,15 +262,18 @@
                                 @endphp
                                 <span class="badge {{ $class }} rounded-pill fw-normal px-3">{{ $row['predikat'] }}</span>
                             </td>
+
+                            {{-- TOMBOL DETAIL (KHUSUS ROUTE PENINJAU) --}}
                             <td class="text-center">
                                 <a href="{{ route('peninjau.laporan.detail', ['siklusId' => $siklus->id, 'userId' => $row['user_id']]) }}" 
-                                   class="btn btn-sm btn-light border rounded-3 px-3 text-muted" title="Lihat Detail">
+                                   class="btn btn-sm btn-light border rounded-3 px-3 text-muted" 
+                                   title="Lihat Detail Penilaian">
                                     <i class="bi bi-chevron-right"></i>
                                 </a>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center py-5">Data tidak ditemukan.</td></tr>
+                        <tr><td colspan="7" class="text-center py-5">Data tidak ditemukan.</td></tr>
                     @endforelse
                 </tbody>
             </table>

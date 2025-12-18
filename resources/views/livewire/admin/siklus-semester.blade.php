@@ -64,7 +64,7 @@
                                     <span class="badge bg-secondary">Tidak Aktif</span>
                                 @endif
                             </td>
-                            <td class="text-center">
+                           <td class="text-center">
                                 {{-- Tombol Edit (Selalu Ada) --}}
                                 <button class="btn btn-sm btn-outline-primary border-0 me-1" wire:click="edit({{ $siklus->id }})">
                                     <i class="bi bi-pencil-fill"></i>
@@ -72,15 +72,40 @@
 
                                 {{-- LOGIKA TOMBOL HAPUS VS MATA --}}
                                 @if($siklus->penilaianSession)
-                                    {{-- JIKA SUDAH DIPAKAI: Tombol Link ke Halaman Baru --}}
-                                    {{-- Pastikan route 'admin.rekap-siklus' sudah ada di web.php --}}
-                                    <a href="{{ route('admin.rekap-siklus', $siklus->id) }}" 
-                                       class="btn btn-sm btn-info text-white border-0" 
-                                       title="Lihat Rekap Nilai (Halaman Baru)">
-                                        <i class="bi bi-eye-fill"></i>
-                                    </a>
+                                    
+                                    @php
+                                        // Hitung logika waktu di sini
+                                        $batasWaktu = \Carbon\Carbon::parse($siklus->penilaianSession->batas_waktu);
+                                        $isOngoing = now()->lessThan($batasWaktu);
+                                        
+                                        // Format tanggal untuk pesan notifikasi (Contoh: 17 Desember 2025 23:59)
+                                        $tglIndo = $batasWaktu->translatedFormat('d F Y H:i');
+                                    @endphp
+
+                                    @if($isOngoing)
+                                        {{-- KONDISI 1: ADA SESI TAPI BELUM SELESAI --}}
+                                        {{-- Tombol tetap bisa diklik, tapi memunculkan SweetAlert --}}
+                                        <button class="btn btn-sm btn-secondary border-0" 
+                                                onclick="Swal.fire({
+                                                    icon: 'info',
+                                                    title: 'Penilaian Sedang Berjalan',
+                                                    text: 'Hasil rekap baru dapat dilihat setelah batas waktu berakhir pada {{ $tglIndo }} WIB.',
+                                                    confirmButtonColor: '#c38e44',
+                                                    confirmButtonText: 'Mengerti'
+                                                })">
+                                            <i class="bi bi-eye-slash-fill"></i>
+                                        </button>
+                                    @else
+                                        {{-- KONDISI 2: ADA SESI DAN SUDAH SELESAI (LINK AKTIF) --}}
+                                        <a href="{{ route('admin.rekap-siklus', $siklus->id) }}" 
+                                        class="btn btn-sm btn-info text-white border-0" 
+                                        title="Lihat Rekap Nilai">
+                                            <i class="bi bi-eye-fill"></i>
+                                        </a>
+                                    @endif
+
                                 @else
-                                    {{-- JIKA BELUM DIPAKAI: Tombol Hapus --}}
+                                    {{-- KONDISI 3: BELUM ADA SESI (TOMBOL HAPUS) --}}
                                     <button class="btn btn-sm btn-outline-danger border-0" 
                                             title="Hapus" 
                                             wire:click="confirmDelete({{ $siklus->id }})">

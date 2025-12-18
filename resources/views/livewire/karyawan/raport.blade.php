@@ -15,17 +15,16 @@
         .avatar-circle {
             width: 54px;
             height: 54px;
-            background-color: #fdf3e3; /* Warna background muda */
-            color: #C38E44; /* Warna teks emas */
+            background-color: #fdf3e3;
+            color: #C38E44;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 16px; /* Rounded kotak modern */
+            border-radius: 16px;
             font-weight: 700;
             font-size: 1.4rem;
             box-shadow: 0 2px 6px rgba(195, 142, 68, 0.15);
         }
-        /* Custom scrollbar untuk tabel jika panjang */
         .table-responsive::-webkit-scrollbar {
             height: 6px;
         }
@@ -47,6 +46,7 @@
         </div>
 
         <div class="d-flex align-items-center gap-2 bg-white p-2 rounded-pill shadow-sm border">
+             {{-- [PERBAIKAN] Pastikan wire:model.live berfungsi --}}
              <select wire:model.live="selectedSemester" class="form-select form-select-sm border-0 bg-light rounded-pill px-3 py-2" style="width: 220px; font-weight: 500; cursor: pointer;">
                 @foreach ($listSemester as $id => $label)
                     <option value="{{ $id }}">{{ $label }}</option>
@@ -67,7 +67,7 @@
         </div>
     </div>
 
-    {{-- Alert Error (Misal dipaksa cetak saat terkunci) --}}
+    {{-- Alert Error --}}
     @if (session('error'))
         <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-4 mb-4" role="alert">
             <div class="d-flex align-items-center">
@@ -78,6 +78,7 @@
         </div>
     @endif
 
+    {{-- Alert Info --}}
     @if (session('info'))
         <div class="alert alert-info alert-dismissible fade show border-0 shadow-sm rounded-4 mb-4" role="alert">
             <div class="d-flex align-items-center">
@@ -93,10 +94,8 @@
         <div class="d-flex flex-column align-items-center justify-content-center py-5 bg-white rounded-4 shadow-sm text-center" style="min-height: 400px;">
             <div class="bg-light rounded-circle p-4 mb-3">
                 @if($isLocked)
-                    {{-- Ikon Gembok jika Terkunci --}}
                     <i class="bi bi-lock-fill text-warning" style="font-size: 3.5rem;"></i>
                 @else
-                    {{-- Ikon Data Kosong Biasa --}}
                     <i class="bi bi-journal-x text-muted" style="font-size: 3.5rem;"></i>
                 @endif
             </div>
@@ -110,7 +109,7 @@
             @endif
         </div>
     @else
-        {{-- TAMPILAN RAPORT (JIKA DATA ADA & TIDAK TERKUNCI) --}}
+        {{-- TAMPILAN RAPORT --}}
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="card shadow-sm border-0 rounded-4 h-100 bg-white">
@@ -156,7 +155,8 @@
                     <div class="card-body p-4 position-relative z-1 text-center py-5">
                         <h6 class="text-white-50 text-uppercase small fw-bold mb-3 ls-1">Total Nilai Akhir</h6>
                         <div class="d-flex justify-content-center align-items-baseline mb-3">
-                            <h1 class="display-1 fw-bold mb-0" style="text-shadow: 0 4px 8px rgba(0,0,0,0.2);">{{ number_format($finalScore) }}</h1>
+                            {{-- [PERBAIKAN] Gunakan number_format 2 desimal --}}
+                            <h1 class="display-1 fw-bold mb-0" style="text-shadow: 0 4px 8px rgba(0,0,0,0.2);">{{ number_format($finalScore, 2) }}</h1>
                         </div>
                         
                         <div class="inline-block">
@@ -192,7 +192,8 @@
                                         </td>
                                         <td class="px-4 py-3 text-end border-bottom-0">
                                             <span class="badge {{ $nilai < 60 ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success' }} rounded-pill px-3">
-                                                {{ number_format($nilai) }}
+                                                {{-- [PERBAIKAN] Tampilkan 2 desimal --}}
+                                                {{ number_format($nilai, 2) }}
                                             </span>
                                         </td>
                                     </tr>
@@ -215,7 +216,6 @@
     <script>
         let chartInstanceRaport = null; 
 
-        // Fungsi Render Chart (Logika Asli Tetap Sama)
         function renderRaportChart(data) {
             const ctxRaport = document.getElementById('kinerjaChart');
             if (!ctxRaport) return;
@@ -231,18 +231,18 @@
                     datasets: [{
                         label: 'Nilai (0-100)',
                         data: data.scores,
-                        backgroundColor: '#C38E44', // Warna Cokelat Emas Anda
+                        backgroundColor: '#C38E44',
                         borderColor: '#a8793a',
                         borderWidth: 1,
-                        borderRadius: 8, // Sedikit lebih bulat
-                        barPercentage: 0.6, // Ukuran bar proporsional
+                        borderRadius: 8,
+                        barPercentage: 0.6,
                         hoverBackgroundColor: '#8E652E'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    indexAxis: 'y', // Bar Horizontal
+                    indexAxis: 'y',
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -253,7 +253,8 @@
                             bodyFont: { size: 14, family: "'Segoe UI', sans-serif", weight: 'bold' },
                             callbacks: {
                                 label: function(context) {
-                                    return 'Nilai: ' + context.parsed.x;
+                                    // [PERBAIKAN] Tampilkan koma di Tooltip Chart
+                                    return 'Nilai: ' + context.parsed.x.toFixed(2);
                                 }
                             }
                         }
@@ -261,11 +262,8 @@
                     scales: {
                         x: { 
                             beginAtZero: true, 
-                            max: 100, // Memastikan max 100 agar diagram rapi
-                            grid: {
-                                color: '#f3f3f3',
-                                borderDash: [5, 5]
-                            },
+                            max: 100, 
+                            grid: { color: '#f3f3f3', borderDash: [5, 5] },
                             ticks: { font: { size: 11 } }
                         },
                         y: { 
@@ -276,29 +274,29 @@
                             }
                         }
                     },
-                    layout: {
-                        padding: { left: 10, right: 20, top: 20, bottom: 20 }
-                    },
-                    animation: {
-                        duration: 1500,
-                        easing: 'easeOutQuart'
-                    }
+                    layout: { padding: { left: 10, right: 20, top: 20, bottom: 20 } },
+                    animation: { duration: 1500, easing: 'easeOutQuart' }
                 }
             });
         }
 
-        // Listener Livewire (Tetap Sama)
+        // Listener saat Livewire di-init
         document.addEventListener('livewire:initialized', () => {
-            let data = @this.chartData;
-            if (data && data.labels.length > 0) {
+            // [PERBAIKAN] Ambil data langsung dari variabel PHP yang di-pass ke JS
+            let data = @json($chartData); 
+            if (data && data.labels && data.labels.length > 0) {
                 renderRaportChart(data);
             }
         });
 
-        // Update chart saat data berubah
+        // Listener saat Livewire di-update (Ganti Semester)
         document.addEventListener('livewire:updated', () => {
-             let data = @this.chartData;
-             if (data && data.labels.length > 0) {
+             // [PERBAIKAN] Pastikan data ter-refresh
+             // Kita ambil data terbaru via snapshot Livewire
+             let component = Livewire.find(document.querySelector('[wire\\:id]').getAttribute('wire:id'));
+             let data = component.get('chartData');
+
+             if (data && data.labels && data.labels.length > 0) {
                  renderRaportChart(data);
              }
         });

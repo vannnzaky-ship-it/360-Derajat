@@ -6,15 +6,17 @@ use Livewire\Component;
 use App\Models\Siklus;
 use Livewire\Attributes\Layout;
 
-#[Layout('layouts.admin')] // Sesuaikan dengan layout utama Anda
+#[Layout('layouts.admin')]
 class LaporanHasil extends Component
 {
     public function render()
     {
-        // Ambil siklus yang SUDAH memiliki data penilaian
-        $sikluses = Siklus::whereHas('penilaianSession', function($q) {
-            $q->whereHas('alokasis'); 
-        })->orderBy('tahun_ajaran', 'desc')->get();
+        // AMBIL SEMUA SIKLUS YANG PUNYA SESI PENILAIAN
+        // (Tidak perlu filter status 'Closed' lagi, karena kita mau tampilkan semua)
+        $sikluses = Siklus::whereHas('penilaianSession')
+            ->orderBy('tahun_ajaran', 'desc')
+            ->orderBy('semester', 'desc')
+            ->get();
 
         return view('livewire.peninjau.laporan-hasil', [
             'sikluses' => $sikluses

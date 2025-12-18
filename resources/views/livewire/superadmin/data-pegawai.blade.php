@@ -196,7 +196,7 @@
             <div class="card-header py-3 border-bottom-0 d-flex justify-content-between align-items-center">
                  <div class="input-group w-auto">
                       <span class="input-group-text"><i class="bi bi-search"></i></span>
-                     <input wire:model.live.debounce.300ms="search" type="text" class="form-control" placeholder="Cari data pegawai...">
+                      <input wire:model.live.debounce.300ms="search" type="text" class="form-control" placeholder="Cari data pegawai...">
                  </div>
                 <button wire:click="showTambahModal" class="btn btn-success">
                     <i class="bi bi-plus-circle me-1"></i> Tambah Pegawai
@@ -268,6 +268,10 @@
                                 @foreach ($pegawai->user->roles as $role)
                                     <span class="badge rounded-pill badge-role">
                                         {{ $role->label }}
+                                        {{-- Tampilkan bintang kecil jika role Peninjau --}}
+                                        @if($role->name === 'peninjau')
+                                            <i class="bi bi-star-fill text-warning ms-1" style="font-size: 0.6em;"></i>
+                                        @endif
                                     </span>
                                 @endforeach
                             </div>
@@ -472,22 +476,75 @@
                             </div>
                         </div>
 
-                        {{-- Pilih Peran --}}
+                        {{-- Pilih Peran (UPDATED: Indikator Peninjau) --}}
                         <div class="col-12">
                             <label class="form-label-sm opacity-75 mb-1">Role Aplikasi <span class="text-danger">*</span></label>
                             @error('selectedRoles') <div class="text-danger fw-bold" style="font-size: 0.65rem;">{{ $message }}</div> @enderror
 
-                            <div class="d-flex gap-2 flex-wrap">
-                                @foreach ($roleList as $role)
-                                    {{-- Ganti bg-light dengan border --}}
-                                    <div class="form-check form-check-inline border rounded px-2 py-1 m-0 d-flex align-items-center">
-                                        <input class="form-check-input m-0 me-2" type="checkbox" wire:model="selectedRoles" value="{{ $role->id }}" id="sm-role-{{ $role->id }}">
-                                        <label class="form-check-label" for="sm-role-{{ $role->id }}" style="font-size: 0.75rem; cursor: pointer;">
-                                            {{ $role->label }}
-                                        </label>
-                                    </div>
-                                @endforeach
-                            </div>
+{{-- List Role --}}
+<div class="d-flex gap-2 flex-wrap">
+    @foreach ($roleList as $role)
+        @php
+            $isPeninjau = $role->name === 'peninjau';
+            // Cek apakah role ini harus dimatikan (Disabled)
+            $isDisabled = $isPeninjau && $peninjauTakenBy;
+            
+            // Siapkan pesan error untuk JS (dibersihkan dari karakter aneh)
+            $pesanError = "Role Peninjau sudah digunakan oleh akun: " . addslashes($peninjauTakenBy ?? '') . ". Hanya diperbolehkan 1 akun Peninjau.";
+        @endphp
+
+        {{-- 
+            WRAPPER UTAMA
+            Kita gunakan logic PHP sederhana untuk onclick agar tidak merusak HTML
+        --}}
+        <div class="form-check form-check-inline border rounded px-2 py-1 m-0 d-flex align-items-center {{ $isDisabled ? 'bg-secondary bg-opacity-10 border-secondary' : '' }}"
+             @if($isDisabled)
+                style="cursor: not-allowed;"
+                onclick="Swal.fire({
+                    icon: 'warning',
+                    title: 'Akses Dibatasi',
+                    text: '{{ $pesanError }}',
+                    confirmButtonText: 'Mengerti',
+                    confirmButtonColor: '#c38e44'
+                })"
+             @endif
+        >
+            
+            {{-- INPUT CHECKBOX --}}
+            <input class="form-check-input m-0 me-2" 
+                   type="checkbox" 
+                   wire:model="selectedRoles" 
+                   value="{{ $role->id }}" 
+                   id="sm-role-{{ $role->id }}"
+                   {{-- Jika disabled, matikan input & matikan pointer events biar klik tembus ke div wrapper --}}
+                   @if($isDisabled) disabled style="pointer-events: none;" @endif> 
+            
+            {{-- LABEL --}}
+            <label class="form-check-label d-flex align-items-center" 
+                   for="sm-role-{{ $role->id }}" 
+                   style="font-size: 0.75rem; cursor: {{ $isDisabled ? 'not-allowed' : 'pointer' }}; @if($isDisabled) pointer-events: none; @endif">
+                
+                <span class="{{ $isDisabled ? 'text-muted' : '' }}">{{ $role->label }}</span>
+                
+                {{-- INDIKATOR VISUAL --}}
+                @if($isPeninjau)
+                    @if($isDisabled)
+                        {{-- Tampilan Gembok (Sudah ada orang lain) --}}
+                        <span class="badge bg-danger bg-opacity-10 text-danger ms-2" style="font-size: 0.65em;">
+                            <i class="bi bi-lock-fill me-1"></i> {{ Str::limit($peninjauTakenBy, 8) }}
+                        </span>
+                    @else
+                        {{-- Tampilan Bintang (Bisa dipilih) --}}
+                        <i class="bi bi-star-fill text-warning ms-1" 
+                           style="font-size: 0.6rem;" 
+                           data-bs-toggle="tooltip" 
+                           title="Role Spesial: Hanya 1 Orang"></i>
+                    @endif
+                @endif
+            </label>
+        </div>
+    @endforeach
+</div>
                         </div>
 
                     </div>
