@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Siklus;
 use App\Models\User;
+use App\Models\Jabatan; // PENTING: Tambahkan Model Jabatan
 use App\Models\PenilaianSession;
 use App\Models\PenilaianAlokasi;
 use App\Services\HitungSkorService;
@@ -77,6 +78,8 @@ class Raport extends Component
 
         if ($session) {
             $this->deadline = $session->batas_waktu;
+            
+            // Cek Lock System
             if ($this->siklus->status == 'Aktif' && $session->batas_waktu && now() < $session->batas_waktu) {
                 $this->isLocked = true;
                 $this->lockMessage = 'Hasil penilaian periode ini masih berjalan. Raport akan terbuka otomatis setelah batas waktu berakhir.';
@@ -91,20 +94,30 @@ class Raport extends Component
             foreach ($jabatanToProcess as $jId) {
                 $hasil = $service->hitungNilaiAkhir($this->user->id, $session->id, $jId);
                 $rekap = $service->getRekapKompetensi($this->user->id, $session->id, $jId);
-                if (!empty($rekap)) {
+                
+                if (isset($hasil['skor_akhir'])) {
                     $totalNilai += floatval($hasil['skor_akhir']);
                     $countJabatan++;
-                    foreach ($rekap as $nama => $nilai) { $tempKomp[$nama][] = $nilai; }
+                    
+                    if (!empty($rekap)) {
+                        foreach ($rekap as $nama => $nilai) { $tempKomp[$nama][] = $nilai; }
+                    }
                 }
             }
 
             if ($countJabatan > 0) {
                 $this->finalScore = round($totalNilai / $countJabatan, 2);
                 $this->mutu = $this->getPredikat($this->finalScore);
-                foreach ($tempKomp as $nama => $vals) { $this->tableData[$nama] = round(array_sum($vals) / count($vals), 2); }
+                
+                foreach ($tempKomp as $nama => $vals) { 
+                    $this->tableData[$nama] = round(array_sum($vals) / count($vals), 2); 
+                }
+                
                 $this->chartData = ['labels' => array_keys($this->tableData), 'scores' => array_values($this->tableData)];
                 
-                $rankingInfo = $this->calculateRank($this->user->id, $session->id);
+                // UPDATE: Kirim parameter filter jabatan ke fungsi ranking
+                $rankingInfo = $this->calculateRank($this->user->id, $session->id, $this->selectedJabatanId);
+                
                 $this->ranking = $rankingInfo['rank'];
                 $this->totalPegawai = $rankingInfo['total'];
 
@@ -113,31 +126,92 @@ class Raport extends Component
         }
     }
 
-    private function calculateRank($userId, $sessionId) {
+    // --- LOGIKA RANKING BARU (Cross-Department Level & Bayesian) ---
+    private function calculateRank($userId, $sessionId, $jabatanIdFilter = 'all') {
         $service = new HitungSkorService();
-        $targetIds = PenilaianAlokasi::where('penilaian_session_id', $sessionId)->distinct()->pluck('target_user_id');
+        $C = 70; // Baseline
+        $m = 10; // Threshold
+        
+        $targetIds = PenilaianAlokasi::where('penilaian_session_id', $sessionId)
+                        ->distinct()
+                        ->pluck('target_user_id');
+        
+        // Cek Level Target jika filter aktif
+        $targetLevel = null;
+        if ($jabatanIdFilter !== 'all') {
+             $jabatanDipilih = Jabatan::find($jabatanIdFilter);
+             if ($jabatanDipilih) {
+                 $targetLevel = $jabatanDipilih->level;
+             }
+        }
+
         $rankList = [];
+
         foreach ($targetIds as $id) {
             $u = User::find($id);
-            $t = 0; $c = 0;
-            if($u && $u->pegawai) {
+            if (!$u || !$u->pegawai) continue;
+
+            $totalSkor = 0; $jumlahJabatan = 0;
+            
+            if ($jabatanIdFilter !== 'all' && $targetLevel) {
+                // LOGIKA: Cari jabatan setara (Level sama) pada user target
+                $jabatanSetara = $u->pegawai->jabatans->where('level', $targetLevel)->first();
+
+                if (!$jabatanSetara) continue; // Skip jika tidak punya jabatan selevel
+
+                $h = $service->hitungNilaiAkhir($id, $sessionId, $jabatanSetara->id);
+                if (isset($h['skor_akhir']) && $h['skor_akhir'] > 0) {
+                    $totalSkor = floatval($h['skor_akhir']);
+                    $jumlahJabatan = 1;
+                }
+            } else {
+                // LOGIKA: Gabungan (Rata-rata semua jabatan)
                 foreach ($u->pegawai->jabatans as $j) {
                     $h = $service->hitungNilaiAkhir($id, $sessionId, $j->id);
-                    if (isset($h['skor_akhir'])) { $t += floatval($h['skor_akhir']); $c++; }
+                    if (isset($h['skor_akhir']) && $h['skor_akhir'] > 0) { 
+                        $totalSkor += floatval($h['skor_akhir']); 
+                        $jumlahJabatan++; 
+                    }
                 }
             }
-            $score = ($c > 0) ? round($t / $c, 2) : 0;
-            $votes = PenilaianAlokasi::where('target_user_id', $id)->where('penilaian_session_id', $sessionId)->where('status_nilai', 'Sudah')->count();
-            $rankList[] = ['id' => $id, 'skor' => $score, 'suara' => $votes];
+
+            $skorMurni = ($jumlahJabatan > 0) ? round($totalSkor / $jumlahJabatan, 2) : 0;
+            if ($skorMurni <= 0) continue;
+
+            // Hitung Bayesian Score
+            $v = PenilaianAlokasi::where('target_user_id', $id)
+                    ->where('penilaian_session_id', $sessionId)
+                    ->where('status_nilai', 'Sudah')
+                    ->count();
+
+            if ($v > 0) {
+                $skorRanking = ( ($v / ($v + $m)) * $skorMurni ) + ( ($m / ($v + $m)) * $C );
+            } else {
+                $skorRanking = 0;
+            }
+
+            $rankList[] = [
+                'id' => $id, 
+                'nama' => $u->name,
+                'skor_murni' => $skorMurni,
+                'skor_ranking' => $skorRanking
+            ];
         }
-        usort($rankList, fn($a, $b) => ($a['skor'] == $b['skor']) ? $b['suara'] <=> $a['suara'] : $b['skor'] <=> $a['skor']);
+
+        // Sorting (Bayesian -> Murni -> Nama)
+        usort($rankList, function ($a, $b) {
+            if (abs($b['skor_ranking'] - $a['skor_ranking']) > 0.001) return $b['skor_ranking'] <=> $a['skor_ranking'];
+            if (abs($b['skor_murni'] - $a['skor_murni']) > 0.001) return $b['skor_murni'] <=> $a['skor_murni'];
+            return strcmp($a['nama'], $b['nama']);
+        });
+
         foreach ($rankList as $index => $data) {
             if ($data['id'] == $userId) return ['rank' => $index + 1, 'total' => count($rankList)];
         }
+        
         return ['rank' => '-', 'total' => count($rankList)];
     }
 
-    // FIX PDF DOWNLOAD - MENAMBAHKAN PREDIKAT & JABATANUSER
     public function exportPdf()
     {
         if ($this->isLocked || empty($this->tableData)) return;
@@ -146,11 +220,11 @@ class Raport extends Component
             'namaUser' => $this->namaUser,
             'nipUser' => $this->nipUser,
             'jabatanUser' => $this->jabatanUser,
-            'labelJabatan' => $this->label_jabatan, // Untuk keterangan "Raport Sebagai: ..."
+            'labelJabatan' => $this->label_jabatan,
             'tableData' => $this->tableData,
             'finalScore' => $this->finalScore,
             'mutu' => $this->mutu,
-            'predikat' => $this->mutu, // Ditambahkan agar tidak error Undefined Variable $predikat
+            'predikat' => $this->mutu,
             'siklus' => $this->siklus->tahun_ajaran . ' ' . $this->siklus->semester,
             'ranking' => $this->ranking,
             'totalPegawai' => $this->totalPegawai
@@ -184,15 +258,11 @@ class Raport extends Component
         $this->chartData = []; $this->tableData = []; $this->ranking = '-'; $this->finalScore = 0; $this->isLocked = false;
     }
 
-    // Ganti fungsi getLabelJabatanProperty yang lama dengan ini
     public function getLabelJabatanProperty()
     {
         if ($this->selectedJabatanId === 'all') {
-            // Jika pilih semua, gabungkan semua nama jabatan (misal: Ka BAK, Kaprodi, Dosen TIF)
             return $this->user->pegawai->jabatans->pluck('nama_jabatan')->implode(', ') ?: '-';
         }
-
-        // Jika pilih salah satu, cari nama jabatan yang spesifik
         $jbt = $this->listJabatanFull->firstWhere('id', $this->selectedJabatanId);
         return $jbt ? $jbt->nama_jabatan : 'N/A';
     }
