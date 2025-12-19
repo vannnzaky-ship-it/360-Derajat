@@ -15,7 +15,7 @@ class User extends Authenticatable
     // ... (use Notifiable, dll.)
     
 
-    protected $fillable = ['name', 'email', 'password','profile_photo_path'];
+    protected $fillable = ['name', 'email', 'password','profile_photo_path','otp_code','otp_expires_at',];
     
     // Relasi ke Pegawai (Satu User punya satu data Pegawai)
     public function pegawai(): HasOne

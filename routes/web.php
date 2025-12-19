@@ -23,13 +23,16 @@ use App\Livewire\Superadmin\ManajemenJabatan;
 use App\Livewire\Peninjau\LaporanHasil;
 use App\Livewire\Peninjau\RankingPeninjau;
 use App\Livewire\Peninjau\DetailPeninjau;
+use App\Livewire\Auth\ForgotPassword;
+use App\Livewire\Auth\VerifyOtp;
 
 /*
 |--------------------------------------------------------------------------
 | Rute Aplikasi 360 Degree (Struktur Baru)
 |--------------------------------------------------------------------------
 */
-
+Route::get('/lupa-password', ForgotPassword::class)->name('password.request');
+Route::get('/verifikasi-otp', VerifyOtp::class)->name('password.verify');
 // --- RUTE AUTENTIKASI KUSTOM ---
 Route::get('/login', Login360::class)->name('login')->middleware('guest');
 

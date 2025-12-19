@@ -87,7 +87,7 @@
                                 </div>
 
                                 <div class="text-center mt-3">
-                                    <a href="#" class="text-muted text-decoration-none small">
+                                    <a href="{{ route('password.request') }}" class="text-muted text-decoration-none small">
                                         Lupa Password ?
                                     </a>
                                 </div>
