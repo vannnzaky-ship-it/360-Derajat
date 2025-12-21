@@ -31,15 +31,11 @@ class ForgotPassword extends Component
             'otp_expires_at' => Carbon::now()->addMinutes(15),
         ]);
 
-        // 4. Kirim Email
-        try {
-            Mail::to($this->email)->send(new ResetPasswordOtpMail($otp));
-        } catch (\Exception $e) {
-            $this->addError('email', 'Gagal mengirim email. Cek koneksi internet.');
-            return;
-        }
+        // 4. Kirim Email (VERSI DEBUG: TANPA TRY-CATCH)
+        // Biarkan baris ini sendirian agar jika error, layar akan menampilkan pesan error asli
+        Mail::to($this->email)->send(new ResetPasswordOtpMail($otp));
 
-        // 5. Simpan email di session (biar gak perlu ketik ulang di halaman sebelah)
+        // 5. Simpan email di session
         session(['reset_email' => $this->email]);
 
         // 6. Pindah ke halaman Verifikasi
@@ -48,6 +44,7 @@ class ForgotPassword extends Component
 
     public function render()
     {
+        // Pastikan layout sesuai dengan project Anda
         return view('livewire.auth.forgot-password')->layout('layouts.app');
     }
 }
