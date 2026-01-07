@@ -110,7 +110,11 @@
     </style>
 
     <div class="container py-4">
-        <h1 class="h3 mb-3">Manajemen Data Pegawai</h1>
+        
+        {{-- JUDUL DENGAN IKON BARU --}}
+        <h1 class="h3 fw-bold mb-3 text-dark">
+            <i class="bi bi-people-fill me-2" style="color: #C38E44;"></i>Manajemen Data Pegawai
+        </h1>
 
         @if (session()->has('message'))
             <div class="alert alert-success alert-dismissible fade show">
@@ -174,7 +178,7 @@
 
                     {{-- 2. NIP --}}
                     <td class="py-3">
-                        <span class="font-monospace-custom">#{{ $pegawai->nip }}</span>
+                        <span class="font-monospace-custom">{{ $pegawai->nip }}</span>
                     </td>
 
                     {{-- 3. JABATAN --}}
@@ -360,7 +364,7 @@
                                         $pesanError = "Role Peninjau sudah digunakan oleh akun: " . addslashes($peninjauTakenBy ?? '') . ".";
                                     @endphp
                                     <div class="form-check form-check-inline border rounded px-2 py-1 m-0 d-flex align-items-center {{ $isDisabled ? 'bg-secondary bg-opacity-10 border-secondary' : '' }}"
-                                         @if($isDisabled) onclick="Swal.fire({icon: 'warning', title: 'Akses Dibatasi', text: '{{ $pesanError }}', confirmButtonColor: '#c38e44'})" @endif>
+                                       @if($isDisabled) onclick="Swal.fire({icon: 'warning', title: 'Akses Dibatasi', text: '{{ $pesanError }}', confirmButtonColor: '#c38e44'})" @endif>
                                         <input class="form-check-input m-0 me-2" type="checkbox" wire:model="selectedRoles" value="{{ $role->id }}" id="sm-role-{{ $role->id }}" @if($isDisabled) disabled style="pointer-events: none;" @endif> 
                                         <label class="form-check-label d-flex align-items-center" for="sm-role-{{ $role->id }}" style="font-size: 0.75rem; cursor: {{ $isDisabled ? 'not-allowed' : 'pointer' }}; @if($isDisabled) pointer-events: none; @endif">
                                             <span class="{{ $isDisabled ? 'text-muted' : '' }}">{{ $role->label }}</span>
