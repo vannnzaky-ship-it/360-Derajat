@@ -31,6 +31,7 @@ use App\Livewire\Auth\VerifyOtp;
 | Rute Aplikasi 360 Degree (Struktur Baru)
 |--------------------------------------------------------------------------
 */
+Route::get('/info', function() { phpinfo(); });
 Route::get('/lupa-password', ForgotPassword::class)->name('password.request');
 Route::get('/verifikasi-otp', VerifyOtp::class)->name('password.verify');
 // --- RUTE AUTENTIKASI KUSTOM ---

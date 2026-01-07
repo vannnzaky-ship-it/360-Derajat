@@ -5,13 +5,28 @@
         .text-gold { color: var(--primary-gold) !important; }
         .bg-gold { background-color: var(--primary-gold) !important; color: white; }
 
-        /* --- BUTTON FIX (DESKTOP AUTO, MOBILE FULL) --- */
+        /* --- BUTTON FIX --- */
         .btn-responsive { width: 100%; }
         @media (min-width: 768px) {
             .btn-responsive { width: auto !important; }
         }
 
-        /* --- DESKTOP PODIUM --- */
+        /* --- DESKTOP PODIUM (CSS RAMPING) --- */
+        /* INI KUNCI AGAR RAMPING: KITA BATASI LEBARNYA DI TENGAH */
+        .podium-container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-end; 
+            gap: 20px; /* Jarak antar kartu lebih rapat */
+            margin-bottom: 50px; 
+            padding-top: 30px;
+            
+            /* FORCING SLIM LAYOUT */
+            max-width: 900px; /* Batas lebar maksimal agar tidak melar */
+            margin-left: auto; 
+            margin-right: auto;
+        }
+
         .rank-card {
             background: white; border-radius: 15px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center;
@@ -19,9 +34,14 @@
             transition: transform 0.3s; border: 1px solid rgba(0,0,0,0.05);
         }
         .rank-card:hover { transform: translateY(-5px); }
-        .rank-card-1 { min-height: 360px; border-top: 8px solid var(--gold); transform: scale(1.05); z-index: 2; }
-        .rank-card-2 { min-height: 320px; border-top: 8px solid var(--silver); }
-        .rank-card-3 { min-height: 300px; border-top: 8px solid var(--bronze); }
+        
+        .rank-card-1 { min-height: 350px; border-top: 8px solid var(--gold); transform: scale(1.05); z-index: 2; }
+        .rank-card-2 { min-height: 310px; border-top: 8px solid var(--silver); }
+        .rank-card-3 { min-height: 290px; border-top: 8px solid var(--bronze); }
+
+        .rank-1-wrapper { width: 34%; order: 2; } /* Persentase dari max-width 900px */
+        .rank-2-wrapper { width: 32%; order: 1; }
+        .rank-3-wrapper { width: 32%; order: 3; }
 
         .rank-badge-floating {
             width: 45px; height: 45px; border-radius: 50%;
@@ -35,24 +55,21 @@
         .badge-3 { background: var(--bronze); border: 3px solid white; }
 
         .rank-avatar {
-            width: 90px; height: 90px; border-radius: 50%; object-fit: cover;
-            background: #f8f9fa; color: #555; font-size: 2.5rem; font-weight: bold;
+            width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+            background: #f8f9fa; color: #555; font-size: 2rem; font-weight: bold;
             display: flex; align-items: center; justify-content: center;
             border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin: 40px auto 15px auto;
+            margin: 35px auto 10px auto;
         }
-        .rank-name { font-size: 1.1rem; font-weight: 700; color: #333; margin-bottom: 5px; padding: 0 10px; }
-        .rank-jabatan { font-size: 0.8rem; color: #888; margin-bottom: 15px; padding: 0 10px; min-height: 35px; }
-        .badge-suara { font-size: 0.75rem; background: rgba(0,0,0,0.04); color: #666; padding: 5px 12px; border-radius: 20px; margin-bottom: 15px; display: inline-block; font-weight: 600; }
-        .rank-score-box { margin-top: auto; background: #fafafa; padding: 15px; border-radius: 0 0 15px 15px; border-top: 1px solid #eee; }
-        .rank-score-val { font-size: 1.6rem; font-weight: 800; color: #333; }
-        .rank-score-lbl { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
-        .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 25px; margin-bottom: 50px; padding-top: 30px; }
-        .rank-1-wrapper { width: 32%; order: 2; }
-        .rank-2-wrapper { width: 30%; order: 1; }
-        .rank-3-wrapper { width: 30%; order: 3; }
+        .rank-name { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 2px; padding: 0 10px; }
+        .rank-jabatan { font-size: 0.75rem; color: #888; margin-bottom: 10px; padding: 0 10px; min-height: 30px; line-height: 1.2; }
+        .badge-suara { font-size: 0.7rem; background: rgba(0,0,0,0.04); color: #666; padding: 4px 10px; border-radius: 20px; margin-bottom: 10px; display: inline-block; font-weight: 600; }
+        
+        .rank-score-box { margin-top: auto; background: #fafafa; padding: 12px; border-radius: 0 0 15px 15px; border-top: 1px solid #eee; }
+        .rank-score-val { font-size: 1.4rem; font-weight: 800; color: #333; }
+        .rank-score-lbl { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
 
-        /* --- MOBILE LEADERBOARD ITEM (TOP 3) --- */
+        /* --- MOBILE & LIST STYLES --- */
         .leaderboard-item {
             display: flex; align-items: center; background: #fff;
             padding: 15px; margin-bottom: 15px; border-radius: 12px;
@@ -74,7 +91,6 @@
         .m-score-val { font-size: 1.1rem; font-weight: 800; line-height: 1; color: #333; }
         .m-trophy { position: absolute; right: -5px; top: -5px; font-size: 3rem; color: var(--gold); opacity: 0.1; transform: rotate(15deg); pointer-events: none; }
 
-        /* --- MOBILE LIST CARD (FOR ALL OTHER RANKS) --- */
         .mobile-list-card {
             background: #fff; border-radius: 10px; padding: 15px; margin-bottom: 10px;
             border: 1px solid rgba(0,0,0,0.08); display: flex; align-items: center;
@@ -92,6 +108,8 @@
         [data-bs-theme="dark"] .rank-jabatan, [data-bs-theme="dark"] .m-user-jabatan, [data-bs-theme="dark"] .ml-role { color: #adb5bd !important; }
         [data-bs-theme="dark"] .rank-score-box { background-color: #2c3034 !important; border-top: 1px solid #373b3e !important; }
         [data-bs-theme="dark"] .m-rank-1 { background: linear-gradient(to right, rgba(255, 215, 0, 0.1), #212529); }
+        [data-bs-theme="dark"] .card-header, [data-bs-theme="dark"] .table thead { background-color: #2c3034 !important; color: #adb5bd !important; }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover { color: #fff; background-color: rgba(255,255,255,.075); }
     </style>
 
     {{-- HEADER --}}
@@ -100,11 +118,10 @@
             <a href="{{ route('admin.siklus-semester') }}" class="text-decoration-none text-muted small mb-1 d-block">
                 <i class="bi bi-arrow-left"></i> Kembali ke Siklus
             </a>
-            <h2 class="h3 fw-bold text-dark mb-1">Rekap Nilai Kinerja</h2>
+            <h2 class="h3 fw-bold text-dark mb-1">Rekapitulasi Nilai Kinerja</h2>
             <p class="text-muted mb-0">Periode: <span class="fw-bold text-gold">{{ $siklus->tahun_ajaran }} {{ $siklus->semester }}</span></p>
         </div>
         
-        {{-- TOMBOL UNDUH (FIXED: Responsive Width) --}}
         <div class="dropdown btn-responsive">
             <button class="btn btn-white border shadow-sm dropdown-toggle px-4 py-2 rounded-3 text-secondary fw-bold btn-responsive" type="button" data-bs-toggle="dropdown">
                 <i class="bi bi-download me-2"></i> Unduh
@@ -117,12 +134,11 @@
     </div>
 
     {{-- ============================================================ --}}
-    {{-- TAMPILAN 3 BESAR (PODIUM DESKTOP / LIST MOBILE) --}}
+    {{-- TAMPILAN 3 BESAR (PODIUM RAMPING) --}}
     {{-- ============================================================ --}}
     
     @if(count($dataPegawai) > 0)
         
-        {{-- A. DESKTOP: PODIUM --}}
         <div class="d-none d-md-flex podium-container">
             {{-- JUARA 2 --}}
             @if(isset($dataPegawai[1]))
@@ -188,34 +204,21 @@
             @endif
         </div>
 
-        {{-- B. MOBILE: LIST LEADERBOARD (JUARA 1-3) --}}
+        {{-- B. MOBILE LIST (Sama seperti sebelumnya) --}}
         <div class="d-block d-md-none mb-5">
             <h6 class="fw-bold text-muted text-uppercase mb-3 ps-1 small">3 Besar Terbaik</h6>
-            
             @foreach(array_slice($dataPegawai, 0, 3) as $index => $row)
                 @php 
-                    $rank = $index + 1; 
-                    $mClass = 'm-rank-'.$rank; 
-                    $bgClass = 'm-bg-'.$rank;
+                    $rank = $index + 1; $mClass = 'm-rank-'.$rank; $bgClass = 'm-bg-'.$rank;
                 @endphp
                 <div class="leaderboard-item {{ $mClass }}">
                     @if($rank == 1) <i class="bi bi-trophy-fill m-trophy"></i> @endif
-                    
                     <div class="m-rank-number {{ $bgClass }}">{{ $rank }}</div>
-                    
-                    @if(!empty($row['foto']))
-                        <img src="{{ asset('storage/' . $row['foto']) }}" class="m-user-avatar">
-                    @else
-                        <div class="m-user-avatar d-flex align-items-center justify-content-center bg-light text-secondary fw-bold border">
-                            {{ substr($row['nama'], 0, 1) }}
-                        </div>
-                    @endif
-
+                    <div class="m-user-avatar d-flex align-items-center justify-content-center bg-light text-secondary fw-bold border">{{ substr($row['nama'], 0, 1) }}</div>
                     <div class="m-user-info">
                         <div class="m-user-name text-truncate">{{ $row['nama'] }}</div>
                         <div class="m-user-jabatan text-truncate">{{ $row['jabatan'] }}</div>
                     </div>
-
                     <div class="m-score-box">
                         <div class="m-score-val">{{ number_format($row['skor_akhir'], 2) }}</div>
                         <div class="m-score-lbl">SKOR</div>
@@ -226,9 +229,7 @@
 
     @endif
 
-    {{-- ============================================================ --}}
-    {{-- DAFTAR LENGKAP (TABLE DESKTOP / CARD MOBILE) --}}
-    {{-- ============================================================ --}}
+    {{-- TABEL LENGKAP --}}
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden mt-4">
         <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
             <h6 class="mb-0 fw-bold text-dark">Daftar Peringkat Lengkap</h6>
@@ -239,7 +240,6 @@
         </div>
 
         <div class="card-body p-0">
-            {{-- A. TAMPILAN DESKTOP (TABLE) --}}
             <div class="table-responsive d-none d-md-block">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light text-secondary">
@@ -257,9 +257,7 @@
                         @forelse($dataPegawai as $index => $row)
                             <tr>
                                 <td class="text-center ps-4">
-                                    <div class="badge rounded-circle bg-light text-secondary border" style="width: 28px; height: 28px; display:flex; align-items:center; justify-content:center;">
-                                        {{ $index + 1 }}
-                                    </div>
+                                    <div class="badge rounded-circle bg-light text-secondary border" style="width: 28px; height: 28px; display:flex; align-items:center; justify-content:center;">{{ $index + 1 }}</div>
                                 </td>
                                 <td>
                                     <div class="fw-bold text-dark">{{ $row['nama'] }}</div>
@@ -271,9 +269,7 @@
                                     <span class="fw-bold fs-6 text-dark">{{ number_format($skorTampil, 2) }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-light text-secondary border rounded-pill fw-normal px-3">
-                                        <i class="bi bi-person-check-fill me-1"></i> {{ $row['total_penilai'] }} Suara
-                                    </span>
+                                    <span class="badge bg-light text-secondary border rounded-pill fw-normal px-3"><i class="bi bi-person-check-fill me-1"></i> {{ $row['total_penilai'] }} Suara</span>
                                 </td>
                                 <td class="text-center">
                                     @php
@@ -287,10 +283,7 @@
                                     <span class="badge {{ $class }} rounded-pill fw-normal px-3">{{ $row['predikat'] }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <a href="{{ route('admin.detail-nilai', ['siklusId' => $siklus->id, 'userId' => $row['user_id']]) }}" 
-                                       class="btn btn-sm btn-light border rounded-3 px-3 text-muted w-100" title="Lihat Detail">
-                                        <i class="bi bi-chevron-right"></i>
-                                    </a>
+                                    <a href="{{ route('admin.detail-nilai', ['siklusId' => $siklus->id, 'userId' => $row['user_id']]) }}" class="btn btn-sm btn-light border rounded-3 px-3 text-muted w-100"><i class="bi bi-chevron-right"></i></a>
                                 </td>
                             </tr>
                         @empty
@@ -299,24 +292,19 @@
                     </tbody>
                 </table>
             </div>
-
-            {{-- B. TAMPILAN MOBILE (CARD LIST - TANPA SCROLL) --}}
+            
+            {{-- MOBILE CARD LIST --}}
             <div class="d-md-none p-3 bg-light">
                 @forelse($dataPegawai as $index => $row)
                     @php $skorTampil = $row['skor_akhir'] <= 5 ? $row['skor_akhir'] * 20 : $row['skor_akhir']; @endphp
-                    
                     <div class="mobile-list-card" onclick="window.location='{{ route('admin.detail-nilai', ['siklusId' => $siklus->id, 'userId' => $row['user_id']]) }}'" style="cursor: pointer;">
                         <div class="ml-rank">{{ $index + 1 }}</div>
                         <div class="ml-info">
                             <div class="ml-name text-truncate">{{ $row['nama'] }}</div>
                             <div class="ml-role text-truncate">{{ Str::limit($row['jabatan'], 30) }}</div>
                             <div class="d-flex align-items-center gap-2 mt-1">
-                                <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.65rem;">
-                                    {{ $row['total_penilai'] }} Suara
-                                </span>
-                                <span class="badge bg-light text-dark border fw-normal" style="font-size: 0.65rem;">
-                                    {{ $row['predikat'] }}
-                                </span>
+                                <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.65rem;">{{ $row['total_penilai'] }} Suara</span>
+                                <span class="badge bg-light text-dark border fw-normal" style="font-size: 0.65rem;">{{ $row['predikat'] }}</span>
                             </div>
                         </div>
                         <div class="text-end">

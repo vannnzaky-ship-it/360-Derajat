@@ -10,6 +10,13 @@ use App\Models\PenilaianAlokasi;
 use App\Services\HitungSkorService;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+
 #[Layout('layouts.admin')]
 class RekapSiklus extends Component
 {
@@ -28,9 +35,8 @@ class RekapSiklus extends Component
         $this->loadData();
     }
 
- public function loadData()
+    public function loadData()
     {
-        // 1. Ambil Pegawai
         $pegawais = Pegawai::with(['user', 'jabatans'])
             ->whereHas('user', function($q) {
                 $q->where('name', 'like', '%'.$this->search.'%');
@@ -42,21 +48,13 @@ class RekapSiklus extends Component
         $service = new HitungSkorService();
         $tempData = []; 
 
-        // --- [CONFIG] BAYESIAN AVERAGE SETTINGS ---
-        // C = Baseline/Nilai Standar (Misal KKM = 70). 
-        // Nilai pegawai yang suaranya sedikit akan ditarik mendekati angka ini.
-        $C = 70; 
-        
-        // m = Minimum Vote (Threshold). 
-        // Berapa suara minimal biar nilainya dianggap murni? (Misal 10 orang).
-        $m = 10; 
+        $C = 70; // Baseline
+        $m = 10; // Threshold
 
         foreach ($pegawais as $peg) {
             if(!$peg->user) continue;
             
             $namaJabatanFull = $peg->jabatans->pluck('nama_jabatan')->implode(', ');
-            
-            // --- HITUNG SKOR MURNI (RATA-RATA) ---
             $totalSkor = 0;
             $jumlahJabatan = 0;
 
@@ -76,49 +74,39 @@ class RekapSiklus extends Component
                 $predikat = 'Belum Dinilai';
             }
 
-            // --- AMBIL JUMLAH SUARA (v) ---
             $v = PenilaianAlokasi::where('target_user_id', $peg->user->id)
                             ->where('penilaian_session_id', $sessionId)
                             ->where('status_nilai', 'Sudah')
                             ->count();
 
-            // --- HITUNG SKOR RANKING (RUMUS BAYESIAN) ---
-            // Rumus: (v / (v+m)) * R + (m / (v+m)) * C
             if ($v > 0) {
                 $skorRanking = ( ($v / ($v + $m)) * $skorMurni ) + ( ($m / ($v + $m)) * $C );
             } else {
                 $skorRanking = 0;
             }
 
+            // (VALIDITAS DIHAPUS DARI SINI)
+
             $tempData[] = [
                 'user_id' => $peg->user->id,
                 'nip' => $peg->nip,
                 'nama' => $peg->user->name,
                 'jabatan' => $namaJabatanFull,
-                
-                // TAMPILAN DI LAYAR TETAP SKOR MURNI (ASLI)
                 'skor_akhir' => (float) $skorMurni, 
-                
-                // TAPI URUTAN BERDASARKAN SKOR TERUJI (BAYESIAN)
                 'skor_ranking' => (float) $skorRanking, 
-                
                 'predikat' => $predikat,
                 'total_penilai' => (int) $v,
                 'foto' => $peg->user->profile_photo_path ?? null 
             ];
         }
 
-        // --- SORTING BERDASARKAN SKOR RANKING (BAYESIAN) ---
         usort($tempData, function ($a, $b) {
-            // 1. Bandingkan Skor Bayesian (Kualitas Teruji)
             if (abs($b['skor_ranking'] - $a['skor_ranking']) > 0.001) {
                 return $b['skor_ranking'] <=> $a['skor_ranking'];
             }
-            // 2. Jika Skor Ranking sama, cek Skor Murni
             if ($b['skor_akhir'] != $a['skor_akhir']) {
                 return $b['skor_akhir'] <=> $a['skor_akhir'];
             }
-            // 3. Terakhir nama
             return strcmp($a['nama'], $b['nama']);
         });
 
@@ -133,58 +121,128 @@ class RekapSiklus extends Component
         return 'Belum Dinilai';
     }
 
-    public function updatedSearch()
-    {
-        $this->loadData();
-    }
+    public function updatedSearch() { $this->loadData(); }
 
-    // EXPORT PDF
     public function exportPdf()
     {
+        $pathLogo = public_path('images/logo-polkam.png');
+        $logoBase64 = null;
+        if (file_exists($pathLogo)) {
+            try {
+                $type = pathinfo($pathLogo, PATHINFO_EXTENSION);
+                $data = file_get_contents($pathLogo);
+                $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            } catch (\Exception $e) {}
+        }
+
         $data = [
-            'siklus' => $this->siklus->tahun_ajaran . ' ' . $this->siklus->semester,
-            'pegawais' => $this->dataPegawai
+            'siklus' => $this->siklus,
+            'pegawais' => $this->dataPegawai,
+            'tanggal' => now()->translatedFormat('d F Y'),
+            'logoBase64' => $logoBase64
         ];
         
-        $pdf = Pdf::loadView('livewire.admin.cetak-rekap-siklus', $data);
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->output();
-        }, 'Ranking-Nilai-'.$this->siklus->tahun_ajaran.'.pdf');
+        $pdf = Pdf::loadView('livewire.admin.cetak-rekap-siklus', $data)->setPaper('a4', 'landscape');
+        return response()->streamDownload(function () use ($pdf) { echo $pdf->output(); }, 'Rekap-Siklus-'.$this->siklus->tahun_ajaran.'.pdf');
     }
 
-    // EXPORT EXCEL
     public function exportExcel()
     {
-        $data = $this->dataPegawai;
-        $siklusName = $this->siklus->tahun_ajaran . '-' . $this->siklus->semester;
-        $fileName = 'Ranking-Nilai-' . $siklusName . '.csv';
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Rekap Siklus');
 
-        return response()->streamDownload(function () use ($data, $siklusName) {
-            $file = fopen('php://output', 'w');
+        // LOGO
+        $pathLogo = public_path('images/logo-polkam.png');
+        if (file_exists($pathLogo)) {
+            $drawing = new Drawing();
+            $drawing->setName('Logo');
+            $drawing->setPath($pathLogo);
+            $drawing->setHeight(60);
+            $drawing->setCoordinates('A1');
+            $drawing->setOffsetX(5);
+            $drawing->setOffsetY(5);
+            $drawing->setWorksheet($sheet);
+        }
+
+        // HEADER (Dikembalikan ke lebar G)
+        $sheet->mergeCells('B1:G1'); $sheet->setCellValue('B1', 'POLITEKNIK KAMPAR');
+        $sheet->getStyle('B1')->getFont()->setBold(true)->setSize(16);
+        $sheet->getStyle('B1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->mergeCells('B2:G2'); $sheet->setCellValue('B2', 'REKAPITULASI HASIL EVALUASI 360 DERAJAT');
+        $sheet->getStyle('B2')->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle('B2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->mergeCells('B3:G3'); $sheet->setCellValue('B3', 'Periode: ' . $this->siklus->tahun_ajaran . ' ' . $this->siklus->semester);
+        $sheet->getStyle('B3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // HEADER TABEL (TANPA VALIDITAS)
+        $row = 5;
+        $headers = ['RANK', 'NAMA PEGAWAI', 'NIP / NIK', 'JABATAN', 'TOTAL PENILAI', 'SKOR AKHIR', 'PREDIKAT'];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col.$row, $h);
+            $col++;
+        }
+        
+        // Style Header
+        $sheet->getStyle("A$row:G$row")->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFFFFFF'));
+        $sheet->getStyle("A$row:G$row")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFC38E44');
+        $sheet->getStyle("A$row:G$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // ISI DATA
+        $row++;
+        $startData = $row;
+        foreach ($this->dataPegawai as $index => $d) {
+            $sheet->setCellValue('A'.$row, $index + 1);
+            $sheet->setCellValue('B'.$row, $d['nama']);
+            $sheet->setCellValue('C'.$row, $d['nip']);
+            $sheet->setCellValue('D'.$row, $d['jabatan']);
+            $sheet->setCellValue('E'.$row, $d['total_penilai']);
+            $sheet->setCellValue('F'.$row, $d['skor_akhir']);
+            $sheet->setCellValue('G'.$row, $d['predikat']);
             
-            fputcsv($file, ['PERINGKAT KINERJA PEGAWAI']);
-            fputcsv($file, ['Siklus', $siklusName]);
-            fputcsv($file, []); 
+            $sheet->getStyle("A$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("E$row:G$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            
+            $row++;
+        }
+        $endData = $row - 1;
 
-            fputcsv($file, ['Peringkat', 'NIP', 'Nama Pegawai', 'Jabatan', 'Skor Akhir', 'Jml Penilai', 'Predikat']);
+        $sheet->getStyle("A".($startData-1).":G$endData")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
-            foreach ($data as $index => $row) {
-                fputcsv($file, [
-                    $index + 1,
-                    $row['nip'],
-                    $row['nama'],
-                    $row['jabatan'], 
-                    $row['skor_akhir'],
-                    $row['total_penilai'],
-                    $row['predikat']
-                ]);
-            }
-            fclose($file);
-        }, $fileName);
+        foreach(range('A','G') as $colID) {
+            $sheet->getColumnDimension($colID)->setAutoSize(true);
+        }
+
+        // TANDA TANGAN
+        $ttdRow = $row + 3;
+        $sheet->setCellValue('B'.$ttdRow, 'Mengetahui,');
+        $sheet->setCellValue('F'.$ttdRow, 'Bangkinang, ' . now()->translatedFormat('d F Y')); // Geser ke F/G agar pas
+        $sheet->getStyle('B'.$ttdRow.':F'.$ttdRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        
+        $ttdRow++;
+        $sheet->setCellValue('B'.$ttdRow, 'Wakil Direktur I');
+        $sheet->setCellValue('F'.$ttdRow, 'Ka. BPM');
+        $sheet->getStyle('B'.$ttdRow.':F'.$ttdRow)->getFont()->setBold(true);
+        $sheet->getStyle('B'.$ttdRow.':F'.$ttdRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $ttdRow += 5;
+        $sheet->setCellValue('B'.$ttdRow, '(....................................)');
+        $sheet->setCellValue('F'.$ttdRow, '(....................................)');
+        $ttdRow++;
+        $sheet->setCellValue('B'.$ttdRow, 'NIP: .......................');
+        $sheet->setCellValue('F'.$ttdRow, 'NRP: .......................');
+        $sheet->getStyle('B'.($ttdRow-1).':F'.$ttdRow)->getFont()->setBold(true);
+        $sheet->getStyle('B'.($ttdRow-1).':F'.$ttdRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->setPreCalculateFormulas(false);
+            $writer->save('php://output');
+        }, 'Rekap-Siklus-' . $this->siklus->tahun_ajaran . '.xlsx');
     }
 
-    public function render()
-    {
-        return view('livewire.admin.rekap-siklus');
-    }
+    public function render() { return view('livewire.admin.rekap-siklus'); }
 }
