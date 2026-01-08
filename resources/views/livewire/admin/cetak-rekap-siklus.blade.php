@@ -47,7 +47,7 @@
                 <table class="inner-meta" width="100%">
                     <tr><td width="30%">Periode</td><td>: {{ $siklus->tahun_ajaran ?? '-' }} {{ $siklus->semester ?? '' }}</td></tr>
                     <tr><td>Tanggal</td><td>: {{ $tanggal }}</td></tr>
-                    <tr><td>Halaman</td><td>: 1 dari 1</td></tr>
+                    <tr><td>Halaman</td><td>: </td></tr>
                 </table>
             </td>
         </tr>
@@ -64,8 +64,8 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th width="5%">No</th>
-                <th width="15%">NIP/NIK</th>
+                <th width="5%">Rank</th>
+                <th width="15%">NRP</th>
                 <th>Nama Pegawai</th>
                 <th>Jabatan</th>
                 <th width="10%">Penilai</th>
@@ -110,7 +110,7 @@
         <tr>
             <td>
                 <span class="ttd-name">(....................................)</span>
-                <span style="font-size: 10pt;">NIP/NRP: .......................</span>
+                <span style="font-size: 10pt;">NRP: .......................</span>
             </td>
             <td>
                 <span class="ttd-name">(....................................)</span>

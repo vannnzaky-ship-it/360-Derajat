@@ -85,8 +85,6 @@ class RekapSiklus extends Component
                 $skorRanking = 0;
             }
 
-            // (VALIDITAS DIHAPUS DARI SINI)
-
             $tempData[] = [
                 'user_id' => $peg->user->id,
                 'nip' => $peg->nip,
@@ -123,6 +121,15 @@ class RekapSiklus extends Component
 
     public function updatedSearch() { $this->loadData(); }
 
+    // --- FUNGSI HELPER NAMA FILE (PENTING AGAR TIDAK ERROR) ---
+    private function getSafeFilename($ext) {
+        // Ganti '/' dengan '-' agar tidak dianggap folder
+        $tahunBersih = str_replace(['/', '\\'], '-', $this->siklus->tahun_ajaran);
+        $semester = $this->siklus->semester;
+        return "Rekap-Siklus-{$tahunBersih}-{$semester}.{$ext}";
+    }
+
+    // --- EXPORT PDF ---
     public function exportPdf()
     {
         $pathLogo = public_path('images/logo-polkam.png');
@@ -143,9 +150,14 @@ class RekapSiklus extends Component
         ];
         
         $pdf = Pdf::loadView('livewire.admin.cetak-rekap-siklus', $data)->setPaper('a4', 'landscape');
-        return response()->streamDownload(function () use ($pdf) { echo $pdf->output(); }, 'Rekap-Siklus-'.$this->siklus->tahun_ajaran.'.pdf');
+        
+        // GUNAKAN NAMA FILE AMAN
+        return response()->streamDownload(function () use ($pdf) { 
+            echo $pdf->output(); 
+        }, $this->getSafeFilename('pdf'));
     }
 
+    // --- EXPORT EXCEL ---
     public function exportExcel()
     {
         $spreadsheet = new Spreadsheet();
@@ -165,7 +177,7 @@ class RekapSiklus extends Component
             $drawing->setWorksheet($sheet);
         }
 
-        // HEADER (Dikembalikan ke lebar G)
+        // HEADER
         $sheet->mergeCells('B1:G1'); $sheet->setCellValue('B1', 'POLITEKNIK KAMPAR');
         $sheet->getStyle('B1')->getFont()->setBold(true)->setSize(16);
         $sheet->getStyle('B1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -177,7 +189,7 @@ class RekapSiklus extends Component
         $sheet->mergeCells('B3:G3'); $sheet->setCellValue('B3', 'Periode: ' . $this->siklus->tahun_ajaran . ' ' . $this->siklus->semester);
         $sheet->getStyle('B3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        // HEADER TABEL (TANPA VALIDITAS)
+        // HEADER TABEL
         $row = 5;
         $headers = ['RANK', 'NAMA PEGAWAI', 'NIP / NIK', 'JABATAN', 'TOTAL PENILAI', 'SKOR AKHIR', 'PREDIKAT'];
         $col = 'A';
@@ -219,7 +231,7 @@ class RekapSiklus extends Component
         // TANDA TANGAN
         $ttdRow = $row + 3;
         $sheet->setCellValue('B'.$ttdRow, 'Mengetahui,');
-        $sheet->setCellValue('F'.$ttdRow, 'Bangkinang, ' . now()->translatedFormat('d F Y')); // Geser ke F/G agar pas
+        $sheet->setCellValue('F'.$ttdRow, 'Bangkinang, ' . now()->translatedFormat('d F Y'));
         $sheet->getStyle('B'.$ttdRow.':F'.$ttdRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         
         $ttdRow++;
@@ -232,16 +244,17 @@ class RekapSiklus extends Component
         $sheet->setCellValue('B'.$ttdRow, '(....................................)');
         $sheet->setCellValue('F'.$ttdRow, '(....................................)');
         $ttdRow++;
-        $sheet->setCellValue('B'.$ttdRow, 'NIP: .......................');
+        $sheet->setCellValue('B'.$ttdRow, 'NRP: .......................');
         $sheet->setCellValue('F'.$ttdRow, 'NRP: .......................');
         $sheet->getStyle('B'.($ttdRow-1).':F'.$ttdRow)->getFont()->setBold(true);
         $sheet->getStyle('B'.($ttdRow-1).':F'.$ttdRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
+        // GUNAKAN NAMA FILE AMAN
         return response()->streamDownload(function () use ($spreadsheet) {
             $writer = new Xlsx($spreadsheet);
             $writer->setPreCalculateFormulas(false);
             $writer->save('php://output');
-        }, 'Rekap-Siklus-' . $this->siklus->tahun_ajaran . '.xlsx');
+        }, $this->getSafeFilename('xlsx'));
     }
 
     public function render() { return view('livewire.admin.rekap-siklus'); }

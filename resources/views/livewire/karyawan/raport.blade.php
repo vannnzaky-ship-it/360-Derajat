@@ -81,7 +81,7 @@
                             <div class="small mt-1">
                                 <div class="d-flex flex-wrap gap-3">
                                     {{-- Bagian NIP --}}
-                                    <span class="text-muted"><i class="bi bi-upc-scan me-1"></i> NIP: {{ $nipUser }}</span>
+                                    <span class="text-muted"><i class="bi bi-upc-scan me-1"></i> NRP: {{ $nipUser }}</span>
                                     
                                     <span class="text-muted">|</span>
 

@@ -98,22 +98,49 @@ class ProgressPenilaian extends Component
     // --- FUNGSI DOWNLOAD PDF ---
     public function downloadPdf()
     {
-        $this->loadData(); // Load data terbaru
+        // 1. Load Data Terbaru
+        $this->loadData(); 
 
         if (empty($this->dataProgress)) {
             session()->flash('error', 'Tidak ada data untuk diunduh.');
             return;
         }
 
-        // Load view dari folder: resources/views/livewire/admin/pdf-progress.blade.php
-        $pdf = Pdf::loadView('livewire.admin.pdf-progress', [
+        // 2. Siapkan Logo Base64
+        $pathLogo = public_path('images/logo-polkam.png');
+        $logoBase64 = null;
+        if (file_exists($pathLogo)) {
+            try {
+                $type = pathinfo($pathLogo, PATHINFO_EXTENSION);
+                $data = file_get_contents($pathLogo);
+                $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            } catch (\Exception $e) {}
+        }
+
+        // 3. Format Nama File: Laporan Progress - Tanggal - Tahun Semester
+        $tanggalStr = date('d-m-Y');
+        $siklusStr = $this->activeSiklus 
+            ? $this->activeSiklus->tahun_ajaran . '-' . $this->activeSiklus->semester 
+            : 'Siklus-NA';
+        
+        // Bersihkan nama file dari spasi atau karakter miring agar aman didownload
+        $siklusClean = str_replace([' ', '/'], '-', $siklusStr); 
+        $filename = "Laporan-Progress-{$tanggalStr}-{$siklusClean}.pdf";
+
+        // 4. Data untuk View
+        $pdfData = [
             'data' => $this->dataProgress,
-            'siklus' => $this->activeSiklus
-        ])->setPaper('a4', 'portrait');
+            'siklus' => $this->activeSiklus,
+            'logoBase64' => $logoBase64,
+            // Tambahkan Waktu Cetak (Format Indonesia)
+            'waktu_cetak' => now()->translatedFormat('d F Y, H:i') . ' WIB' 
+        ];
+
+        $pdf = Pdf::loadView('livewire.admin.pdf-progress', $pdfData)->setPaper('a4', 'portrait');
 
         return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->stream();
-        }, 'Laporan-Progress-' . date('d-m-Y') . '.pdf');
+            echo $pdf->output();
+        }, $filename);
     }
 
     public function render()

@@ -16,12 +16,16 @@ class SiklusSemester extends Component
 
     public $search = '';
 
-    // Properti Form
     public $siklusId = null;
     public $isEditMode = false;
     public $showModal = false;
 
-    #[Rule('required|digits:4|integer|min:2020|max:2099', message: 'Tahun ajaran wajib format 4 digit.')]
+    // [UBAH] Rule validasi disesuaikan untuk format string "202X/202Y"
+    // Regex: 4 digit angka, garis miring, 4 digit angka. Contoh: 2025/2026
+    #[Rule(['required', 'string', 'regex:/^\d{4}\/\d{4}$/'], message: [
+        'required' => 'Tahun ajaran wajib diisi.',
+        'regex' => 'Format wajib TAHUN/TAHUN (Contoh: 2025/2026).'
+    ])]
     public $tahun_ajaran = '';
 
     #[Rule('required|in:Ganjil,Genap', message: 'Semester wajib dipilih.')]
@@ -29,8 +33,6 @@ class SiklusSemester extends Component
 
     #[Rule('required|in:Aktif,Tidak Aktif', message: 'Status wajib dipilih.')]
     public $status = 'Tidak Aktif';
-
-    // --- (HAPUS SEMUA VARIABEL REKAP DATA & MODAL DISINI) ---
 
     public function saveSiklus()
     {
@@ -86,7 +88,12 @@ class SiklusSemester extends Component
     public function showTambahModal()
     {
         $this->resetForm();
-        $this->tahun_ajaran = date('Y');
+        
+        // [UBAH] Default tahun otomatis: TahunIni / TahunDepan
+        $now = date('Y');
+        $next = $now + 1;
+        $this->tahun_ajaran = "$now/$next"; // Contoh: 2025/2026
+        
         $this->semester = 'Ganjil';
         $this->status = 'Tidak Aktif';
         $this->isEditMode = false;
@@ -105,12 +112,10 @@ class SiklusSemester extends Component
     {
         $siklus = Siklus::find($this->siklusId);
         if ($siklus) {
-            // Validasi: Tidak boleh hapus jika sudah dipakai Random Penilai
             if ($siklus->penilaianSession()->exists()) {
                 session()->flash('error', 'Gagal hapus! Siklus ini sudah digunakan untuk penilaian.');
                 return;
             }
-            // Validasi: Tidak boleh hapus yang Aktif
             if ($siklus->status == 'Aktif') {
                  session()->flash('error', 'Tidak dapat menghapus Siklus Semester yang sedang Aktif.');
                  return;
@@ -137,18 +142,17 @@ class SiklusSemester extends Component
         $this->resetValidation();
     }
 
-    // --- (HAPUS SEMUA FUNGSI EXPORT/REKAP DISINI) ---
-
     public function render()
     {
-        // Tetap pakai with('penilaianSession') untuk cek tombol mata/hapus
         $daftarSiklus = Siklus::with('penilaianSession')
                             ->withCount('skemaPenilaians')
                             ->where(function($query) {
                                 $query->where('tahun_ajaran', 'like', '%'.$this->search.'%')
                                       ->orWhere('semester', 'like', '%'.$this->search.'%');
                             })
-                            ->orderBy('tahun_ajaran', 'desc')
+                            // [OPSIONAL] Sorting string mungkin perlu penyesuaian jika formatnya kompleks, 
+                            // tapi untuk "YYYY/YYYY" sorting string desc biasanya sudah benar (tahun terbaru diatas)
+                            ->orderBy('tahun_ajaran', 'desc') 
                             ->orderBy('semester', 'desc')
                             ->paginate(10); 
 

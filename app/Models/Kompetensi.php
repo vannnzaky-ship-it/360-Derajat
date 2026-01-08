@@ -10,10 +10,9 @@ class Kompetensi extends Model
 {
     use HasFactory;
 
-    protected $table = 'kompetensi'; // Sesuai database kamu
+    protected $table = 'kompetensi';
     protected $guarded = ['id'];
 
-    // --- TAMBAHKAN FUNGSI INI ---
     public function pertanyaans(): HasMany
     {
         return $this->hasMany(Pertanyaan::class);

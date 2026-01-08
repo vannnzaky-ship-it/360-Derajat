@@ -192,16 +192,31 @@
                             </td>
                             
                             {{-- 6. Aksi --}}
+                            {{-- ... Bagian CSS dan Header sama ... --}}
+
+                            {{-- DIGANTI BAGIAN KOLOM AKSI (Button Hapus) --}}
                             <td class="text-center">
                                 <button type="button" class="btn btn-sm btn-outline-primary" title="Edit" 
                                         wire:click="edit({{ $komp->id }})"> 
                                     <i class="bi bi-pencil-square"></i> <span class="d-md-none ms-1">Edit</span>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger ms-1" title="Hapus" 
-                                        wire:click="confirmDelete({{ $komp->id }})">
-                                    <i class="bi bi-trash"></i> <span class="d-md-none ms-1">Hapus</span>
-                                </button>
+
+                                {{-- LOGIKA: Jika pertanyaans_count == 0, tombol hapus muncul. Jika tidak, tombol hilang/lock --}}
+                                @if($komp->pertanyaans_count == 0)
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-1" title="Hapus" 
+                                            wire:click="confirmDelete({{ $komp->id }})">
+                                        <i class="bi bi-trash"></i> <span class="d-md-none ms-1">Hapus</span>
+                                    </button>
+                                @else
+                                    {{-- <span class="d-inline-block ms-1" tabindex="0" data-bs-toggle="tooltip" title="Terkunci: Berisi Pertanyaan">
+                                        <button class="btn btn-sm btn-light text-muted border" style="cursor: not-allowed;" disabled>
+                                            <i class="bi bi-lock-fill"></i>
+                                        </button>
+                                    </span> --}}
+                                @endif
                             </td>
+
+                            {{-- ... Sisa kode Modal dan Script sama ... --}}
                         </tr>
                         @empty
                         <tr>

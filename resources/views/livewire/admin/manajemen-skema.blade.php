@@ -129,7 +129,12 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div class="w-100 me-2">
-                                    <h4 class="h6 fw-bold text-dark mb-2 text-break">{{ $skema->nama_skema }}</h4>
+                                    <h4 class="h6 fw-bold text-dark mb-2 text-break d-flex align-items-center gap-2">
+                                        {{ $skema->nama_skema }}
+                                        @if($skema->is_locked)
+                                            <i class="bi bi-lock-fill text-muted small" title="Terkunci: Penilaian Berjalan/Selesai"></i>
+                                        @endif
+                                    </h4>
                                     <div class="d-flex flex-wrap gap-1">
                                         @foreach($skema->level_target as $lvl)
                                             <span class="badge bg-secondary opacity-75 fw-normal rounded-pill badge-level">
@@ -141,16 +146,36 @@
                                 
                                 {{-- BUTTON GROUP (EDIT & DELETE) --}}
                                 <div class="d-flex gap-1 flex-shrink-0">
+                                    
+                                    {{-- Tombol Edit --}}
                                     <button class="btn btn-sm text-primary hover-bg-light rounded-circle btn-action-mobile d-flex align-items-center justify-content-center p-0" 
                                             wire:click="edit({{ $skema->id }})" title="Edit Skema">
                                         <i class="bi bi-pencil-square fs-5"></i>
                                     </button>
-                                    <button class="btn btn-sm text-danger hover-bg-light rounded-circle btn-action-mobile d-flex align-items-center justify-content-center p-0" 
-                                            wire:click="hapus({{ $skema->id }})"
-                                            onclick="confirm('Hapus skema ini?') || event.stopImmediatePropagation()"
-                                            title="Hapus Skema">
-                                        <i class="bi bi-trash-fill fs-5"></i>
-                                    </button>
+
+                                    {{-- Tombol Hapus (Conditional Lock) --}}
+                                    @if($skema->is_locked)
+                                        {{-- TAMPILAN TERKUNCI --}}
+                                        <button class="btn btn-sm text-muted hover-bg-light rounded-circle btn-action-mobile d-flex align-items-center justify-content-center p-0" 
+                                                onclick="Swal.fire({
+                                                    icon: 'info',
+                                                    title: 'Skema Terkunci',
+                                                    text: 'Skema ini tidak bisa dihapus karena penilaian periode ini sudah dimulai atau selesai.',
+                                                    confirmButtonColor: '#c38e44'
+                                                })"
+                                                title="Terkunci (Tidak bisa dihapus)">
+                                            <i class="bi bi-lock-fill fs-5"></i>
+                                        </button>
+                                    @else
+                                        {{-- TAMPILAN BISA HAPUS --}}
+                                        <button class="btn btn-sm text-danger hover-bg-light rounded-circle btn-action-mobile d-flex align-items-center justify-content-center p-0" 
+                                                wire:click="hapus({{ $skema->id }})"
+                                                onclick="confirm('Hapus skema ini?') || event.stopImmediatePropagation()"
+                                                title="Hapus Skema">
+                                            <i class="bi bi-trash-fill fs-5"></i>
+                                        </button>
+                                    @endif
+
                                 </div>
                             </div>
 
@@ -201,6 +226,8 @@
                 </div>
                 
                 <div class="modal-body p-3 p-md-4">
+                    
+                    {{-- [LOGIKA TAMBAHAN] Cek Full tapi tetap izinkan Edit --}}
                     @if(!$isFull || $isEditMode)
                         <form wire:submit="simpan">
                             
@@ -216,12 +243,25 @@
                                 <div class="border rounded p-3 bg-light">
                                     <div class="row">
                                         @foreach($masterLevel as $key => $label)
+                                            @php
+                                                // Cek apakah level ini sudah ada di usedLevels
+                                                // Pastikan tipe datanya sama (string/integer)
+                                                $isDisabled = in_array((string)$key, array_map('strval', $usedLevels));
+                                            @endphp
+
                                             <div class="col-12 col-sm-6">
                                                 <div class="form-check mb-2">
                                                     <input class="form-check-input" type="checkbox" value="{{ $key }}" 
-                                                           wire:model="selected_levels" id="lvl_{{ $key }}">
-                                                    <label class="form-check-label text-secondary" for="lvl_{{ $key }}">
+                                                        wire:model="selected_levels" 
+                                                        id="lvl_{{ $key }}"
+                                                        @if($isDisabled) disabled @endif> {{-- Disable jika sudah terpakai --}}
+                                                    
+                                                    <label class="form-check-label {{ $isDisabled ? 'text-muted text-decoration-line-through' : 'text-secondary' }}" 
+                                                        for="lvl_{{ $key }}">
                                                         {{ $label }}
+                                                        @if($isDisabled) 
+                                                            <span class="badge bg-light text-muted border ms-1" style="font-size: 0.65rem;">Terpakai</span>
+                                                        @endif
                                                     </label>
                                                 </div>
                                             </div>

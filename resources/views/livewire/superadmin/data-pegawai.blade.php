@@ -145,7 +145,7 @@
         <thead class="bg-light text-secondary">
              <tr style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">
                 <th class="ps-4 py-3 border-bottom-0" width="35%">Pegawai</th>
-                <th class="py-3 border-bottom-0" width="15%">NIP / ID</th>
+                <th class="py-3 border-bottom-0" width="15%">NRP</th>
                 <th class="py-3 border-bottom-0" width="35%">Jabatan & Peran</th>
                 <th class="text-center py-3 border-bottom-0" width="15%">Aksi</th>
             </tr>
@@ -274,7 +274,7 @@
                             @error('name') <span class="text-danger" style="font-size: 0.65rem;">{{ $message }}</span> @enderror
                         </div>
                         <div class="col-12 col-md-6">
-                             <label class="form-label-sm">NIP / ID <span class="text-danger">*</span></label>
+                             <label class="form-label-sm">NRP <span class="text-danger">*</span></label>
                              <input type="text" wire:model="nip" class="form-control form-control-sm" placeholder="NIP...">
                              @error('nip') <span class="text-danger" style="font-size: 0.65rem;">{{ $message }}</span> @enderror
                         </div>

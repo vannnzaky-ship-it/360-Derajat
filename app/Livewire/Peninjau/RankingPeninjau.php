@@ -53,6 +53,7 @@ class RankingPeninjau extends Component
         $m = 10; // Threshold Vote
 
         foreach ($users as $user) {
+            // Filter Search
             if ($this->search && stripos($user->name, $this->search) === false) {
                 continue;
             }
@@ -60,6 +61,7 @@ class RankingPeninjau extends Component
             $totalSkor = 0;
             $jumlahJabatan = 0;
             
+            // Hitung Skor Murni
             if ($user->pegawai && $user->pegawai->jabatans->isNotEmpty()) {
                 foreach ($user->pegawai->jabatans as $jabatan) {
                     $hasil = $service->hitungNilaiAkhir($user->id, $sessionId, $jabatan->id);
@@ -78,11 +80,13 @@ class RankingPeninjau extends Component
                 $predikat = 'Belum Dinilai';
             }
 
+            // Hitung Jumlah Penilai (v)
             $v = PenilaianAlokasi::where('target_user_id', $user->id)
                             ->where('penilaian_session_id', $sessionId)
                             ->where('status_nilai', 'Sudah')
                             ->count();
 
+            // Hitung Skor Ranking (Bayesian)
             if ($v > 0) {
                 $skorRanking = ( ($v / ($v + $m)) * $skorMurni ) + ( ($m / ($v + $m)) * $C );
             } else {
@@ -102,6 +106,7 @@ class RankingPeninjau extends Component
             ];
         }
 
+        // Sorting Bayesian
         usort($tempData, function ($a, $b) {
             if (abs($b['skor_ranking'] - $a['skor_ranking']) > 0.001) {
                 return $b['skor_ranking'] <=> $a['skor_ranking'];
@@ -125,10 +130,17 @@ class RankingPeninjau extends Component
 
     public function updatedSearch() { $this->hitungRanking(); }
 
-    // --- EXPORT PDF (Pass Data ke View) ---
+    // --- FUNGSI HELPER NAMA FILE ---
+    private function getSafeFilename($ext) {
+        $tahunBersih = str_replace(['/', '\\'], '-', $this->siklus->tahun_ajaran);
+        $semester = $this->siklus->semester;
+        return "Laporan-Ranking-{$tahunBersih}-{$semester}.{$ext}";
+    }
+
+    // --- EXPORT PDF (SAMA SEPERTI REKAP SIKLUS) ---
     public function exportPdf()
     {
-        // Siapkan Logo Base64 agar anti-gagal di PDF
+        // Logo Base64 Anti Error
         $pathLogo = public_path('images/logo-polkam.png');
         $logoBase64 = null;
         if (file_exists($pathLogo)) {
@@ -141,16 +153,20 @@ class RankingPeninjau extends Component
 
         $data = [
             'siklus' => $this->siklus, 
-            'pegawais' => $this->dataPegawai, 
+            'pegawais' => $this->dataPegawai, // Perhatikan nama variabel di view PDF harus 'pegawais'
             'tanggal' => now()->translatedFormat('d F Y'),
             'logoBase64' => $logoBase64
         ];
         
+        // Gunakan view yang sama dengan Rekap Siklus agar konsisten
         $pdf = Pdf::loadView('livewire.peninjau.cetak-ranking-pdf', $data)->setPaper('a4', 'landscape');
-        return response()->streamDownload(function() use ($pdf) { echo $pdf->output(); }, 'Laporan-Ranking-Kinerja.pdf');
+        
+        return response()->streamDownload(function() use ($pdf) { 
+            echo $pdf->output(); 
+        }, $this->getSafeFilename('pdf'));
     }
     
-    // --- EXPORT EXCEL (Format Rapi + Kop Surat + TTD) ---
+    // --- EXPORT EXCEL (SAMA SEPERTI REKAP SIKLUS) ---
     public function exportExcel()
     {
         $spreadsheet = new Spreadsheet();
@@ -184,16 +200,16 @@ class RankingPeninjau extends Component
 
         // 3. HEADER TABEL
         $row = 5;
-        $headers = ['RANK', 'NAMA PEGAWAI', 'NIP / NIK', 'JABATAN', 'TOTAL PENILAI', 'SKOR AKHIR', 'PREDIKAT'];
+        $headers = ['RANK', 'NAMA PEGAWAI', 'NRP', 'JABATAN', 'TOTAL PENILAI', 'SKOR AKHIR', 'PREDIKAT'];
         $col = 'A';
         foreach ($headers as $h) {
             $sheet->setCellValue($col.$row, $h);
             $col++;
         }
         
-        // Style Header Tabel
+        // Style Header
         $sheet->getStyle("A$row:G$row")->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFFFFFF'));
-        $sheet->getStyle("A$row:G$row")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFC38E44'); // Warna Emas Polkam
+        $sheet->getStyle("A$row:G$row")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFC38E44'); 
         $sheet->getStyle("A$row:G$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // 4. ISI DATA
@@ -208,7 +224,6 @@ class RankingPeninjau extends Component
             $sheet->setCellValue('F'.$row, $d['skor_akhir']);
             $sheet->setCellValue('G'.$row, $d['predikat']);
             
-            // Format Center untuk kolom tertentu
             $sheet->getStyle("A$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle("E$row:G$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             
@@ -238,18 +253,19 @@ class RankingPeninjau extends Component
 
         $ttdRow += 5;
         $sheet->setCellValue('B'.$ttdRow, '(....................................)');
-        $sheet->setCellValue('F'.$ttdRow, '(.....................................)');
+        $sheet->setCellValue('F'.$ttdRow, '(....................................)');
         $ttdRow++;
         $sheet->setCellValue('B'.$ttdRow, 'NRP: .......................');
         $sheet->setCellValue('F'.$ttdRow, 'NRP: .......................');
         $sheet->getStyle('B'.($ttdRow-1).':F'.$ttdRow)->getFont()->setBold(true);
         $sheet->getStyle('B'.($ttdRow-1).':F'.$ttdRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
+        // Gunakan nama file aman
         return response()->streamDownload(function () use ($spreadsheet) {
             $writer = new Xlsx($spreadsheet);
             $writer->setPreCalculateFormulas(false);
             $writer->save('php://output');
-        }, 'Laporan-Ranking-' . date('Y-m-d') . '.xlsx');
+        }, $this->getSafeFilename('xlsx'));
     }
 
     public function render()

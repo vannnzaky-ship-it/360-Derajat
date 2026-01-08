@@ -26,6 +26,7 @@ use App\Livewire\Peninjau\DetailPeninjau;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\VerifyOtp;
 
+
 /*
 |--------------------------------------------------------------------------
 | Rute Aplikasi 360 Degree (Struktur Baru)

@@ -378,10 +378,10 @@ class DetailNilai extends Component
 
         $ttdRow += 5;
         $sheet->setCellValue('B'.$ttdRow, '(....................................)');
-        $sheet->setCellValue('F'.$ttdRow, 'Sri Wahyuni, SP, M.Si');
+        $sheet->setCellValue('F'.$ttdRow, '(....................................)');
         $ttdRow++;
-        $sheet->setCellValue('B'.$ttdRow, 'NIP/NRP: .......................');
-        $sheet->setCellValue('F'.$ttdRow, 'NRP: 110907028');
+        $sheet->setCellValue('B'.$ttdRow, 'NRP: .......................');
+        $sheet->setCellValue('F'.$ttdRow, 'NRP: .......................');
         $sheet->getStyle('B'.($ttdRow-1).':F'.$ttdRow)->getFont()->setBold(true);
         $sheet->getStyle('B'.($ttdRow-1).':F'.$ttdRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 

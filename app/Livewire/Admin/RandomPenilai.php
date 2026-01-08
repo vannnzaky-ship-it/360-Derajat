@@ -5,7 +5,9 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use App\Models\Siklus;
 use App\Models\Pegawai;
-use App\Models\Jabatan;
+use App\Models\Kompetensi; // Import Model
+use App\Models\Pertanyaan; // Import Model
+use App\Models\SkemaPenilaian; // Import Model
 use App\Models\PenilaianSession;
 use App\Models\PenilaianAlokasi;
 use Illuminate\Support\Facades\DB;
@@ -28,11 +30,18 @@ class RandomPenilai extends Component
     public $isExpired = false;       
     public $isProcessing = false;
 
+    // [BARU] State untuk Validasi Prasyarat
+    public $statusCheck = [
+        'kompetensi' => false,
+        'pertanyaan' => false,
+        'skema' => false
+    ];
+    public $isReadyToGenerate = false; // Master switch agar tombol aktif/mati
+
     public $selectedHistory = null;
 
     protected $rules = [
         'siklus_id' => 'required|exists:siklus,id',
-        // BERUBAH: Menggunakan after_or_equal agar hari ini bisa dipilih
         'batas_waktu' => 'required|date|after_or_equal:today',
         'limit_rekan' => 'required|integer|min:1|max:50',
         'pilihan_kategori' => 'required|array|min:1',
@@ -51,12 +60,38 @@ class RandomPenilai extends Component
             if($anySiklus) $this->siklus_id = $anySiklus->id;
         }
 
+        // Cek status sesi & Cek prasyarat data
         $this->checkSessionStatus();
+        $this->checkPrerequisites(); 
     }
 
     public function updatedSiklusId()
     {
         $this->checkSessionStatus();
+        $this->checkPrerequisites(); // Cek ulang saat ganti siklus (karena skema nempel di siklus)
+    }
+
+    // [FUNGSI BARU] Cek Kelengkapan Data
+    public function checkPrerequisites()
+    {
+        // 1. Cek Kompetensi (Harus ada yang aktif)
+        $this->statusCheck['kompetensi'] = Kompetensi::where('status', 'Aktif')->exists();
+
+        // 2. Cek Pertanyaan (Harus ada yang aktif)
+        $this->statusCheck['pertanyaan'] = Pertanyaan::where('status', 'Aktif')->exists();
+
+        // 3. Cek Skema (Harus ada skema untuk siklus yang dipilih ini)
+        if ($this->siklus_id) {
+            $this->statusCheck['skema'] = SkemaPenilaian::where('siklus_id', $this->siklus_id)->exists();
+        } else {
+            $this->statusCheck['skema'] = false;
+        }
+
+        // Tombol Ready jika: Session belum ada DAN semua checklist TRUE
+        $this->isReadyToGenerate = !$this->isSessionExists 
+                                   && $this->statusCheck['kompetensi'] 
+                                   && $this->statusCheck['pertanyaan'] 
+                                   && $this->statusCheck['skema'];
     }
 
     public function checkSessionStatus()
@@ -89,6 +124,13 @@ class RandomPenilai extends Component
 
     public function generate()
     {
+        // [VALIDASI SERVER SIDE] Cegah user bypass via inspect element
+        $this->checkPrerequisites();
+        if (!$this->isReadyToGenerate) {
+            session()->flash('error', 'Data master (Kompetensi/Pertanyaan/Skema) belum lengkap! Tidak dapat memproses.');
+            return;
+        }
+
         $this->validate();
         
         if ($this->isSessionExists) {
@@ -175,6 +217,7 @@ class RandomPenilai extends Component
 
             DB::commit();
             $this->checkSessionStatus();
+            $this->checkPrerequisites(); // Update status cek lagi
             session()->flash('message', "Berhasil Generate!");
 
         } catch (\Exception $e) {

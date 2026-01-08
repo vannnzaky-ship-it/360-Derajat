@@ -5,25 +5,25 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Rule;
-use App\Models\Kompetensi; // Import Model
+use App\Models\Kompetensi;
 use Livewire\WithPagination;
-use Livewire\Attributes\On; 
+use Livewire\Attributes\On;
 
-#[Layout('layouts.admin', ['title' => 'Manajemen Kompetensi'])] 
+#[Layout('layouts.admin', ['title' => 'Manajemen Kompetensi'])]
 class KompetensiCrud extends Component
 {
-    use WithPagination; 
+    use WithPagination;
 
     public $search = '';
 
     // Properti Form
-    public $kompetensiId = null; 
+    public $kompetensiId = null;
     public $isEditMode = false;
     public $showModal = false;
 
     #[Rule('required|string|max:255', message:'Nama kompetensi wajib diisi.')]
     public $nama_kompetensi = '';
-    
+
     #[Rule('nullable|string')]
     public $deskripsi = '';
 
@@ -31,39 +31,30 @@ class KompetensiCrud extends Component
     public $bobot = 0;
 
     #[Rule('required|in:Aktif,Tidak Aktif')]
-    public $status = 'Aktif'; 
+    public $status = 'Aktif';
 
-    /**
-     * Fungsi utama untuk menyimpan (Create atau Update)
-     */
     public function saveKompetensi()
     {
         $validatedData = $this->validate();
 
-        // Validasi custom: Total Bobot Kompetensi Aktif harus 100%
         $currentTotalBobot = Kompetensi::where('status', 'Aktif')
-                                      ->where('id', '!=', $this->kompetensiId) // Abaikan diri sendiri saat edit
-                                      ->sum('bobot');
+            ->where('id', '!=', $this->kompetensiId)
+            ->sum('bobot');
         $newTotalBobot = $currentTotalBobot + ($this->status == 'Aktif' ? $this->bobot : 0);
 
         if ($this->status == 'Aktif' && $newTotalBobot > 100) {
             $this->addError('bobot_total', 'Total bobot semua kompetensi aktif tidak boleh melebihi 100%. Sisa bobot: ' . (100 - $currentTotalBobot) . '%');
             return;
         }
-         // Opsional: Beri warning jika total < 100? Atau biarkan saja?
 
-        // Simpan atau Update ke Database
         Kompetensi::updateOrCreate(['id' => $this->kompetensiId], $validatedData);
 
         $this->closeModal();
-        $this->dispatch('close-kompetensi-modal'); 
+        $this->dispatch('close-kompetensi-modal');
         session()->flash('message', $this->isEditMode ? 'Kompetensi berhasil diperbarui!' : 'Kompetensi berhasil ditambahkan!');
-        $this->resetPage(); 
+        $this->resetPage();
     }
 
-    /**
-     * Memuat data untuk mode Edit & membuka modal
-     */
     public function edit($id)
     {
         $kompetensi = Kompetensi::findOrFail($id);
@@ -73,52 +64,46 @@ class KompetensiCrud extends Component
         $this->bobot = $kompetensi->bobot;
         $this->status = $kompetensi->status;
         $this->isEditMode = true;
-        $this->resetValidation(); 
-        $this->dispatch('open-kompetensi-modal'); // Kirim event BUKA modal ke JS
+        $this->resetValidation();
+        $this->dispatch('open-kompetensi-modal');
     }
 
-     /**
-     * Membuka modal Tambah
-     */
     public function showTambahModal()
     {
-        $this->resetForm(); 
+        $this->resetForm();
         $this->isEditMode = false;
-        $this->status = 'Aktif'; // Default aktif
-        $this->dispatch('open-kompetensi-modal'); // Kirim event BUKA modal ke JS
+        $this->status = 'Aktif';
+        $this->dispatch('open-kompetensi-modal');
     }
 
-    /**
-     * Konfirmasi sebelum hapus
-     */
     public function confirmDelete($id)
     {
-        $this->kompetensiId = $id; 
-        $this->dispatch('show-delete-confirmation-kompetensi'); // Nama event unik
+        $this->kompetensiId = $id;
+        $this->dispatch('show-delete-confirmation-kompetensi');
     }
 
-    /**
-     * Hapus data setelah dikonfirmasi
-     */
-    #[On('deleteConfirmedKompetensi')] // Nama listener unik
+    #[On('deleteConfirmedKompetensi')]
     public function delete()
     {
         $kompetensi = Kompetensi::find($this->kompetensiId);
         if ($kompetensi) {
-            // Logika tambahan: Cek apakah kompetensi ini digunakan di Pertanyaan? Jika iya, jangan hapus?
-            // if ($kompetensi->pertanyaan()->exists()) { ... error ... return; } 
+            // [LOGIKA BARU] Cek server-side juga untuk keamanan
+            if ($kompetensi->pertanyaans()->exists()) {
+                session()->flash('error', 'GAGAL: Kompetensi tidak bisa dihapus karena masih memiliki pertanyaan.');
+                $this->kompetensiId = null;
+                return;
+            }
 
-            // Cek ulang total bobot jika menghapus kompetensi aktif
-             if ($kompetensi->status == 'Aktif') {
-                 $currentTotalBobot = Kompetensi::where('status', 'Aktif')
-                                               ->where('id', '!=', $this->kompetensiId) 
-                                               ->sum('bobot');
-                 if ($currentTotalBobot == 0 && Kompetensi::where('status', 'Aktif')->count() > 1) {
-                      session()->flash('error', 'Tidak dapat menghapus. Harus ada minimal satu kompetensi aktif atau total bobot aktif menjadi 0.');
-                      $this->kompetensiId = null;
-                      return;
-                 }
-                 // Warning jika total bobot tidak 100% setelah dihapus?
+            // Validasi bobot (logika lama Anda)
+            if ($kompetensi->status == 'Aktif') {
+                $currentTotalBobot = Kompetensi::where('status', 'Aktif')
+                     ->where('id', '!=', $this->kompetensiId)
+                     ->sum('bobot');
+                if ($currentTotalBobot == 0 && Kompetensi::where('status', 'Aktif')->count() > 1) {
+                    session()->flash('error', 'Tidak dapat menghapus. Harus ada minimal satu kompetensi aktif.');
+                    $this->kompetensiId = null;
+                    return;
+                }
             }
 
             $kompetensi->delete();
@@ -129,36 +114,27 @@ class KompetensiCrud extends Component
         $this->kompetensiId = null;
     }
 
-    /**
-     * Menutup modal dan reset state (hanya kirim event)
-     */
     public function closeModal()
     {
         $this->resetForm();
-        $this->dispatch('close-kompetensi-modal'); // Kirim event close
+        $this->dispatch('close-kompetensi-modal');
     }
 
-    /**
-     * Reset properti form
-     */
     public function resetForm()
     {
-         $this->reset([
-            'kompetensiId', 'isEditMode', 'nama_kompetensi', 'deskripsi', 
-            'bobot', 'status'
-        ]);
-        $this->resetErrorBag(); 
+        $this->reset(['kompetensiId', 'isEditMode', 'nama_kompetensi', 'deskripsi', 'bobot', 'status']);
+        $this->resetErrorBag();
         $this->resetValidation();
     }
 
     public function render()
     {
-        // Ambil data dari database dengan pagination dan search
-        $daftarKompetensi = Kompetensi::where('nama_kompetensi', 'like', '%'.$this->search.'%')
-                            ->orderBy('nama_kompetensi', 'asc')
-                            ->paginate(10); 
+        // [UPDATE] Tambahkan withCount('pertanyaans')
+        $daftarKompetensi = Kompetensi::withCount('pertanyaans')
+            ->where('nama_kompetensi', 'like', '%'.$this->search.'%')
+            ->orderBy('nama_kompetensi', 'asc')
+            ->paginate(10);
 
-        // Hitung total bobot aktif untuk ditampilkan
         $totalBobotAktif = Kompetensi::where('status', 'Aktif')->sum('bobot');
 
         return view('livewire.admin.kompetensi-crud', [

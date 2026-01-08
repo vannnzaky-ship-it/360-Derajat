@@ -90,7 +90,7 @@
                             <div class="flex-grow-1">
                                 <h5 class="fw-bold text-dark mb-1">{{ $user->name }}</h5>
                                 <div class="d-flex flex-wrap gap-3 text-muted small">
-                                    <span class="d-flex align-items-center"><i class="bi bi-upc-scan me-1"></i> NIP: {{ $user->pegawai->nip ?? '-' }}</span>
+                                    <span class="d-flex align-items-center"><i class="bi bi-upc-scan me-1"></i> NRP: {{ $user->pegawai->nip ?? '-' }}</span>
                                     <span class="d-flex align-items-center text-warning fw-bold">
                                         <i class="bi bi-briefcase me-1"></i> {{ $this->label_jabatan }}
                                     </span>

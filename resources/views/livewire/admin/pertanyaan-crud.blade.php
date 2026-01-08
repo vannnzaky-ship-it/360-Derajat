@@ -167,16 +167,30 @@
                             </td>
                             
                             {{-- Action --}}
+                            {{-- ... Bagian CSS dan Header sama ... --}}
+
+                            {{-- BAGIAN KOLOM ACTION --}}
                             <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-outline-primary" title="Edit Status" 
+                                <button type="button" class="btn btn-sm btn-outline-primary" title="Edit" 
                                         wire:click="edit({{ $pert->id }})"> 
                                     <i class="bi bi-pencil-square"></i> <span class="d-md-none ms-1">Edit</span>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger ms-1" title="Hapus" 
-                                        wire:click="confirmDelete({{ $pert->id }})">
-                                    <i class="bi bi-trash"></i> <span class="d-md-none ms-1">Hapus</span>
-                                </button>
+                                
+                                {{-- LOGIKA: Jika penilaian_skors_count == 0, tombol hapus muncul. Jika > 0, hilang --}}
+                                @if($pert->penilaian_skors_count == 0)
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-1" title="Hapus" 
+                                            wire:click="confirmDelete({{ $pert->id }})">
+                                        <i class="bi bi-trash"></i> <span class="d-md-none ms-1">Hapus</span>
+                                    </button>
+                                @else
+                                    {{-- <span class="d-inline-block ms-1" tabindex="0" data-bs-toggle="tooltip" title="Sedang Digunakan: Sudah ada data nilai">
+                                        <button class="btn btn-sm btn-light text-warning border" style="cursor: not-allowed;" disabled>
+                                            <i class="bi bi-shield-lock-fill"></i>
+                                        </button>
+                                    </span> --}}
+                                @endif
                             </td>
+
                         </tr>
                         @empty
                         <tr>

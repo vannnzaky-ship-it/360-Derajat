@@ -20,6 +20,7 @@ class ManajemenSkema extends Component
     public $isFull = false; 
     public $isEditMode = false; // Penanda mode Edit
     public $skemaIdEditing = null; // ID skema yang sedang diedit
+    public $usedLevels = []; // [BARU] Menyimpan level yang sudah dipakai oleh skema lain
 
     // Form Input
     #[Rule('required|min:3', as: 'Nama Skema')]
@@ -53,7 +54,7 @@ class ManajemenSkema extends Component
     {
         $this->siklus_list = Siklus::orderBy('tahun_ajaran', 'desc')->get();
         
-        // Default pilih siklus Aktif
+        // Default pilih siklus Aktif atau yang terbaru
         $siklusAktif = Siklus::where('status', 'Aktif')->first();
         $this->siklus_id_aktif = $siklusAktif ? $siklusAktif->id : ($this->siklus_list->first()->id ?? null);
 
@@ -67,22 +68,35 @@ class ManajemenSkema extends Component
 
     public function loadSkema()
     {
+        // Reset daftar level terpakai setiap kali load
+        $this->usedLevels = []; 
+
         if ($this->siklus_id_aktif) {
             $this->daftar_skema = SkemaPenilaian::where('siklus_id', $this->siklus_id_aktif)->get();
 
-            // LOGIKA CEK PENUH
-            $usedLevels = [];
+            // Kumpulkan level yang sudah dipakai oleh skema LAIN
             foreach($this->daftar_skema as $skema) {
+                // Jika sedang mode edit, JANGAN masukkan level milik skema yang sedang diedit ini
+                // agar checkboxnya tidak disabled untuk dirinya sendiri.
+                if ($this->isEditMode && $this->skemaIdEditing == $skema->id) {
+                    continue; 
+                }
+
                 if(is_array($skema->level_target)) {
-                    $usedLevels = array_merge($usedLevels, $skema->level_target);
+                    // Konversi ke string agar in_array aman
+                    $levels = array_map('strval', $skema->level_target);
+                    $this->usedLevels = array_merge($this->usedLevels, $levels);
                 }
             }
-            $usedLevels = array_unique($usedLevels);
+            $this->usedLevels = array_unique($this->usedLevels); // Hapus duplikat
             
-            $allMasterLevels = array_keys($this->masterLevel);
-            $remainingLevels = array_diff($allMasterLevels, $usedLevels);
+            // Cek apakah semua level master sudah terpakai semua?
+            $allMasterLevels = array_map('strval', array_keys($this->masterLevel));
+            $remainingLevels = array_diff($allMasterLevels, $this->usedLevels);
             
-            $this->isFull = empty($remainingLevels);
+            // isFull true jika tidak ada sisa level DAN kita tidak sedang dalam mode edit
+            // (kalo mode edit, kita anggap tidak full karena bisa ngedit punya sendiri)
+            $this->isFull = empty($remainingLevels) && !$this->isEditMode;
 
         } else {
             $this->daftar_skema = [];
@@ -93,14 +107,20 @@ class ManajemenSkema extends Component
     public function showTambahModal()
     {
         $this->resetForm(); // Pastikan form bersih & mode edit mati
+        $this->loadSkema(); // Reload untuk update $usedLevels (semua terpakai masuk)
         $this->dispatch('open-modal'); 
     }
 
-    // FUNGSI EDIT BARU
     public function edit($id)
     {
         $skema = SkemaPenilaian::findOrFail($id);
         
+        // [LOGIKA LOCK] Cek apakah Siklus ini sudah punya sesi penilaian
+        if ($skema->siklus && $skema->siklus->penilaianSession()->exists()) {
+             session()->flash('error', 'MAAF: Skema tidak bisa diedit karena penilaian periode ini sudah dimulai/selesai.');
+             return;
+        }
+
         $this->skemaIdEditing = $skema->id;
         $this->nama_skema = $skema->nama_skema;
         $this->selected_levels = $skema->level_target; // Array
@@ -110,6 +130,8 @@ class ManajemenSkema extends Component
         $this->p_bawahan = $skema->persen_bawahan;
         
         $this->isEditMode = true; // Nyalakan mode edit
+        
+        $this->loadSkema(); // PENTING: Reload skema agar $usedLevels di-refresh dengan exclude ID ini
         
         $this->dispatch('open-modal');
     }
@@ -129,6 +151,15 @@ class ManajemenSkema extends Component
             return;
         }
 
+        // [LOGIKA LOCK SAAT SAVE] (Double Check keamanan server-side)
+        if ($this->isEditMode && $this->skemaIdEditing) {
+             $skemaCek = SkemaPenilaian::find($this->skemaIdEditing);
+             if ($skemaCek && $skemaCek->siklus && $skemaCek->siklus->penilaianSession()->exists()) {
+                 session()->flash('error', 'GAGAL SIMPAN: Penilaian sedang berjalan, skema terkunci.');
+                 return;
+             }
+        }
+
         // VALIDASI ANTI-NABRAK (Overlap)
         // Ambil skema lain KECUALI diri sendiri (jika sedang edit)
         $query = SkemaPenilaian::where('siklus_id', $this->siklus_id_aktif);
@@ -140,11 +171,16 @@ class ManajemenSkema extends Component
         $existingSchemes = $query->get();
 
         foreach ($existingSchemes as $scheme) {
-            $intersect = array_intersect($this->selected_levels, $scheme->level_target);
-            if (!empty($intersect)) {
-                $duplicateLevels = implode(', ', $intersect);
-                $this->addError('selected_levels', "Level ($duplicateLevels) sudah dipakai di skema: '{$scheme->nama_skema}'.");
-                return; 
+            // Pastikan casting array bekerja atau decode manual jika perlu
+            $schemeLevels = is_array($scheme->level_target) ? $scheme->level_target : json_decode($scheme->level_target, true);
+            
+            if(is_array($schemeLevels)){
+                $intersect = array_intersect($this->selected_levels, $schemeLevels);
+                if (!empty($intersect)) {
+                    $duplicateLevels = implode(', ', $intersect);
+                    $this->addError('selected_levels', "Level ($duplicateLevels) sudah dipakai di skema: '{$scheme->nama_skema}'.");
+                    return; 
+                }
             }
         }
 
@@ -173,6 +209,12 @@ class ManajemenSkema extends Component
     {
         $skema = SkemaPenilaian::find($id);
         if ($skema) {
+            // [LOGIKA LOCK] Cek Siklus
+            if ($skema->siklus && $skema->siklus->penilaianSession()->exists()) {
+                 session()->flash('error', 'GAGAL HAPUS: Skema ini sedang digunakan dalam penilaian aktif.');
+                 return;
+            }
+
             $skema->delete();
             session()->flash('message', 'Skema berhasil dihapus.');
             $this->loadSkema();

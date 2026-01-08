@@ -89,7 +89,7 @@
                             <h5 class="fw-bold text-dark mb-0">{{ $user->name }}</h5>
                             <div class="small mt-1">
                                 <div class="d-flex flex-wrap gap-3">
-                                    <span class="text-muted"><i class="bi bi-upc-scan me-1"></i> NIP: {{ $user->pegawai->nip ?? '-' }}</span>
+                                    <span class="text-muted"><i class="bi bi-upc-scan me-1"></i> NRP: {{ $user->pegawai->nip ?? '-' }}</span>
                                     <span class="text-muted">|</span>
                                     <span class="d-flex align-items-center fw-bold text-warning text-uppercase">
                                         <i class="bi bi-briefcase me-1"></i> 

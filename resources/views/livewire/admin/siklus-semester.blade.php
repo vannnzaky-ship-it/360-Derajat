@@ -228,7 +228,17 @@
                         <div class="row mb-3">
                             <div class="col-12 col-md-6 mb-3">
                                 <label for="tahun_ajaran" class="form-label fw-bold small text-uppercase text-muted">Tahun Ajaran <span class="text-danger">*</span></label>
-                                <input type="number" id="tahun_ajaran" class="form-control @error('tahun_ajaran') is-invalid @enderror" wire:model="tahun_ajaran" placeholder="Contoh: 2024">
+                                
+                                {{-- [UBAH] Input Text dengan placeholder --}}
+                                <input type="text" id="tahun_ajaran" 
+                                    class="form-control @error('tahun_ajaran') is-invalid @enderror" 
+                                    wire:model="tahun_ajaran" 
+                                    placeholder="Contoh: 2025/2026"
+                                    maxlength="9"> {{-- Max 9 karakter: 2025/2026 --}}
+                                    
+                                {{-- Helper text kecil di bawah input --}}
+                                <div class="form-text small text-muted">Format: TAHUN/TAHUN (cth: 2025/2026)</div>
+
                                 @error('tahun_ajaran') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-12 col-md-6 mb-3">

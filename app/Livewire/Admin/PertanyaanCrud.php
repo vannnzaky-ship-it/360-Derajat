@@ -5,86 +5,82 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Rule;
-use App\Models\Pertanyaan; // Import Pertanyaan
-use App\Models\Kompetensi; // Import Kompetensi
+use App\Models\Pertanyaan;
+use App\Models\Kompetensi;
 use Livewire\WithPagination;
-use Livewire\Attributes\On; 
+use Livewire\Attributes\On;
 
-#[Layout('layouts.admin', ['title' => 'Manajemen Pertanyaan'])] 
+#[Layout('layouts.admin', ['title' => 'Manajemen Pertanyaan'])]
 class PertanyaanCrud extends Component
 {
-    use WithPagination; 
+    use WithPagination;
 
     public $search = '';
     public $perPage = 10;
 
-    // Properti Form
-    public $pertanyaanId = null; 
+    public $pertanyaanId = null;
     public $isEditMode = false;
     public $showModal = false;
 
     #[Rule('required|exists:kompetensi,id', message:'Kompetensi wajib dipilih.')]
     public $kompetensi_id = '';
-    
+
     #[Rule('required|string|min:10', message:'Teks pertanyaan wajib diisi (minimal 10 karakter).')]
     public $teks_pertanyaan = '';
 
-    // Properti untuk checkbox Tipe Penilai
-    #[Rule('boolean')]
-    public $untuk_diri = false;
-    #[Rule('boolean')]
-    public $untuk_atasan = false;
-    #[Rule('boolean')]
-    public $untuk_rekan = false;
-    #[Rule('boolean')]
-    public $untuk_bawahan = false;
-    // Validasi custom: minimal 1 checkbox terpilih
-    public $penilaiError = ''; 
+    #[Rule('boolean')] public $untuk_diri = false;
+    #[Rule('boolean')] public $untuk_atasan = false;
+    #[Rule('boolean')] public $untuk_rekan = false;
+    #[Rule('boolean')] public $untuk_bawahan = false;
+
+    public $penilaiError = '';
 
     #[Rule('required|in:Aktif,Tidak Aktif')]
-    public $status = 'Aktif'; 
+    public $status = 'Aktif';
 
-    /**
-     * Fungsi utama untuk menyimpan (HANYA CREATE) atau UPDATE STATUS
-     */
     public function savePertanyaan()
     {
-        // 1. Validasi dasar
         $validatedData = $this->validate();
 
-        // 2. Validasi custom: minimal 1 Tipe Penilai dipilih
         if (!$this->untuk_diri && !$this->untuk_atasan && !$this->untuk_rekan && !$this->untuk_bawahan) {
             $this->addError('penilai_checkbox', 'Pilih minimal satu Tipe Penilai.');
             return;
         }
 
-        // 3. Logika Simpan atau Update Status
         if ($this->isEditMode && $this->pertanyaanId) {
-            // MODE EDIT: Hanya update status
+            // MODE EDIT
             $pertanyaan = Pertanyaan::find($this->pertanyaanId);
             if ($pertanyaan) {
+                // Jika sudah ada nilai, hanya boleh edit status (dan teks jika perlu, tapi hati-hati)
+                // Disini kita izinkan edit status.
                 $pertanyaan->status = $this->status;
+                
+                // Opsional: Jika ingin mengizinkan edit teks meski sudah ada nilai, biarkan baris ini.
+                // Jika ingin melarang edit teks saat sudah ada nilai, bungkus dengan if.
+                $pertanyaan->teks_pertanyaan = $this->teks_pertanyaan;
+                // Update tipe penilai dll...
+                $pertanyaan->untuk_diri = $this->untuk_diri;
+                $pertanyaan->untuk_atasan = $this->untuk_atasan;
+                $pertanyaan->untuk_rekan = $this->untuk_rekan;
+                $pertanyaan->untuk_bawahan = $this->untuk_bawahan;
+                $pertanyaan->kompetensi_id = $this->kompetensi_id;
+
                 $pertanyaan->save();
-                session()->flash('message', 'Status pertanyaan berhasil diperbarui!');
+                session()->flash('message', 'Pertanyaan berhasil diperbarui!');
             } else {
-                 session()->flash('error', 'Pertanyaan tidak ditemukan.');
+                session()->flash('error', 'Pertanyaan tidak ditemukan.');
             }
         } else {
-            // MODE CREATE: Simpan data baru
+            // MODE CREATE
             Pertanyaan::create($validatedData);
             session()->flash('message', 'Pertanyaan berhasil ditambahkan!');
         }
 
-        // 4. Tutup modal & kirim notifikasi
         $this->closeModal();
-        $this->dispatch('close-pertanyaan-modal'); 
-        $this->resetPage(); 
+        $this->dispatch('close-pertanyaan-modal');
+        $this->resetPage();
     }
 
-    /**
-     * Memuat data untuk mode Edit & membuka modal
-     * Hanya status yang bisa diedit.
-     */
     public function edit($id)
     {
         $pertanyaan = Pertanyaan::findOrFail($id);
@@ -96,42 +92,37 @@ class PertanyaanCrud extends Component
         $this->untuk_rekan = (bool)$pertanyaan->untuk_rekan;
         $this->untuk_bawahan = (bool)$pertanyaan->untuk_bawahan;
         $this->status = $pertanyaan->status;
-        
-        $this->isEditMode = true; // Tandai mode edit
-        $this->resetValidation(); 
-        $this->dispatch('open-pertanyaan-modal'); 
+
+        $this->isEditMode = true;
+        $this->resetValidation();
+        $this->dispatch('open-pertanyaan-modal');
     }
 
-     /**
-     * Membuka modal Tambah
-     */
     public function showTambahModal()
     {
-        $this->resetForm(); 
-        $this->isEditMode = false; // Pastikan mode tambah
-        $this->status = 'Aktif'; // Default aktif
-        $this->dispatch('open-pertanyaan-modal'); 
+        $this->resetForm();
+        $this->isEditMode = false;
+        $this->status = 'Aktif';
+        $this->dispatch('open-pertanyaan-modal');
     }
 
-    /**
-     * Konfirmasi sebelum hapus
-     */
     public function confirmDelete($id)
     {
-        $this->pertanyaanId = $id; 
-        $this->dispatch('show-delete-confirmation-pertanyaan'); // Nama event unik
+        $this->pertanyaanId = $id;
+        $this->dispatch('show-delete-confirmation-pertanyaan');
     }
 
-    /**
-     * Hapus data setelah dikonfirmasi
-     */
-    #[On('deleteConfirmedPertanyaan')] // Nama listener unik
+    #[On('deleteConfirmedPertanyaan')]
     public function delete()
     {
         $pertanyaan = Pertanyaan::find($this->pertanyaanId);
         if ($pertanyaan) {
-            // Logika tambahan: Cek apakah pertanyaan ini sudah pernah dijawab? Jika iya, jangan hapus?
-            // if ($pertanyaan->jawaban()->exists()) { session()->flash('error','...'); return; } 
+            // [LOGIKA BARU] Cek apakah pertanyaan sudah ada di PenilaianSkor
+            if ($pertanyaan->penilaianSkors()->exists()) {
+                session()->flash('error', 'DILARANG: Pertanyaan ini sudah digunakan dalam penilaian (data nilai sudah ada). Menghapus ini akan merusak hasil penilaian.');
+                $this->pertanyaanId = null;
+                return;
+            }
 
             $pertanyaan->delete();
             session()->flash('message', 'Pertanyaan berhasil dihapus.');
@@ -141,49 +132,39 @@ class PertanyaanCrud extends Component
         $this->pertanyaanId = null;
     }
 
-    /**
-     * Menutup modal dan reset state (hanya kirim event)
-     */
     public function closeModal()
     {
         $this->resetForm();
-        $this->dispatch('close-pertanyaan-modal'); 
+        $this->dispatch('close-pertanyaan-modal');
     }
 
-    /**
-     * Reset properti form
-     */
     public function resetForm()
     {
-         $this->reset([
-            'pertanyaanId', 'isEditMode', 'kompetensi_id', 'teks_pertanyaan', 
-            'untuk_diri', 'untuk_atasan', 'untuk_rekan', 'untuk_bawahan', 
-            'status'
-        ]);
-        $this->resetErrorBag(); 
+        $this->reset(['pertanyaanId', 'isEditMode', 'kompetensi_id', 'teks_pertanyaan', 'untuk_diri', 'untuk_atasan', 'untuk_rekan', 'untuk_bawahan', 'status']);
+        $this->resetErrorBag();
         $this->resetValidation();
     }
 
     public function render()
     {
-        // Ambil data dari database dengan pagination dan search
-        $daftarPertanyaan = Pertanyaan::with('kompetensi') // Eager load relasi kompetensi
-                            ->where(function($query) {
-                                $query->where('teks_pertanyaan', 'like', '%'.$this->search.'%')
-                                      ->orWhereHas('kompetensi', function ($qKompetensi) {
-                                          $qKompetensi->where('nama_kompetensi', 'like', '%'.$this->search.'%');
-                                      });
-                            })
-                            ->orderBy('kompetensi_id', 'asc') // Urutkan berdasarkan kompetensi dulu
-                            ->orderBy('created_at', 'asc') // Lalu berdasarkan waktu dibuat
-                            ->paginate($this->perPage); 
+        // [UPDATE] Tambahkan withCount('penilaianSkors')
+        $daftarPertanyaan = Pertanyaan::with('kompetensi')
+            ->withCount('penilaianSkors') // <-- Menghitung jumlah penggunaan di tabel skor
+            ->where(function($query) {
+                $query->where('teks_pertanyaan', 'like', '%'.$this->search.'%')
+                      ->orWhereHas('kompetensi', function ($qKompetensi) {
+                          $qKompetensi->where('nama_kompetensi', 'like', '%'.$this->search.'%');
+                      });
+            })
+            ->orderBy('kompetensi_id', 'asc')
+            ->orderBy('created_at', 'asc')
+            ->paginate($this->perPage);
 
-        // Ambil daftar kompetensi aktif untuk dropdown di modal
         $kompetensiList = Kompetensi::where('status', 'Aktif')->orderBy('nama_kompetensi')->get();
 
         return view('livewire.admin.pertanyaan-crud', [
             'daftarPertanyaan' => $daftarPertanyaan,
-            'kompetensiList' => $kompetensiList, // Kirim daftar kompetensi ke view
+            'kompetensiList' => $kompetensiList,
         ]);
     }
 }

@@ -70,8 +70,8 @@
             <h4 class="fw-bold text-dark">Belum Ada Sesi Penilaian</h4>
             <p class="text-muted mb-0 small">Fitur ini hanya aktif ketika Sesi Random Penilai sedang <strong>BERLANGSUNG (OPEN)</strong>.</p>
             <div class="mt-4">
-                <a href="{{ route('admin.siklus-semester') }}" class="btn btn-outline-dark rounded-pill px-4 fw-bold btn-sm">
-                    <i class="bi bi-gear-fill me-2"></i> Ke Manajemen Siklus
+                <a href="{{ route('admin.random-penilai') }}" class="btn btn-outline-dark rounded-pill px-4 fw-bold btn-sm">
+                    <i class="bi bi-gear-fill me-2"></i> Ke Random Penilai
                 </a>
             </div>
         </div>

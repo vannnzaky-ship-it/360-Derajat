@@ -67,7 +67,7 @@
             <tr>
                 <th width="5%">Rank</th>
                 <th>Nama Pegawai</th>
-                <th width="15%">NIP / NIK</th>
+                <th width="15%">NRP</th>
                 <th>Jabatan</th>
                 <th width="8%">Total Penilai</th>
                 <th width="8%">Skor Akhir</th>
@@ -113,7 +113,7 @@
         <tr>
             <td>
                 <b>(....................................)</b><br>
-                NIP/NRP: .......................
+                NRP: .......................
             </td>
             <td></td>
             <td>
