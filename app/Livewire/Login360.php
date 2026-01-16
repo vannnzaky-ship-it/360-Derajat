@@ -5,8 +5,6 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-
-// TAMBAHKAN DUA BARIS INI
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
@@ -24,7 +22,6 @@ class Login360 extends Component
             'password' => 'required',
         ]);
 
-        // 'Auth' tidak akan merah lagi
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
@@ -39,12 +36,13 @@ class Login360 extends Component
                 return;
             }
 
+            // JIKA ROLE LEBIH DARI 1, ARAHKAN KE PILIH ROLE
             if ($roles->count() > 1) {
                 return $this->redirect('/pilih-role', navigate: true);
             }
 
+            // JIKA ROLE HANYA 1, LANGSUNG MASUK DASHBOARD
             $roleName = $roles->first()->name;
-            // 'Session' tidak akan merah lagi
             Session::put('selected_role', $roleName);
             
             return $this->redirect($this->getRedirectPath($roleName), navigate: true);
@@ -55,15 +53,15 @@ class Login360 extends Component
     }
 
     protected function getRedirectPath(string $roleName): string
-{
-    return match ($roleName) {
-        'superadmin' => '/superadmin/dashboard',
-        'admin'      => '/admin/dashboard', // <-- TAMBAHKAN INI
-        'peninjau'   => '/peninjau/dashboard',
-        'karyawan'   => '/karyawan/dashboard',
-        default      => '/', // Fallback ke root (yang akan redirect lagi)
-    };
-}
+    {
+        return match ($roleName) {
+            'superadmin' => '/superadmin/dashboard', 
+            'admin'      => '/admin/dashboard',
+            'peninjau'   => '/peninjau/dashboard',
+            'karyawan'   => '/karyawan/dashboard',
+            default      => '/', 
+        };
+    }
 
     public function render()
     {

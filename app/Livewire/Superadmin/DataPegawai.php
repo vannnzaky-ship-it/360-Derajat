@@ -10,12 +10,14 @@ use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\On; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Collection; 
 
 #[Layout('layouts.admin')]
+#[Title('Data Pegawai')] // <-- PENTING: Judul Halaman
 class DataPegawai extends Component
 {
     use WithPagination;
@@ -35,7 +37,7 @@ class DataPegawai extends Component
 
     // --- PROPERTI VALIDASI ---
     public array $takenSingletonJabatans = []; 
-    public $peninjauTakenBy = null; // Menyimpan nama pemilik role Peninjau
+    public $peninjauTakenBy = null; 
 
     public function mount()
     {
@@ -43,12 +45,10 @@ class DataPegawai extends Component
         $this->checkPeninjauStatus(); 
     }
     
-    // 1. FUNGSI YANG HILANG TADI (WAJIB ADA)
     public function updateTakenSingletons()
     {
          $this->takenSingletonJabatans = Jabatan::where('is_singleton', true)
              ->whereHas('pegawais', function ($query) {
-                 // Jika sedang edit, jangan hitung jabatan milik pegawai ini sendiri sebagai "terambil"
                  if ($this->isEditMode && $this->pegawaiId) {
                      $query->where('pegawai.id', '!=', $this->pegawaiId);
                  }
@@ -57,34 +57,27 @@ class DataPegawai extends Component
              ->toArray();
     }
 
-    // 2. FUNGSI CEK PENINJAU
     public function checkPeninjauStatus()
     {
-        // Cari user yang punya role 'peninjau'
         $existingPeninjau = User::whereHas('roles', function($q) {
             $q->where('name', 'peninjau');
         })->first();
 
         if ($existingPeninjau) {
-            // Jika sedang Edit Mode, dan User yang diedit ADALAH si Peninjau itu sendiri,
-            // Maka anggap role ini 'tersedia' (biar dia bisa uncheck atau tetap centang)
             if ($this->isEditMode && $this->userId == $existingPeninjau->id) {
                 $this->peninjauTakenBy = null;
             } else {
-                // Jika user lain, atau tambah baru, simpan namanya
                 $this->peninjauTakenBy = $existingPeninjau->name;
             }
         } else {
-            $this->peninjauTakenBy = null; // Role kosong
+            $this->peninjauTakenBy = null; 
         }
     }
 
     public function render()
     {
-        // Panggil fungsi cek status setiap render agar realtime
         $this->checkPeninjauStatus();
 
-        // Ambil Data Jabatan
         $allJabatans = Jabatan::orderBy('bidang', 'asc')
             ->orderBy('level', 'asc') 
             ->orderBy('urutan', 'asc')
@@ -94,14 +87,12 @@ class DataPegawai extends Component
             return $this->sortListHierarchically($list);
         });
 
-        // Query Pegawai
         $pegawaiQuery = Pegawai::with(['user.roles', 'jabatans']) 
             ->whereHas('user', function ($query) {
                 $query->whereDoesntHave('roles', fn($q) => $q->where('name', 'superadmin'));
                 $query->where('id', '!=', Auth::id()); 
             });
 
-        // Logika Search
         if ($this->search) {
              $pegawaiQuery->where(function ($query) { 
                  $query->whereHas('user', function ($qUser) {
@@ -117,7 +108,6 @@ class DataPegawai extends Component
 
         $pegawai = $pegawaiQuery->distinct()->orderBy('created_at', 'desc')->paginate(10);
 
-        // Data Role untuk Form Modal
         $currentUser = Auth::user(); 
         $isAdminAccessing = false; 
         if ($currentUser && !$currentUser->hasRole('superadmin')) { $isAdminAccessing = true; }
@@ -134,7 +124,6 @@ class DataPegawai extends Component
         ]); 
     }
 
-    // --- HELPER SORTING ---
     private function sortListHierarchically(Collection $list)
     {
         $sorted = new Collection();
@@ -160,8 +149,6 @@ class DataPegawai extends Component
         }
     }
 
-    // --- CRUD ---
-
     public function edit($pegawaiId) 
     {
         $pegawai = Pegawai::with('user.roles', 'jabatans')->findOrFail($pegawaiId);
@@ -180,7 +167,6 @@ class DataPegawai extends Component
         $this->isEditMode = true;
         $this->resetValidation(); 
         
-        // Update Validasi Singleton & Peninjau
         $this->updateTakenSingletons(); 
         $this->checkPeninjauStatus();
         
@@ -192,7 +178,6 @@ class DataPegawai extends Component
         $this->resetForm();
         $this->isEditMode = false;
         
-        // Update Validasi Singleton & Peninjau
         $this->updateTakenSingletons(); 
         $this->checkPeninjauStatus();
         
@@ -213,7 +198,6 @@ class DataPegawai extends Component
         if (!$this->isEditMode) { $rules['password'] = 'required|string|min:8'; } 
         else { $rules['password'] = 'nullable|string|min:8'; }
 
-        // A. Validasi Jabatan Singleton
         $this->updateTakenSingletons(); 
         foreach ($this->selectedJabatans as $jabatanId) {
              if (in_array($jabatanId, $this->takenSingletonJabatans)) {
@@ -223,10 +207,8 @@ class DataPegawai extends Component
              }
         }
 
-        // B. Validasi Role Peninjau (Double Check di Backend)
         $this->checkPeninjauStatus();
         $peninjauRole = Role::where('name', 'peninjau')->first();
-        // Jika user pilih Peninjau DAN role itu sudah ada yang punya (selain user ini)
         if ($peninjauRole && in_array($peninjauRole->id, $this->selectedRoles) && $this->peninjauTakenBy) {
              $this->addError('selectedRoles', "Role Peninjau sudah digunakan oleh: {$this->peninjauTakenBy}.");
              return;
@@ -234,7 +216,6 @@ class DataPegawai extends Component
 
         $this->validate($rules); 
 
-        // Simpan Data
         $userData = ['name' => $this->name, 'email' => $this->email];
         if (!empty($this->password)) { $userData['password'] = Hash::make($this->password); }
         $user = User::updateOrCreate(['id' => $this->userId], $userData);

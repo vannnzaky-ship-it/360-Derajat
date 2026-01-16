@@ -7,9 +7,11 @@ use App\Models\User;
 use App\Models\Role;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
-use Illuminate\Support\Facades\Auth; // <-- Baris ini membuat Auth::id() berfungsi
+use Livewire\Attributes\Title; // <-- PENTING: Import atribut Title
+use Illuminate\Support\Facades\Auth;
 
 #[Layout('layouts.admin')]
+#[Title('Manajemen Admin')] // <-- PENTING: Judul Halaman
 class ManajemenAdmin extends Component
 {
     use WithPagination;
@@ -24,9 +26,8 @@ class ManajemenAdmin extends Component
 
     public function render()
     {
-        // ==== PERBAIKAN DI SINI ====
         $users = User::with('roles')
-            ->where('id', '!=', Auth::id()) // Ganti ke Auth::id()
+            ->where('id', '!=', Auth::id())
             ->where(function($query) {
                 $query->where('name', 'like', '%'.$this->search.'%')
                       ->orWhere('email', 'like', '%'.$this->search.'%');
@@ -42,11 +43,9 @@ class ManajemenAdmin extends Component
     {
         $user = User::find($userId);
         
-        // ==== PERBAIKAN DI SINI ====
-        if ($user && $user->id !== Auth::id()) { // Ganti ke Auth::id()
+        if ($user && $user->id !== Auth::id()) {
             $user->roles()->toggle($this->adminRole->id);
             session()->flash('message', 'Hak akses Administrator untuk ' . $user->name . ' telah diperbarui.');
         }
     }
 }
-

@@ -2,21 +2,27 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable; // <-- Ini untuk login
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Spatie\Permission\Traits\HasRoles;
+//use Spatie\Permission\Traits\HasRoles; // Opsional jika pakai Spatie murni
 
 class User extends Authenticatable
 {
-    // ... (use Notifiable, dll.)
-    
+    use HasFactory, Notifiable; 
+    // use HasRoles; // Matikan dulu jika ingin pakai relasi manual di bawah
 
-    protected $fillable = ['name', 'email', 'password','profile_photo_path','otp_code','otp_expires_at',];
-    
+    protected $fillable = [
+        'name', 
+        'email', 
+        'password',
+        'profile_photo_path',
+        'otp_code',
+        'otp_expires_at',
+    ];
+
     // Relasi ke Pegawai (Satu User punya satu data Pegawai)
     public function pegawai(): HasOne
     {
@@ -29,7 +35,7 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class);
     }
 
-    // Fungsi helper untuk cek role
+    // Fungsi helper untuk cek role (Manual Check)
     public function hasRole(string $roleName): bool
     {
         return $this->roles()->where('name', $roleName)->exists();

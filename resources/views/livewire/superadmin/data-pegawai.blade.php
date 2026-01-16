@@ -1,31 +1,34 @@
 <div>
-    {{-- CSS CUSTOM: MODAL, DARK MODE & KARTU TERPISAH (MOBILE) --}}
+    {{-- CSS CUSTOM: STYLE TABLE FLOATING & MODAL --}}
     <style>
-        /* --- 1. GLOBAL STYLE --- */
-        .avatar-initial, .avatar-img {
-            width: 50px; height: 50px; border-radius: 50%; /* Avatar sedikit lebih besar */
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; color: #C38E44; background-color: rgba(195, 142, 68, 0.15);
-            font-size: 1.2rem; object-fit: cover; flex-shrink: 0;
-            border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        /* --- 1. STYLE GLOBAL & TABLE --- */
+        body { background-color: #f8f9fa; }
+        
+        .table-floating { border-collapse: separate; border-spacing: 0 15px; }
+        .row-floating { 
+            background-color: #ffffff; 
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.05); 
+            transition: transform 0.2s;
         }
-        .font-monospace-custom {
-            font-family: 'SFMono-Regular', Consolas, monospace;
-            background: rgba(0,0,0,0.04); color: #444;
-            padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;
-        }
-        .badge-jabatan {
-            color: #8f6222 !important; background-color: #fff3cd !important;
-            border: 1px solid #ffe69c !important; padding: 5px 10px;
-            border-radius: 6px; font-weight: 600; font-size: 0.75rem;
-            display: inline-flex; align-items: center; gap: 4px;
-        }
-        .badge-role {
-            color: #495057; background-color: #e9ecef; border: 1px solid #ced4da;
-            font-weight: 500; font-size: 0.7rem; padding: 3px 8px;
+        .row-floating:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
         }
 
-        /* --- 2. MODAL & FORM --- */
+        .row-floating td:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+        .row-floating td:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+
+        .avatar-circle {
+            width: 45px; height: 45px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; color: #fff; background-color: #C38E44;
+            font-size: 1.1rem; flex-shrink: 0;
+            border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- 2. STYLE MODAL (ASLI) --- */
         .modal-dialog-compact { max-width: 550px; margin-top: 60px; margin-bottom: 2rem; }
         .modal-body-compact { max-height: 70vh; overflow-y: auto; padding: 15px 20px !important; }
         .form-label-sm { font-size: 0.75rem; font-weight: 700; margin-bottom: 2px; color: #555; }
@@ -37,214 +40,174 @@
         .accordion-button-custom:not(.collapsed) {
             color: #C38E44 !important; background-color: rgba(195, 142, 68, 0.1) !important;
         }
-
-        /* --- 3. DARK MODE --- */
-        [data-bs-theme="dark"] .modal-content { background-color: #212529; color: #e9ecef; border: 1px solid #495057; }
-        [data-bs-theme="dark"] .modal-header, [data-bs-theme="dark"] .modal-footer { background-color: #212529 !important; border-color: #495057; }
-        [data-bs-theme="dark"] .form-control { background-color: #2b3035; border-color: #495057; color: #fff; }
-        [data-bs-theme="dark"] .avatar-initial { border-color: #2b3035; }
-        [data-bs-theme="dark"] .font-monospace-custom { background: rgba(255,255,255,0.1); color: #e9ecef; }
-        [data-bs-theme="dark"] .badge-jabatan { background-color: rgba(195, 142, 68, 0.2) !important; color: #e0b675 !important; border-color: rgba(195, 142, 68, 0.3) !important; }
-        [data-bs-theme="dark"] .badge-role { background-color: #343a40 !important; color: #adb5bd !important; border-color: #495057 !important; }
-
-        /* --- 4. TAMPILAN MOBILE: KARTU TERPISAH (CARD STACK) --- */
-        @media (max-width: 767px) {
-            /* Sembunyikan Header Tabel */
-            thead { display: none; }
-
-            /* Ubah TABLE jadi BLOCK agar bisa margin */
-            table, tbody { display: block; width: 100%; }
-
-            /* Ubah TR menjadi Kartu Individu */
-            tbody tr {
-                display: block; /* Jadi kotak block */
-                background-color: var(--bs-body-bg);
-                border: 1px solid rgba(0,0,0,0.1);
-                border-radius: 12px;
-                margin-bottom: 1.5rem; /* JARAK ANTAR KARTU PEGAWAI */
-                box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* Bayangan agar "pop up" */
-                position: relative;
-                overflow: hidden;
-            }
-
-            /* Reset padding default TD */
-            tbody td { 
-                display: block; 
-                padding: 10px 15px;
-                border: none;
-                border-bottom: 1px solid rgba(0,0,0,0.05);
-            }
-            tbody td:last-child { border-bottom: 0; }
-
-            /* --- BAGIAN 1: PROFIL & TOMBOL (Header Kartu) --- */
-            tbody td:nth-child(1) {
-                background: linear-gradient(to bottom, rgba(195, 142, 68, 0.05), transparent);
-                padding-top: 15px;
-                padding-bottom: 15px;
-            }
-            /* Kita pindahkan tombol aksi ke sebelah nama menggunakan absolute position di CSS ini */
-            /* Tapi karena struktur HTML tabel kaku, kita pakai Flex di dalam TD Profil nanti */
-            
-            /* --- BAGIAN 2: NIP --- */
-            tbody td:nth-child(2)::before {
-                content: "NIP / ID PEGAWAI";
-                display: block; font-size: 0.65rem; font-weight: 800; color: #aaa; margin-bottom: 4px;
-            }
-
-            /* --- BAGIAN 3: JABATAN --- */
-            tbody td:nth-child(3)::before {
-                content: "JABATAN & PERAN";
-                display: block; font-size: 0.65rem; font-weight: 800; color: #aaa; margin-bottom: 6px;
-            }
-
-            /* --- BAGIAN 4: AKSI (Footer Kartu) --- */
-            tbody td:nth-child(4) {
-                background-color: rgba(0,0,0,0.02);
-                padding: 10px 15px;
-                display: flex; justify-content: flex-end; /* Tombol di kanan bawah */
-            }
+        .badge-jabatan {
+            color: #8f6222 !important; background-color: #fff3cd !important;
+            border: 1px solid #ffe69c !important; padding: 4px 8px;
+            border-radius: 6px; font-weight: 600; font-size: 0.7rem;
+            display: inline-flex; align-items: center; gap: 4px;
         }
 
-        /* Desktop Fix */
-        @media (min-width: 768px) { .w-md-auto { width: auto !important; } }
+        /* --- 3. RESPONSIVE MOBILE --- */
+        @media (max-width: 768px) {
+            .table-floating thead { display: none; }
+            .table-floating, .table-floating tbody, .table-floating tr, .table-floating td { display: block; width: 100%; }
+            .table-floating tr { margin-bottom: 1rem; border-radius: 12px; }
+            
+            .row-floating td:first-child { border-radius: 12px 12px 0 0; background: linear-gradient(to bottom, #fdfbf7, #fff); }
+            .row-floating td:last-child { border-radius: 0 0 12px 12px; border-top: 1px solid #eee; }
+            
+            .row-floating td { padding: 10px 15px; text-align: left; }
+        }
     </style>
 
-    <div class="container py-4">
+    <div class="container-fluid p-4" style="background-color: #f8f9fa; min-height: 100vh;">
         
-        {{-- JUDUL DENGAN IKON BARU --}}
-        <h1 class="h3 fw-bold mb-3 text-dark">
-            <i class="bi bi-people-fill me-2" style="color: #C38E44;"></i>Manajemen Data Pegawai
-        </h1>
+        {{-- HEADER PAGE --}}
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5">
+            <div class="mb-3 mb-md-0 text-center text-md-start">
+                <h1 class="h3 fw-bold text-dark mb-1">
+                    <i class="bi bi-people-fill me-2" style="color: #C38E44;"></i>Manajemen Data Pegawai
+                </h1>
+                <p class="text-secondary small mb-0">Kelola informasi pegawai, jabatan, dan hak akses aplikasi.</p>
+            </div>
 
+            <div class="d-flex flex-column flex-md-row gap-2 col-12 col-md-auto">
+                <div class="input-group shadow-sm rounded-pill bg-white" style="min-width: 280px;">
+                    <span class="input-group-text bg-transparent border-0 ps-3">
+                        <i class="bi bi-search text-secondary"></i>
+                    </span>
+                    <input wire:model.live.debounce.300ms="search" type="text" class="form-control bg-transparent border-0 py-2" placeholder="Cari nama atau NIP...">
+                </div>
+
+                <button wire:click="showTambahModal" class="btn shadow-sm rounded-pill px-4 fw-bold text-white d-flex align-items-center justify-content-center gap-2" style="background-color: #C38E44;">
+                    <i class="bi bi-plus-lg"></i> <span>Tambah</span>
+                </button>
+            </div>
+        </div>
+
+        {{-- ALERT MESSAGE --}}
         @if (session()->has('message'))
-            <div class="alert alert-success alert-dismissible fade show">
-                {{ session('message') }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4 rounded-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="bg-success text-white rounded-circle p-1 me-2 d-flex justify-content-center align-items-center" style="width: 24px; height: 24px;">
+                        <i class="bi bi-check small"></i>
+                    </div>
+                    <div class="fw-bold">{{ session('message') }}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
-        <div class="card shadow border-0 rounded-3" style="background: transparent; box-shadow: none !important;"> 
-            {{-- Header Global (Pencarian) --}}
-            <div class="card-header bg-white py-3 border rounded-3 mb-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 shadow-sm">
-                 <div class="input-group w-100 w-md-auto">
-                      <span class="input-group-text"><i class="bi bi-search"></i></span>
-                      <input wire:model.live.debounce.300ms="search" type="text" class="form-control" placeholder="Cari pegawai...">
-                 </div>
-                <button wire:click="showTambahModal" class="btn btn-success w-100 w-md-auto">
-                    <i class="bi bi-plus-circle me-1"></i> Tambah Pegawai
-                </button>
-            </div>
-            
-            {{-- Container Tabel / Kartu --}}
-            <div class=""> 
-                {{-- Hapus background putih container utama agar kartu terlihat terpisah di mobile --}}
-                <div style="min-height: 400px;">
-    <table class="table align-middle border-bottom mb-0 table-hover-custom" style="background: transparent;">
-        
-        {{-- HEADER TABEL (Hanya Satu Saja) --}}
-        {{-- CSS @media di atas akan otomatis menyembunyikan ini di HP --}}
-        <thead class="bg-light text-secondary">
-             <tr style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">
-                <th class="ps-4 py-3 border-bottom-0" width="35%">Pegawai</th>
-                <th class="py-3 border-bottom-0" width="15%">NRP</th>
-                <th class="py-3 border-bottom-0" width="35%">Jabatan & Peran</th>
-                <th class="text-center py-3 border-bottom-0" width="15%">Aksi</th>
-            </tr>
-        </thead>
-
-        <tbody class="border-top-0">
-            @forelse ($pegawaiList as $index => $pegawai)
-                <tr wire:key="pegawai-{{ $pegawai->id }}" class="bg-white">
-                    
-                    {{-- 1. PROFIL --}}
-                    <td class="ps-4 py-3">
-                        <div class="d-flex align-items-center">
-                            {{-- Avatar --}}
-                            @if($pegawai->user->profile_photo_path)
-                                <img src="{{ asset('storage/' . $pegawai->user->profile_photo_path) }}" alt="Avatar" class="avatar-img me-3">
-                            @else
-                                <div class="avatar-initial me-3">{{ strtoupper(substr($pegawai->user->name, 0, 1)) }}</div>
-                            @endif
+        {{-- TABEL DATA --}}
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle table-floating">
+                <thead>
+                    <tr class="text-secondary small text-uppercase" style="letter-spacing: 0.5px;">
+                        <th class="fw-bold ps-4" style="width: 30%;">Profil Pegawai</th>
+                        <th class="fw-bold text-center" style="width: 15%;">NRP / ID</th>
+                        <th class="fw-bold text-center" style="width: 35%;">Jabatan & Peran</th>
+                        <th class="fw-bold text-center" style="width: 20%;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($pegawaiList as $pegawai)
+                        <tr wire:key="pegawai-{{ $pegawai->id }}" class="row-floating">
                             
-                            {{-- Nama & Email --}}
-                            <div class="d-flex flex-column" style="min-width: 0;">
-                                <span class="fw-bold text-body mb-0" style="font-size: 1rem;">{{ $pegawai->user->name }}</span>
-                                <span class="text-muted small text-truncate">{{ $pegawai->user->email }}</span>
-                                @if($pegawai->no_hp)
-                                    <span class="text-muted small"><i class="bi bi-telephone me-1"></i> {{ $pegawai->no_hp }}</span>
-                                @endif
-                            </div>
-                        </div>
-                    </td>
-
-                    {{-- 2. NIP --}}
-                    <td class="py-3">
-                        <span class="font-monospace-custom">{{ $pegawai->nip }}</span>
-                    </td>
-
-                    {{-- 3. JABATAN --}}
-                    <td class="py-3">
-                        <div class="d-flex flex-column gap-2">
-                            {{-- Jabatan --}}
-                            <div class="d-flex flex-wrap gap-1">
-                                @forelse ($pegawai->jabatans as $jabatan)
-                                    <div class="badge-jabatan">
-                                        <i class="bi bi-briefcase-fill opacity-50"></i> {{ $jabatan->nama_jabatan }}
+                            {{-- 1. PROFIL --}}
+                            <td class="py-3 ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-3">
+                                        @if($pegawai->user->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $pegawai->user->profile_photo_path) }}" alt="Avatar">
+                                        @else
+                                            {{ strtoupper(substr($pegawai->user->name, 0, 1)) }}
+                                        @endif
                                     </div>
-                                @empty
-                                    <span class="text-muted small fst-italic px-1">- Tidak ada jabatan -</span>
-                                @endforelse
-                            </div>
-                            {{-- Role --}}
-                            <div class="d-flex flex-wrap gap-1">
-                                @foreach ($pegawai->user->roles as $role)
-                                    <span class="badge rounded-pill badge-role">
-                                        {{ $role->label }}
-                                        @if($role->name === 'peninjau') <i class="bi bi-star-fill text-warning ms-1"></i> @endif
-                                    </span>
-                                @endforeach
-                            </div>
-                        </div>
-                    </td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold text-dark">{{ $pegawai->user->name }}</span>
+                                        <span class="text-secondary small">{{ $pegawai->user->email }}</span>
+                                        
+                                        {{-- NO HP & ICON (DITAMPILKAN KEMBALI) --}}
+                                        @if($pegawai->no_hp)
+                                            <span class="text-muted small mt-1">
+                                                <i class="bi bi-whatsapp text-success me-1"></i>{{ $pegawai->no_hp }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
 
-                    {{-- 4. AKSI --}}
-                    <td class="text-center py-3">
-                        <div class="d-flex justify-content-end justify-content-md-center w-100">
-                            <div class="btn-group shadow-sm rounded-3">
-                                <button wire:click="edit({{ $pegawai->id }})" class="btn btn-sm btn-light border text-primary px-3" title="Edit">
-                                    <i class="bi bi-pencil-square"></i> <span class="d-md-none ms-1 fw-bold">Edit</span>
-                                </button>
-                                <button wire:click="confirmDelete({{ $pegawai->user_id }})" class="btn btn-sm btn-light border text-danger px-3" title="Hapus">
-                                    <i class="bi bi-trash"></i> <span class="d-md-none ms-1 fw-bold">Hapus</span>
-                                </button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr class="bg-white">
-                    <td colspan="4" class="text-center py-5">
-                        <div class="d-flex flex-column align-items-center opacity-50">
-                            <i class="bi bi-people display-4 mb-3"></i>
-                            <h6 class="fw-bold">Belum ada data pegawai</h6>
-                            <p class="small text-muted">Silakan tambahkan pegawai baru.</p>
-                        </div>
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-</div>
-                
-                @if($pegawaiList->hasPages())
-                 <div class="py-3">
-                      {{ $pegawaiList->links() }}
-                 </div>
-                 @endif
-            </div>
+                            {{-- 2. NIP --}}
+                            <td class="py-3 text-center">
+                                <span class="d-md-none fw-bold text-secondary small d-block mb-1">NIP/NRP</span>
+                                <span class="badge bg-light text-dark border fw-bold" style="font-family: monospace; font-size: 0.9rem;">
+                                    {{ $pegawai->nip }}
+                                </span>
+                            </td>
+
+                            {{-- 3. JABATAN & PERAN --}}
+                            <td class="py-3 text-center">
+                                <span class="d-md-none fw-bold text-secondary small d-block mb-1">JABATAN</span>
+                                <div class="d-flex flex-column gap-2 align-items-center">
+                                    <div class="d-flex flex-wrap justify-content-center gap-1">
+                                        @forelse ($pegawai->jabatans as $jabatan)
+                                            <div class="badge-jabatan">
+                                                <i class="bi bi-briefcase-fill opacity-50"></i> {{ $jabatan->nama_jabatan }}
+                                            </div>
+                                        @empty
+                                            <span class="text-muted small fst-italic">- Tidak ada jabatan -</span>
+                                        @endforelse
+                                    </div>
+                                    <div class="d-flex flex-wrap justify-content-center gap-1">
+                                        @foreach ($pegawai->user->roles as $role)
+                                            <span class="badge rounded-pill border bg-light text-secondary fw-normal px-2">
+                                                {{ $role->label }}
+                                                @if($role->name === 'peninjau') <i class="bi bi-star-fill text-warning ms-1"></i> @endif
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </td>
+
+                            {{-- 4. AKSI --}}
+                            <td class="py-3 text-center">
+                                <div class="d-flex justify-content-end justify-content-md-center w-100 gap-2">
+                                    <button wire:click="edit({{ $pegawai->id }})" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold border-2 d-flex align-items-center gap-1">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </button>
+                                    <button wire:click="confirmDelete({{ $pegawai->user_id }})" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold border-2 d-flex align-items-center gap-1">
+                                        <i class="bi bi-trash"></i> Hapus
+                                    </button>
+                                </div>
+                            </td>
+
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center opacity-50">
+                                    <div class="bg-white p-3 rounded-circle shadow-sm mb-3">
+                                        <i class="bi bi-search display-6 text-secondary"></i>
+                                    </div>
+                                    <h6 class="fw-bold text-secondary">Data tidak ditemukan</h6>
+                                    <p class="small text-muted">Coba kata kunci lain atau tambahkan data baru.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
+
+        {{-- PAGINATION --}}
+        @if($pegawaiList->hasPages())
+            <div class="d-flex justify-content-center mt-4">
+                 {{ $pegawaiList->links('pagination::bootstrap-5') }}
+            </div>
+        @endif
     </div>
 
-    {{-- MODAL (TIDAK ADA PERUBAHAN) --}}
+    {{-- MODAL (TETAP SAMA) --}}
     <div class="modal fade @if($showModal) show d-block @endif" 
          id="pegawaiModal" tabindex="-1" aria-labelledby="pegawaiModalLabel" 
          aria-hidden="{{ !$showModal ? 'true' : 'false' }}" 
@@ -296,7 +259,7 @@
                         </div>
                     </div>
 
-                    {{-- B. Jabatan & Peran --}}
+                    {{-- B. Jabatan & Peran (LOGIC ACCORDION) --}}
                     <div class="section-divider">Akses & Jabatan</div>
                     <div class="row g-3">
                         <div class="col-12">

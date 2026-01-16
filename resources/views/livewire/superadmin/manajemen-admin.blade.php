@@ -1,105 +1,167 @@
 <div>
-    <div class="container-fluid p-4">
+    {{-- CSS CUSTOM: RESPONSIVE TABLE (CARD STACK ON MOBILE) --}}
+    <style>
+        /* Default Table Style (Desktop) */
+        .table-floating { border-collapse: separate; border-spacing: 0 15px; }
+        .row-floating { background-color: #fff; box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); transition: transform 0.2s; }
+        .row-floating:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,0.1); }
         
-        {{-- Header Judul dengan Ikon --}}
-        <div class="mb-4">
-            <h1 class="h3 fw-bold text-dark mb-1">
-                <i class="bi bi-shield-lock me-2"style="color: #C38E44;"></i>Manajemen Akses Administrator
-            </h1>
-            <p class="text-secondary mb-0">Halaman ini digunakan untuk menunjuk atau mencabut hak akses Administrator dari seorang pengguna.</p>
+        .row-floating td:first-child { border-top-left-radius: 1rem; border-bottom-left-radius: 1rem; }
+        .row-floating td:last-child { border-top-right-radius: 1rem; border-bottom-right-radius: 1rem; }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 767.98px) {
+            .table-responsive thead { display: none; }
+            .table-responsive table, .table-responsive tbody, .table-responsive tr, .table-responsive td { display: block; width: 100%; }
+
+            .table-responsive tr.row-floating {
+                margin-bottom: 1rem; border-radius: 1rem;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #dee2e6;
+            }
+
+            .table-responsive td {
+                text-align: left !important; padding: 10px 20px;
+                border-bottom: 1px solid #f0f0f0; display: flex;
+                justify-content: space-between; align-items: center;
+                flex-wrap: wrap; gap: 10px;
+            }
+            .table-responsive td:last-child { border-bottom: none; }
+            .row-floating td:first-child { border-radius: 1rem 1rem 0 0; background-color: #fcfcfc; }
+            .row-floating td:last-child { border-radius: 0 0 1rem 1rem; padding-top: 15px; padding-bottom: 15px; }
+            .td-name { justify-content: flex-start !important; }
+            .td-aksi { justify-content: flex-end !important; }
+        }
+    </style>
+
+    <div class="container-fluid p-4" style="background-color: #f8f9fa; min-height: 100vh;">
+        
+        {{-- Header Judul --}}
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5 gap-3">
+            <div class="text-center text-md-start">
+                <h1 class="h3 fw-bold text-dark mb-1">
+                    <i class="bi bi-shield-lock me-2" style="color: #C38E44;"></i>Akses Administrator
+                </h1>
+                <p class="text-secondary small mb-0">Kelola hak akses Admin dengan mudah dan aman.</p>
+            </div>
+
+            {{-- Kolom Pencarian --}}
+            <div class="col-12 col-md-5 col-lg-4">
+                <div class="input-group shadow-sm rounded-pill bg-white">
+                    <span class="input-group-text bg-transparent border-0 ps-3">
+                        <i class="bi bi-search text-secondary"></i>
+                    </span>
+                    <input wire:model.live.debounce.300ms="search" type="text" class="form-control bg-transparent border-0 py-2" placeholder="Cari pengguna...">
+                </div>
+            </div>
         </div>
 
         {{-- Alert Message --}}
         @if (session()->has('message'))
-            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i> {{ session('message') }}
+            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4 rounded-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="bg-success text-white rounded-circle p-1 me-2 d-flex justify-content-center align-items-center" style="width: 24px; height: 24px;">
+                        <i class="bi bi-check small"></i>
+                    </div>
+                    <div>{{ session('message') }}</div>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
 
-        {{-- Card Utama --}}
-        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-            
-            {{-- Bagian Pencarian --}}
-            {{-- PERBAIKAN DI SINI: Saya hapus 'pb-0' dan ubah jadi p-4 agar jaraknya rata --}}
-            <div class="card-header bg-white border-bottom-0 p-4">
-                <div class="row">
-                    {{-- Saya buat col-12 agar dia full width dan terlihat rapi di tengah area putih --}}
-                    <div class="col-12">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0 rounded-start-pill ps-3">
-                                <i class="bi bi-search text-muted"></i>
-                            </span>
-                            <input wire:model.live.debounce.300ms="search" type="text" class="form-control bg-light border-start-0 rounded-end-pill py-2" placeholder="Cari nama atau email...">
-                        </div>
-                    </div>
-                </div>
-            </div>
+        {{-- Tabel Floating Rows --}}
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle table-floating">
+                <thead>
+                    <tr class="text-secondary small text-uppercase">
+                        <th class="fw-bold text-center" style="width: 25%;">Nama Pengguna</th>
+                        <th class="fw-bold text-center" style="width: 20%;">Email</th>
+                        <th class="fw-bold text-center" style="width: 15%;">Peran</th>
+                        <th class="fw-bold text-center" style="width: 15%;">Status Admin</th>
+                        <th class="fw-bold text-center" style="width: 25%;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($users as $user)
+                        <tr wire:key="{{ $user->id }}" class="row-floating">
+                            
+                            {{-- 1. Kolom Nama --}}
+                            <td class="py-3 text-center td-name">
+                                <div class="d-flex flex-column flex-md-column flex-row align-items-center justify-content-center gap-3 gap-md-0 w-100">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white mb-md-2" 
+                                         style="width: 40px; height: 40px; background-color: #C38E44; flex-shrink: 0;">
+                                        {{ substr($user->name, 0, 1) }}
+                                    </div>
+                                    <span class="fw-bold text-dark text-center">{{ $user->name }}</span>
+                                </div>
+                            </td>
 
-            <div class="card-body p-0"> 
-                {{-- PERBAIKAN: Padding dipindah ke dalam agar tabel mepet rapi tapi header punya jarak --}}
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="py-3 ps-4 text-uppercase small text-secondary fw-bold">Nama Pengguna</th>
-                                <th class="py-3 text-uppercase small text-secondary fw-bold">Email</th>
-                                <th class="py-3 text-uppercase small text-secondary fw-bold">Peran Saat Ini</th>
-                                <th class="py-3 text-uppercase small text-secondary fw-bold">Status Admin</th>
-                                <th class="py-3 text-end pe-4 text-uppercase small text-secondary fw-bold">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($users as $user)
-                                <tr wire:key="{{ $user->id }}" class="border-bottom-0">
-                                    <td class="ps-4 py-3 fw-semibold text-dark">{{ $user->name }}</td>
-                                    <td class="py-3 text-muted">{{ $user->email }}</td>
-                                    <td class="py-3">
-                                        @foreach ($user->roles as $role)
-                                            @if($user->roles->count() == 1 || $role->name != 'karyawan')
-                                                <span class="badge bg-secondary rounded-pill fw-normal px-3 py-2 me-1">{{ $role->label }}</span>
-                                            @endif
-                                        @endforeach
-                                    </td>
-                                    <td class="py-3">
-                                        @if ($user->hasRole('admin'))
-                                            <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3 py-2">
-                                                <i class="bi bi-check-circle-fill me-1"></i> Aktif
-                                            </span>
-                                        @else
-                                            <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3 py-2">
-                                                <i class="bi bi-x-circle-fill me-1"></i> Tidak Aktif
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="py-3 text-end pe-4">
-                                        <button 
-                                            wire:click="toggleAdmin({{ $user->id }})" 
-                                            class="btn btn-sm {{ $user->hasRole('admin') ? 'btn-outline-danger' : 'btn-outline-success' }} rounded-pill px-3 fw-medium">
-                                            {{ $user->hasRole('admin') ? 'Cabut Akses' : 'Jadikan Admin' }}
-                                        </button>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-5 text-muted">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <i class="bi bi-inbox fs-1 mb-2 opacity-50"></i>
-                                            <p class="mb-0">Tidak ada pengguna lain ditemukan.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            {{-- Footer Pagination --}}
-            <div class="card-footer bg-white border-top-0 p-4 pt-3">
-                 {{ $users->links('pagination::bootstrap-5') }}
-            </div>
+                            {{-- 2. Kolom Email --}}
+                            <td class="py-3 text-center text-muted fw-medium">
+                                <span class="d-md-none fw-bold small text-secondary me-2">Email:</span>
+                                {{ $user->email }}
+                            </td>
 
+                            {{-- 3. Kolom Peran (DIPERBAIKI: SEMUA ROLE MUNCUL) --}}
+                            <td class="py-3 text-center">
+                                <span class="d-md-none fw-bold small text-secondary me-2">Peran:</span>
+                                <div class="d-inline-block">
+                                {{-- Loop tanpa filter IF --}}
+                                @foreach ($user->roles as $role)
+                                    <span class="badge rounded-pill fw-normal px-3 py-2 border m-1" 
+                                          style="background-color: #f8f9fa; color: #6c757d; border-color: #dee2e6;">
+                                        {{ $role->label }}
+                                    </span>
+                                @endforeach
+                                </div>
+                            </td>
+
+                            {{-- 4. Kolom Status --}}
+                            <td class="py-3 text-center">
+                                <span class="d-md-none fw-bold small text-secondary me-2">Status:</span>
+                                @if ($user->hasRole('admin'))
+                                    <div class="d-inline-flex align-items-center text-success bg-success-subtle px-3 py-2 rounded-pill fw-bold" style="font-size: 0.85rem;">
+                                        <span class="spinner-grow spinner-grow-sm me-2" role="status" aria-hidden="true"></span>
+                                        Aktif
+                                    </div>
+                                @else
+                                    <div class="d-inline-flex align-items-center text-secondary bg-light px-3 py-2 rounded-pill border fw-medium" style="font-size: 0.85rem;">
+                                        <i class="bi bi-dash-circle me-2"></i> Non-Aktif
+                                    </div>
+                                @endif
+                            </td>
+
+                            {{-- 5. Kolom Aksi --}}
+                            <td class="py-3 text-center td-aksi">
+                                <button 
+                                    wire:click="toggleAdmin({{ $user->id }})" 
+                                    class="btn btn-sm rounded-pill px-4 py-2 fw-bold transition-all {{ $user->hasRole('admin') ? 'btn-outline-danger' : 'btn-outline-success' }}"
+                                    style="border-width: 2px;">
+                                    @if($user->hasRole('admin'))
+                                        <i class="bi bi-shield-x me-1"></i> Cabut
+                                    @else
+                                        <i class="bi bi-shield-check me-1"></i> Jadikan
+                                    @endif
+                                </button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="text-muted opacity-50">
+                                    <i class="bi bi-search fs-1"></i>
+                                    <p class="mt-2">Tidak ada pengguna yang cocok.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
+        
+        {{-- Footer Pagination --}}
+        <div class="d-flex justify-content-center mt-3">
+             {{ $users->links('pagination::bootstrap-5') }}
+        </div>
+
     </div>
 </div>

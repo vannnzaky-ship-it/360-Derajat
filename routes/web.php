@@ -54,11 +54,10 @@ Route::post('/logout', function () {
 
 // GRUP SUPER ADMIN
 Route::prefix('superadmin')
-    // TAMBAHKAN MiddlewarePreventBackHistory DISINI
     ->middleware(['auth', 'role:superadmin', MiddlewarePreventBackHistory::class]) 
     ->name('superadmin.')
     ->group(function () {
-        Route::redirect('/dashboard', '/superadmin/manajemen-admin')->name('dashboard');
+        Route::get('/dashboard', \App\Livewire\Superadmin\Dashboard::class)->name('dashboard');
         Route::get('/manajemen-admin', ManajemenAdmin::class)->name('manajemen-admin');
         Route::get('/data-pegawai', SuperadminDataPegawai::class)->name('data-pegawai');
     });
