@@ -39,10 +39,10 @@ class JabatanSeeder extends Seeder
             'is_singleton' => true, 
             'status' => 'Aktif', 
             'bidang' => 'Direktorat', 
-            'level' => 2, 
+            'level' => 3, 
             'urutan' => 2
         ]);
-        Jabatan::create(['nama_jabatan' => 'Staff Ka BPM', 'parent_id' => $kaBPM->id, 'is_singleton' => false, 'status' => 'Aktif', 'bidang' => 'Direktorat', 'level' => 3, 'urutan' => 3]);
+        Jabatan::create(['nama_jabatan' => 'Staff Ka BPM', 'parent_id' => $kaBPM->id, 'is_singleton' => false, 'status' => 'Aktif', 'bidang' => 'Direktorat', 'level' => 5, 'urutan' => 5]);
 
         $kaKoperasi = Jabatan::create([
             'nama_jabatan' => 'Ka Koperasi', 
@@ -50,10 +50,10 @@ class JabatanSeeder extends Seeder
             'is_singleton' => true, 
             'status' => 'Aktif', 
             'bidang' => 'Direktorat', 
-            'level' => 2, 
+            'level' => 3, 
             'urutan' => 4
         ]);
-        Jabatan::create(['nama_jabatan' => 'Staff Ka Koperasi', 'parent_id' => $kaKoperasi->id, 'is_singleton' => false, 'status' => 'Aktif', 'bidang' => 'Direktorat', 'level' => 3, 'urutan' => 5]);
+        Jabatan::create(['nama_jabatan' => 'Staff Ka Koperasi', 'parent_id' => $kaKoperasi->id, 'is_singleton' => false, 'status' => 'Aktif', 'bidang' => 'Direktorat', 'level' => 5, 'urutan' => 5]);
 
         $badanPP = Jabatan::create([
             'nama_jabatan' => 'Badan Perencanaan dan Pengembangan', 
@@ -61,10 +61,10 @@ class JabatanSeeder extends Seeder
             'is_singleton' => true, 
             'status' => 'Aktif', 
             'bidang' => 'Direktorat', 
-            'level' => 2, 
+            'level' => 3, 
             'urutan' => 6
         ]);
-        Jabatan::create(['nama_jabatan' => 'Staf Badan PP', 'parent_id' => $badanPP->id, 'is_singleton' => false, 'status' => 'Aktif', 'bidang' => 'Direktorat', 'level' => 3, 'urutan' => 7]);
+        Jabatan::create(['nama_jabatan' => 'Staf Badan PP', 'parent_id' => $badanPP->id, 'is_singleton' => false, 'status' => 'Aktif', 'bidang' => 'Direktorat', 'level' => 5, 'urutan' => 7]);
 
 
         // ============================================================
@@ -88,7 +88,7 @@ class JabatanSeeder extends Seeder
         // Fungsi helper kecil biar codingan gak panjang
         $buatUnit = function($namaJabatan, $parent, $bidang, &$urutan) {
             $kepala = Jabatan::create(['nama_jabatan' => $namaJabatan, 'parent_id' => $parent->id, 'is_singleton' => true, 'status' => 'Aktif', 'bidang' => $bidang, 'level' => 3, 'urutan' => $urutan++]);
-            Jabatan::create(['nama_jabatan' => 'Staff ' . $namaJabatan, 'parent_id' => $kepala->id, 'is_singleton' => false, 'status' => 'Aktif', 'bidang' => $bidang, 'level' => 4, 'urutan' => $urutan++]);
+            Jabatan::create(['nama_jabatan' => 'Staff ' . $namaJabatan, 'parent_id' => $kepala->id, 'is_singleton' => false, 'status' => 'Aktif', 'bidang' => $bidang, 'level' => 5, 'urutan' => $urutan++]);
             return $kepala;
         };
 

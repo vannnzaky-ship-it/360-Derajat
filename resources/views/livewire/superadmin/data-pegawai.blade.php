@@ -238,7 +238,7 @@
                         </div>
                         <div class="col-12 col-md-6">
                              <label class="form-label-sm">NRP <span class="text-danger">*</span></label>
-                             <input type="text" wire:model="nip" class="form-control form-control-sm" placeholder="NIP...">
+                             <input type="text" wire:model="nip" class="form-control form-control-sm" placeholder="NRP...">
                              @error('nip') <span class="text-danger" style="font-size: 0.65rem;">{{ $message }}</span> @enderror
                         </div>
                         <div class="col-12 col-md-6">

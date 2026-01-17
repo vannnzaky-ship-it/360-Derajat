@@ -89,7 +89,6 @@ class SiklusSemester extends Component
     {
         $this->resetForm();
         
-        // [UBAH] Default tahun otomatis: TahunIni / TahunDepan
         $now = date('Y');
         $next = $now + 1;
         $this->tahun_ajaran = "$now/$next"; // Contoh: 2025/2026

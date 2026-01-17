@@ -116,7 +116,7 @@
         </div>
         
         <div class="card-body p-0">
-            <div class=""> {{-- Hapus table-responsive agar card view berfungsi --}}
+            <div class=""> 
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="bg-custom-brown text-white">
                         <tr>
@@ -133,7 +133,7 @@
                         <tr wire:key="{{ $pert->id }}">
                             <td class="text-center fw-bold">{{ $daftarPertanyaan->firstItem() + $index }}</td>
                             
-                            {{-- Kompetensi (UBAH JADI HITAM / TEXT-DARK) --}}
+                            
                             <td>
                                 <span class="fw-medium text-dark">{{ $pert->kompetensi->nama_kompetensi ?? 'N/A' }}</span>
                             </td>

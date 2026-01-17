@@ -26,7 +26,7 @@ class ManajemenJabatan extends Component
         'Direktorat' => 'Direktorat (Petinggi)',
         'Bidang 1' => 'Bidang 1 (Akademik)',
         'Bidang 2' => 'Bidang 2 (Keuangan/SDM)',
-        'Bidang 3' => 'Bidang 3 (Kemahasiswaan)',
+        'Bidang 3' => 'Bidang 3 (Humas)',
         'Lainnya' => 'Lainnya',
     ];
 
