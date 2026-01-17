@@ -65,10 +65,9 @@
         {{-- HEADER PAGE --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5">
             <div class="mb-3 mb-md-0 text-center text-md-start">
-                <h1 class="h3 fw-bold text-dark mb-1">
+                <h1 class="h3 text-dark mb-1">
                     <i class="bi bi-people-fill me-2" style="color: #C38E44;"></i>Manajemen Data Pegawai
                 </h1>
-                <p class="text-secondary small mb-0">Kelola informasi pegawai, jabatan, dan hak akses aplikasi.</p>
             </div>
 
             <div class="d-flex flex-column flex-md-row gap-2 col-12 col-md-auto">

@@ -34,10 +34,9 @@
     {{-- HEADER --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
         <div class="d-flex align-items-center">
-            <div class="p-2 me-3"><i class="bi bi-shuffle fs-3 text-gold"></i></div>
+            <div class="p-2 me-2"><i class="bi bi-shuffle fs-3 text-gold"></i></div>
             <div>
-                <h2 class="h4 fw-bold mb-0 text-dark">Random Penilai</h2>
-                <p class="text-muted small mb-0">Generate acak penilai untuk siklus berjalan</p>
+                <h2 class="h4 mb-0 text-dark">Random Penilai</h2>
             </div>
         </div>
     </div>

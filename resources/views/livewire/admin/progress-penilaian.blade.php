@@ -33,7 +33,14 @@
     {{-- HEADER --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
         <div>
-            <h2 class="h3 fw-bold text-dark mb-1">Monitoring Proses Penilai</h2>
+            <div class="d-flex align-items-center">
+            <div class="p-2 me-2">
+                <i class="bi bi bi-laptop fs-2 text-gold " style="color: #C38E44;"></i>
+            </div>
+            <div>
+                <h2 class="h3 mb-0 text-dark">Monitoring Proses Penilaian</h2>
+            </div>
+        </div>
             @if($activeSiklus)
                 <div class="d-flex align-items-center gap-2">
                     <span class="text-muted small">Periode: <strong class="text-custom">{{ $activeSiklus->tahun_ajaran }} {{ $activeSiklus->semester }}</strong></span>

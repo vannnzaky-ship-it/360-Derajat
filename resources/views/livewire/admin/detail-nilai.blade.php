@@ -30,7 +30,7 @@
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div>
-                <h1 class="h3 fw-bold text-dark mb-1">Detail Raport Pegawai</h1>
+                <h1 class="h3 text-dark mb-1">Detail Raport Pegawai</h1>
                 <p class="text-secondary mb-0">Admin View Mode</p>
             </div>
         </div>

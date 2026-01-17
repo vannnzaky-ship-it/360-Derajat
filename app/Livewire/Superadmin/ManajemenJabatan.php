@@ -198,14 +198,33 @@ class ManajemenJabatan extends Component
         $this->dispatch('close-modal');
     }
 
-    public function delete($targetId)
+    public function confirmDelete($id)
     {
-        $jabatan = Jabatan::findOrFail($targetId);
-        if($jabatan->children()->count() > 0) {
-            session()->flash('error', 'Gagal hapus! Jabatan ini masih memiliki bawahan.');
-            return;
+        // Kirim event ke JS untuk munculkan SweetAlert
+        $this->dispatch('show-delete-confirmation', $id);
+    }
+
+    // 2. Eksekusi Hapus (Dipanggil setelah klik YA di SweetAlert)
+    public function destroy($targetId)
+    {
+        // Gunakan 'first()' untuk memastikan kita mengambil 1 objek model, bukan Collection
+        $jabatan = Jabatan::where('id', $targetId)->first();
+        
+        if ($jabatan) {
+            // Cek apakah jabatan ini punya bawahan (children)
+            // Karena $jabatan sudah pasti Single Object, fungsi children() akan berjalan lancar
+            if ($jabatan->children()->count() > 0) {
+                // Tampilkan pesan error jika punya bawahan
+                $this->dispatch('close-modal'); // Tutup modal jika ada
+                session()->flash('error', 'Gagal hapus! Jabatan ini masih memiliki bawahan. Hapus atau pindahkan bawahan terlebih dahulu.');
+                return;
+            }
+
+            // Jika aman, hapus
+            $jabatan->delete();
+            session()->flash('message', 'Jabatan berhasil dihapus.');
+        } else {
+            session()->flash('error', 'Data jabatan tidak ditemukan.');
         }
-        $jabatan->delete();
-        session()->flash('message', 'Jabatan berhasil dihapus.');
     }
 }

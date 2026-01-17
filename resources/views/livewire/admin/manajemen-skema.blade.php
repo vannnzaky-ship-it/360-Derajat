@@ -1,98 +1,118 @@
 <div class="container-fluid p-4">
 
-    {{-- CUSTOM STYLES & RESPONSIVE FIXES --}}
+    {{-- CUSTOM STYLES --}}
     <style>
+        /* 1. Global Colors */
         :root { --polkam-gold: #c38e44; --polkam-gold-hover: #a57635; }
         .text-gold { color: var(--polkam-gold) !important; }
         .bg-gold { background-color: var(--polkam-gold) !important; color: white; }
         .border-gold { border-color: var(--polkam-gold) !important; }
-        .btn-green { background-color: #198754; color: white; border: none; font-weight: 600; } 
+        
+        /* 2. Custom Buttons */
+        .btn-green { background-color: #198754; color: white; border: none; font-weight: 600; font-size: 0.9rem; } 
         .btn-green:hover { background-color: #1a8452; color: white; }
         .btn-gold { background-color: var(--polkam-gold); color: white; border: none; font-weight: 600; }
         .btn-gold:hover { background-color: var(--polkam-gold-hover); color: white; }
-        .form-check-input:checked { background-color: var(--polkam-gold); border-color: var(--polkam-gold); }
-        .card-skema { border-left: 5px solid var(--polkam-gold); transition: transform 0.2s; }
-        .card-skema:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+
+        /* 3. Modal Compact Style (KUNCI AGAR TIDAK LEBAR) */
+        .modal-dialog-compact { 
+            max-width: 500px; 
+            margin-top: 50px; 
+            margin-bottom: 2rem; 
+        }
+        
+        /* Typography Form Kecil */
+        .form-label-sm { 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            margin-bottom: 3px; 
+            color: #666; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+        }
+        .form-control-sm, .form-select-sm, .input-group-text-sm, .form-check-label-sm { 
+            font-size: 0.85rem; 
+        }
+
+        /* 4. Card & Progress Bar Styles */
+        .card-skema { border-left: 4px solid var(--polkam-gold); transition: transform 0.2s; }
+        .card-skema:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.1)!important; }
         .progress-diri { background-color: #0dcaf0; }
         .progress-atasan { background-color: #198754; }
         .progress-rekan { background-color: #ffc107; color: black; }
         .progress-bawahan { background-color: #dc3545; }
+        .badge-level { font-size: 0.7rem; padding: 0.35em 0.65em; }
 
         /* Mobile Fixes */
         @media (max-width: 767px) {
-            .btn-action-mobile { width: 40px; height: 40px; } /* Tombol lebih besar di mobile */
-            .card-skema .card-body { padding: 1rem; }
-            .badge-level { font-size: 0.75rem; padding: 0.35em 0.65em; }
+            .btn-action-mobile { width: 35px; height: 35px; }
+            .modal-dialog-compact { margin: 10px; max-width: 100%; }
         }
         @media (min-width: 768px) {
             .w-md-auto { width: auto !important; }
-            .btn-action-mobile { width: 32px; height: 32px; } /* Normal di desktop */
+            .btn-action-mobile { width: 32px; height: 32px; }
         }
     </style>
 
-    {{-- HEADER --}}
+    {{-- HEADER HALAMAN --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
         <div class="d-flex align-items-center">
-            <div class="p-2 me-3">
-                <i class="bi bi-diagram-3-fill fs-3 text-gold"></i>
+            <div class="p-2 me-2">
+                <i class="bi bi-diagram-3-fill fs-2 text-gold"></i>
             </div>
             <div>
-                <h2 class="h4 fw-bold mb-0 text-dark">Skema Penilaian</h2>
+                <h2 class="h3 mb-0 text-dark">Skema Penilaian</h2>
             </div>
         </div>
         
-        {{-- TOMBOL TAMBAH --}}
         <div class="w-100 w-md-auto">
             @if($siklus_list->isEmpty())
-                <button class="btn btn-secondary shadow-sm px-4 w-100 w-md-auto" disabled style="cursor: not-allowed; opacity: 0.7;">
+                <button class="btn btn-secondary shadow-sm px-4 w-100 w-md-auto" disabled>
                     <i class="bi bi-lock-fill me-2"></i>Tambah Skema
                 </button>
             @else
-                <button class="btn btn-green shadow-sm px-4 w-100 w-md-auto" wire:click="showTambahModal">
+                <button type="button" class="btn btn-success shadow-sm px-4 w-100 w-md-auto" wire:click="showTambahModal">
                     <i class="bi bi-plus-lg me-2"></i>Tambah Skema
                 </button>
             @endif
         </div>
     </div>
 
-    {{-- ALERT PERINGATAN JIKA KOSONG (SIMPLE) --}}
+    {{-- NOTIFIKASI --}}
     @if($siklus_list->isEmpty())
-        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-start mb-4" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-3 fs-4 text-warning mt-1"></i>
-            <div>
-                <strong class="d-block text-dark">Belum ada Siklus Semester!</strong>
-                <span class="text-muted small">Harap tambahkan data semester terlebih dahulu pada menu <b>Siklus Semester</b> agar dapat membuat skema penilaian.</span>
+        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4 py-2" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-3 fs-5 text-warning"></i>
+            <div class="small">
+                <strong>Data Siklus Kosong!</strong> Harap tambahkan data semester terlebih dahulu.
             </div>
         </div>
     @endif
 
-    {{-- ALERT NOTIFIKASI --}}
     @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm py-2" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>{{ session('message') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
     @if (session()->has('error'))
-        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm py-2" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
-    {{-- SIKLUS SELECTOR --}}
-    <div class="card border-0 shadow-sm mb-4">
+    {{-- FILTER SIKLUS --}}
+    <div class="card border-0 shadow-sm mb-4 bg-white">
         <div class="card-body py-3">
             <div class="row align-items-center gy-2">
-                <div class="col-12 col-md-auto text-gold fw-bold">
+                <div class="col-12 col-md-auto text-gold fw-bold small text-uppercase">
                     <i class="bi bi-calendar-check me-2"></i>Siklus Aktif:
                 </div>
-                <div class="col-12 col-md-6">
-                    <select wire:model.live="siklus_id_aktif" class="form-select border-gold bg-light" 
+                <div class="col-12 col-md-5">
+                    <select wire:model.live="siklus_id_aktif" class="form-select form-select-sm border-gold bg-light" 
                             @if($siklus_list->isEmpty()) disabled @endif>
-                        
                         @if($siklus_list->isEmpty())
-                            <option value="">Data Siklus Kosong</option>
+                            <option value="">Tidak ada data</option>
                         @else
                             <option value="">-- Pilih Siklus --</option>
                             @foreach($siklus_list as $s)
@@ -104,164 +124,149 @@
                         @endif
                     </select>
                 </div>
-                <div class="col-12 col-md text-md-end text-muted small">
-                    <i class="bi bi-info-circle me-1"></i>Pilih siklus untuk melihat/mengedit skema.
+                <div class="col-12 col-md text-md-end text-muted" style="font-size: 0.75rem;">
+                    Total Skema: <strong class="text-dark">{{ count($daftar_skema) }}</strong>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- LIST SKEMA (GRID RESPONSIVE) --}}
-    <div class="card border-0 shadow-sm bg-transparent shadow-none">
-        <div class="card-header bg-transparent border-0 px-0 pt-0 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
-            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center">
-                <i class="bi bi-list-task me-2 text-gold"></i>Daftar Skema Tersedia
-            </h5>
-            @if($siklus_id_aktif)
-                <span class="badge bg-white text-dark shadow-sm border align-self-start align-self-md-center">Total: {{ count($daftar_skema) }} Skema</span>
-            @endif
-        </div>
-
-        <div class="row g-3">
-            @forelse($daftar_skema as $skema)
-                <div class="col-12 col-md-6">
-                    <div class="card border-0 shadow-sm card-skema bg-white h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div class="w-100 me-2">
-                                    <h4 class="h6 fw-bold text-dark mb-2 text-break d-flex align-items-center gap-2">
-                                        {{ $skema->nama_skema }}
-                                        @if($skema->is_locked)
-                                            <i class="bi bi-lock-fill text-muted small" title="Terkunci: Penilaian Berjalan/Selesai"></i>
-                                        @endif
-                                    </h4>
-                                    <div class="d-flex flex-wrap gap-1">
-                                        @foreach($skema->level_target as $lvl)
-                                            <span class="badge bg-secondary opacity-75 fw-normal rounded-pill badge-level">
-                                                Level {{ $lvl }}
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                </div>
-                                
-                                {{-- BUTTON GROUP (EDIT & DELETE) --}}
-                                <div class="d-flex gap-1 flex-shrink-0">
-                                    
-                                    {{-- Tombol Edit --}}
-                                    <button class="btn btn-sm text-primary hover-bg-light rounded-circle btn-action-mobile d-flex align-items-center justify-content-center p-0" 
-                                            wire:click="edit({{ $skema->id }})" title="Edit Skema">
-                                        <i class="bi bi-pencil-square fs-5"></i>
-                                    </button>
-
-                                    {{-- Tombol Hapus (Conditional Lock) --}}
+    {{-- LIST SKEMA --}}
+    <div class="row g-3">
+        @forelse($daftar_skema as $skema)
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm card-skema bg-white h-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="w-100 me-2">
+                                <h6 class="fw-bold text-dark mb-1 text-truncate" title="{{ $skema->nama_skema }}">
+                                    {{ $skema->nama_skema }}
                                     @if($skema->is_locked)
-                                        {{-- TAMPILAN TERKUNCI --}}
-                                        <button class="btn btn-sm text-muted hover-bg-light rounded-circle btn-action-mobile d-flex align-items-center justify-content-center p-0" 
-                                                onclick="Swal.fire({
-                                                    icon: 'info',
-                                                    title: 'Skema Terkunci',
-                                                    text: 'Skema ini tidak bisa dihapus karena penilaian periode ini sudah dimulai atau selesai.',
-                                                    confirmButtonColor: '#c38e44'
-                                                })"
-                                                title="Terkunci (Tidak bisa dihapus)">
-                                            <i class="bi bi-lock-fill fs-5"></i>
-                                        </button>
-                                    @else
-                                        {{-- TAMPILAN BISA HAPUS --}}
-                                        <button class="btn btn-sm text-danger hover-bg-light rounded-circle btn-action-mobile d-flex align-items-center justify-content-center p-0" 
-                                                wire:click="hapus({{ $skema->id }})"
-                                                onclick="confirm('Hapus skema ini?') || event.stopImmediatePropagation()"
-                                                title="Hapus Skema">
-                                            <i class="bi bi-trash-fill fs-5"></i>
-                                        </button>
+                                        <i class="bi bi-lock-fill text-muted ms-1" style="font-size: 0.7rem;"></i>
                                     @endif
-
+                                </h6>
+                                <div class="d-flex flex-wrap gap-1 mb-2">
+                                    @foreach($skema->level_target as $lvl)
+                                        <span class="badge bg-secondary opacity-75 fw-normal rounded-pill badge-level">Lvl {{ $lvl }}</span>
+                                    @endforeach
                                 </div>
                             </div>
+                            
+                            {{-- Action Buttons --}}
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-sm btn-outline-primary border-0 rounded-circle btn-action-mobile d-flex align-items-center justify-content-center" 
+                                        wire:click="edit({{ $skema->id }})">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
 
-                            <div class="progress rounded-pill" style="height: 25px; font-weight: 600; font-size: 0.7rem;">
-                                @if($skema->persen_diri > 0)
-                                    <div class="progress-bar progress-diri overflow-hidden text-truncate px-1" style="width: {{ $skema->persen_diri }}%">Diri {{ $skema->persen_diri }}%</div>
-                                @endif
-                                @if($skema->persen_atasan > 0)
-                                    <div class="progress-bar progress-atasan overflow-hidden text-truncate px-1" style="width: {{ $skema->persen_atasan }}%">Ats {{ $skema->persen_atasan }}%</div>
-                                @endif
-                                @if($skema->persen_rekan > 0)
-                                    <div class="progress-bar progress-rekan overflow-hidden text-truncate px-1" style="width: {{ $skema->persen_rekan }}%">Rek {{ $skema->persen_rekan }}%</div>
-                                @endif
-                                @if($skema->persen_bawahan > 0)
-                                    <div class="progress-bar progress-bawahan overflow-hidden text-truncate px-1" style="width: {{ $skema->persen_bawahan }}%">Bwh {{ $skema->persen_bawahan }}%</div>
+                                @if($skema->is_locked)
+                                    <button class="btn btn-sm btn-outline-secondary border-0 rounded-circle btn-action-mobile d-flex align-items-center justify-content-center" 
+                                            onclick="Swal.fire({icon: 'info', title: 'Terkunci', text: 'Skema sedang digunakan dalam penilaian.', confirmButtonColor: '#c38e44'})">
+                                        <i class="bi bi-lock-fill"></i>
+                                    </button>
+                                @else
+                                    <button class="btn btn-sm btn-outline-danger border-0 rounded-circle btn-action-mobile d-flex align-items-center justify-content-center" 
+                                            wire:click="hapus({{ $skema->id }})"
+                                            onclick="confirm('Hapus skema ini?') || event.stopImmediatePropagation()">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 @endif
                             </div>
                         </div>
+
+                        {{-- Progress Bar Bobot --}}
+                        <div class="progress rounded-pill bg-light border" style="height: 20px; font-weight: 700; font-size: 0.65rem;">
+                            @if($skema->persen_diri > 0)
+                                <div class="progress-bar progress-diri" style="width: {{ $skema->persen_diri }}%">Diri {{ $skema->persen_diri }}%</div>
+                            @endif
+                            @if($skema->persen_atasan > 0)
+                                <div class="progress-bar progress-atasan" style="width: {{ $skema->persen_atasan }}%">Ats {{ $skema->persen_atasan }}%</div>
+                            @endif
+                            @if($skema->persen_rekan > 0)
+                                <div class="progress-bar progress-rekan" style="width: {{ $skema->persen_rekan }}%">Rek {{ $skema->persen_rekan }}%</div>
+                            @endif
+                            @if($skema->persen_bawahan > 0)
+                                <div class="progress-bar progress-bawahan" style="width: {{ $skema->persen_bawahan }}%">Bwh {{ $skema->persen_bawahan }}%</div>
+                            @endif
+                        </div>
                     </div>
                 </div>
-            @empty
-                <div class="col-12">
-                    <div class="text-center py-5 bg-white rounded shadow-sm border-0">
-                        <i class="bi bi-inbox text-gold opacity-50" style="font-size: 3rem;"></i>
-                        @if($siklus_list->isEmpty())
-                            <h6 class="mt-3 fw-bold text-danger">Data Siklus Kosong</h6>
-                            <p class="text-muted small px-3">Anda harus membuat Siklus Semester terlebih dahulu di menu "Siklus Semester".</p>
-                        @else
-                            <h6 class="mt-3 fw-bold text-muted">Belum ada skema</h6>
-                            <p class="text-muted small px-3">Silakan pilih siklus di atas lalu klik tombol "Tambah Skema".</p>
-                        @endif
-                    </div>
+            </div>
+        @empty
+            <div class="col-12">
+                <div class="text-center py-5 bg-white rounded shadow-sm">
+                    <i class="bi bi-inbox text-gold opacity-25" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2 small">
+                        @if($siklus_list->isEmpty()) Data siklus belum tersedia. @else Belum ada skema pada siklus ini. @endif
+                    </p>
                 </div>
-            @endforelse
-        </div>
+            </div>
+        @endforelse
     </div>
 
-    {{-- MODAL FORM --}}
-    <div wire:ignore.self class="modal fade" id="skemaModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-gold text-white">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi {{ $isEditMode ? 'bi-pencil-square' : 'bi-plus-circle-fill' }} me-2"></i>
-                        {{ $isEditMode ? 'Edit Skema' : 'Buat Skema Baru' }}
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    {{-- MODAL FORM (COMPACT & BLUR) --}}
+    <div wire:ignore.self class="modal fade" id="skemaModal" tabindex="-1" aria-hidden="true" 
+         style="background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);"> 
+        
+        <div class="modal-dialog modal-dialog-centered modal-dialog-compact">
+            <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+                
+                {{-- HEADER (Style Clean) --}}
+                <div class="modal-header py-2 px-3 border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning bg-opacity-10 text-warning rounded p-1 me-2">
+                            <i class="bi bi-diagram-3-fill fs-6"></i>
+                        </div>
+                        <h6 class="modal-title fw-bold m-0" id="skemaModalLabel">
+                            {{ $isEditMode ? 'Edit Skema' : 'Buat Skema' }}
+                        </h6>
+                    </div>
+                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
-                <div class="modal-body p-3 p-md-4">
+                <div class="modal-body p-3">
                     
-                    {{-- [LOGIKA TAMBAHAN] Cek Full tapi tetap izinkan Edit --}}
-                    @if(!$isFull || $isEditMode)
+                    {{-- CEK JIKA FULL & BUKAN EDIT MODE --}}
+                    @if($isFull && !$isEditMode)
+                        <div class="text-center py-4">
+                            <i class="bi bi-check-circle-fill text-success mb-3" style="font-size: 3rem;"></i>
+                            <h6 class="fw-bold">Semua Level Terisi!</h6>
+                            <p class="text-muted small px-3 mb-0">
+                                Semua level jabatan (1-5) pada siklus ini sudah memiliki skema. Edit skema yang ada jika ingin mengubah.
+                            </p>
+                        </div>
+                        <div class="modal-footer bg-light border-top py-2 px-3 justify-content-center">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                        </div>
+                    
+                    @else
+                        {{-- FORM INPUT --}}
                         <form wire:submit="simpan">
                             
+                            {{-- 1. Nama Skema --}}
                             <div class="mb-3">
-                                <label class="fw-bold mb-1 small text-uppercase text-muted">Nama Skema / Aturan</label>
-                                <input type="text" class="form-control" wire:model="nama_skema" 
-                                       placeholder="Contoh: Skema Pimpinan">
-                                @error('nama_skema') <small class="text-danger">{{ $message }}</small> @enderror
+                                <label class="form-label-sm">Nama Skema <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" wire:model="nama_skema" placeholder="Contoh: Skema Pimpinan">
+                                @error('nama_skema') <div class="text-danger small mt-1" style="font-size: 0.7rem;">{{ $message }}</div> @enderror
                             </div>
 
+                            {{-- 2. Level Target (Checkboxes Compact) --}}
                             <div class="mb-3">
-                                <label class="fw-bold mb-2 small text-uppercase text-muted">Berlaku untuk Level:</label>
-                                <div class="border rounded p-3 bg-light">
-                                    <div class="row">
+                                <label class="form-label-sm">Berlaku untuk Level <span class="text-danger">*</span></label>
+                                <div class="border rounded p-2 bg-light">
+                                    <div class="row g-2">
                                         @foreach($masterLevel as $key => $label)
                                             @php
-                                                // Cek apakah level ini sudah ada di usedLevels
-                                                // Pastikan tipe datanya sama (string/integer)
+                                                // Cek disable jika level sudah dipakai (kecuali sedang diedit)
                                                 $isDisabled = in_array((string)$key, array_map('strval', $usedLevels));
                                             @endphp
-
-                                            <div class="col-12 col-sm-6">
-                                                <div class="form-check mb-2">
+                                            <div class="col-6">
+                                                <div class="form-check small mb-0">
                                                     <input class="form-check-input" type="checkbox" value="{{ $key }}" 
-                                                        wire:model="selected_levels" 
-                                                        id="lvl_{{ $key }}"
-                                                        @if($isDisabled) disabled @endif> {{-- Disable jika sudah terpakai --}}
-                                                    
-                                                    <label class="form-check-label {{ $isDisabled ? 'text-muted text-decoration-line-through' : 'text-secondary' }}" 
-                                                        for="lvl_{{ $key }}">
+                                                           wire:model="selected_levels" id="lvl_{{ $key }}"
+                                                           @if($isDisabled) disabled @endif>
+                                                    <label class="form-check-label form-check-label-sm {{ $isDisabled ? 'text-muted text-decoration-line-through' : 'text-dark' }}" for="lvl_{{ $key }}">
                                                         {{ $label }}
-                                                        @if($isDisabled) 
-                                                            <span class="badge bg-light text-muted border ms-1" style="font-size: 0.65rem;">Terpakai</span>
-                                                        @endif
                                                     </label>
                                                 </div>
                                             </div>
@@ -269,75 +274,58 @@
                                     </div>
                                 </div>
                                 @error('selected_levels') 
-                                    <div class="alert alert-warning mt-2 py-2 small d-flex align-items-center">
-                                        <i class="bi bi-exclamation-triangle me-2"></i> {{ $message }}
-                                    </div>
+                                    <div class="text-danger small mt-1" style="font-size: 0.7rem;">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <div class="mb-4">
-                                <label class="fw-bold mb-3 small text-uppercase text-muted">Distribusi Bobot (%)</label>
-                                @foreach([
-                                    'p_diri' => 'Diri Sendiri',
-                                    'p_atasan' => 'Atasan',
-                                    'p_rekan' => 'Rekan',
-                                    'p_bawahan' => 'Bawahan'
-                                ] as $field => $label)
-                                    <div class="row g-2 mb-2 align-items-center">
-                                        <div class="col-4 col-sm-3 text-muted small fw-bold">{{ $label }}</div>
-                                        <div class="col-8 col-sm-9">
+                            {{-- 3. Distribusi Bobot (Grid 2x2 Compact) --}}
+                            <div class="mb-2">
+                                <label class="form-label-sm">Distribusi Bobot (%) <span class="text-danger">*</span></label>
+                                <div class="row g-2">
+                                    @php
+                                        $fields = [
+                                            'p_diri' => 'Diri Sendiri', 'p_atasan' => 'Atasan',
+                                            'p_rekan' => 'Rekan', 'p_bawahan' => 'Bawahan'
+                                        ];
+                                    @endphp
+                                    @foreach($fields as $field => $label)
+                                        <div class="col-6">
+                                            <label class="small text-muted mb-0" style="font-size: 0.7rem;">{{ $label }}</label>
                                             <div class="input-group input-group-sm">
-                                                <input type="number" class="form-control" wire:model="{{ $field }}">
-                                                <span class="input-group-text bg-light">%</span>
+                                                <input type="number" class="form-control form-control-sm" wire:model="{{ $field }}" placeholder="0">
+                                                <span class="input-group-text bg-white text-muted px-1">%</span>
                                             </div>
                                         </div>
-                                    </div>
-                                @endforeach
-
+                                    @endforeach
+                                </div>
                                 @error('total_persen') 
-                                    <div class="alert alert-danger mt-3 py-2 text-center fw-bold small">
-                                        <i class="bi bi-x-circle me-1"></i> {{ $message }}
+                                    <div class="alert alert-danger mt-2 py-1 px-2 small mb-0 d-flex align-items-center" style="font-size: 0.75rem;">
+                                        <i class="bi bi-exclamation-circle me-2"></i> {{ $message }}
                                     </div>
                                 @enderror
                             </div>
 
-                            <div class="d-flex justify-content-end gap-2 border-top pt-3">
-                                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
-                                <button type="submit" class="btn btn-gold px-4 shadow-sm">
-                                    {{ $isEditMode ? 'Update' : 'Simpan' }}
+                            {{-- FOOTER COMPACT --}}
+                            <div class="modal-footer bg-light border-top py-2 px-3 mt-3 mx-n3 mb-n3">
+                                <button type="button" class="btn btn-sm btn-secondary border" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-sm btn-gold text-white px-3 shadow-sm">
+                                    {{ $isEditMode ? 'Simpan Perubahan' : 'Simpan Data' }}
                                 </button>
                             </div>
                         </form>
-
-                    @else
-                        {{-- TAMPILAN JIKA PENUH --}}
-                        <div class="text-center py-4">
-                            <div class="mb-3">
-                                <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-                            </div>
-                            <h4 class="fw-bold text-dark">Semua Level Terisi!</h4>
-                            <p class="text-muted small px-3">
-                                Semua level jabatan (Level 1 s/d 5) pada siklus ini sudah memiliki skema penilaian.
-                            </p>
-                            <div class="alert alert-warning d-inline-block mt-2 small">
-                                <i class="bi bi-info-circle me-1"></i> Klik tombol Edit (Pensil) pada skema yang ada untuk mengubah.
-                            </div>
-                            <div class="mt-4">
-                                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Tutup</button>
-                            </div>
-                        </div>
                     @endif
                 </div>
             </div>
         </div>
     </div>
+
 </div>
 
 @push('scripts')
 <script>
     document.addEventListener('livewire:initialized', () => {
         const modalElement = document.getElementById('skemaModal');
-        const modal = modalElement ? new bootstrap.Modal(modalElement) : null;
+        const modal = modalElement ? new bootstrap.Modal(modalElement, { backdrop: 'static', keyboard: false }) : null;
 
         @this.on('open-modal', () => { if(modal) modal.show(); });
         @this.on('close-modal', () => { if(modal) modal.hide(); });

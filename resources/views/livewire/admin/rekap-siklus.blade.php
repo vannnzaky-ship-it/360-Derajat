@@ -118,7 +118,14 @@
             <a href="{{ route('admin.siklus-semester') }}" class="text-decoration-none text-muted small mb-1 d-block">
                 <i class="bi bi-arrow-left"></i> Kembali ke Siklus
             </a>
-            <h2 class="h3 fw-bold text-dark mb-1">Rekapitulasi Nilai Kinerja</h2>
+            <div class="d-flex align-items-center">
+                <div class="p-2 me-2">
+                    <i class="bi bi bi-journal-arrow-down fs-2 text-gold " style="color: #C38E44;"></i>
+                </div>
+                <div>
+                    <h2 class="h3 mb-0 text-dark">Rekap Penilaian</h2>
+            </div>
+        </div>
             <p class="text-muted mb-0">Periode: <span class="fw-bold text-gold">{{ $siklus->tahun_ajaran }} {{ $siklus->semester }}</span></p>
         </div>
         
