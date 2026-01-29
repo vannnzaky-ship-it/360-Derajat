@@ -10,7 +10,7 @@ use App\Livewire\Superadmin\DataPegawai as SuperadminDataPegawai;
 use App\Livewire\Superadmin\ManajemenAdmin;
 use App\Livewire\Peninjau\Dashboard as PeninjauDashboard;
 use App\Livewire\Admin\SiklusSemester;
-use App\Livewire\Admin\pertanyaanCrud;
+use App\Livewire\Admin\PertanyaanCrud;
 use App\Livewire\Admin\ManajemenSkema;
 use App\Livewire\Karyawan\Dashboard as KaryawanDashboard;
 use App\Livewire\Karyawan\Penilaian as KaryawanPenilaian;
@@ -27,11 +27,7 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\VerifyOtp;
 
 
-/*
-|--------------------------------------------------------------------------
-| Rute Aplikasi 360 Degree (Struktur Baru)
-|--------------------------------------------------------------------------
-*/
+
 Route::get('/info', function() { phpinfo(); });
 Route::get('/lupa-password', ForgotPassword::class)->name('password.request');
 Route::get('/verifikasi-otp', VerifyOtp::class)->name('password.verify');

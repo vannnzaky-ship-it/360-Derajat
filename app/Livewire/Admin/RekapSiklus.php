@@ -17,7 +17,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
-#[Layout('layouts.admin')]
+#[Layout('layouts.admin', ['title' => 'Rekap Penilaian'])]
 class RekapSiklus extends Component
 {
     public $siklus;

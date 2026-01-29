@@ -28,7 +28,7 @@ use PhpOffice\PhpSpreadsheet\Chart\XAxis;
 use PhpOffice\PhpSpreadsheet\Chart\YAxis;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing; 
 
-#[Layout('layouts.admin')]
+#[Layout('layouts.admin', ['title' => 'Raport Pegawai'])]
 class DetailNilai extends Component
 {
     public $user, $siklus;

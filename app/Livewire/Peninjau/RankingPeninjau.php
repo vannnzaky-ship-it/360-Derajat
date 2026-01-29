@@ -18,7 +18,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
-#[Layout('layouts.admin')]
+#[Layout('layouts.admin', ['title' => 'Ranking'])]
 class RankingPeninjau extends Component
 {
     public $siklus;

@@ -12,7 +12,9 @@ use App\Models\PenilaianSession;
 use App\Models\PenilaianAlokasi;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
+use Livewire\Attributes\Layout;
 
+#[Layout('layouts.admin', ['title' => 'Random Penilai'])]
 class RandomPenilai extends Component
 {
     use WithPagination;

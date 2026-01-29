@@ -6,7 +6,7 @@ use Livewire\Component;
 use App\Models\Siklus;
 use Livewire\Attributes\Layout;
 
-#[Layout('layouts.admin')]
+#[Layout('layouts.admin', ['title' => 'Laporan Hasil'])]
 class LaporanHasil extends Component
 {
     public function render()

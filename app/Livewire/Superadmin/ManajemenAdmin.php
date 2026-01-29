@@ -7,11 +7,10 @@ use App\Models\User;
 use App\Models\Role;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title; // <-- PENTING: Import atribut Title
 use Illuminate\Support\Facades\Auth;
 
-#[Layout('layouts.admin')]
-#[Title('Manajemen Admin')] // <-- PENTING: Judul Halaman
+
+#[Layout('layouts.admin', ['title' => 'Manajemen Struktur'])]
 class ManajemenAdmin extends Component
 {
     use WithPagination;

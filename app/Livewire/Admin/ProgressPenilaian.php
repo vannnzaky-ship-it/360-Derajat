@@ -11,7 +11,7 @@ use App\Models\PenilaianSession;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf; // Pastikan ini ada
 
-#[Layout('layouts.admin')]
+#[Layout('layouts.admin', ['title' => 'Proses Penilai'])]
 class ProgressPenilaian extends Component
 {
     public $search = '';

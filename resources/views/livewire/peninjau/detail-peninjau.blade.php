@@ -31,7 +31,7 @@
             </a>
 
             <div>
-                <h1 class="h3 fw-bold text-dark mb-1">Detail Penilaian Pegawai</h1>
+                <h1 class="h3 fw-bold text-dark mb-1">Raport Pegawai</h1>
                 <p class="text-secondary mb-0">Peninjau View Mode</p>
             </div>
         </div>
