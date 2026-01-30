@@ -1,6 +1,6 @@
 <div class="container-fluid p-4">
 
-    {{-- ... (STYLE TETAP SAMA SEPERTI SEBELUMNYA) ... --}}
+    {{-- ... (STYLE TETAP SAMA) ... --}}
     <style>
         :root { --polkam-gold: #c38e44; --polkam-gold-hover: #a57635; }
         .text-gold { color: var(--polkam-gold) !important; }
@@ -15,8 +15,6 @@
         .modal-header-gold { background-color: #f8f9fa; border-bottom: 2px solid var(--polkam-gold); }
         .detail-label { font-size: 0.75rem; text-transform: uppercase; color: #6c757d; font-weight: 700; }
         .detail-value { font-weight: 600; color: #212529; }
-
-        /* ... Style Mobile & Dark Mode (Tetap Sama) ... */
         @media (max-width: 767px) {
             .table-mobile-card thead { display: none; }
             .table-mobile-card tbody tr { display: flex; flex-wrap: wrap; background-color: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 4px 8px rgba(0,0,0,0.05); overflow: hidden; }
@@ -35,30 +33,26 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
         <div class="d-flex align-items-center">
             <div class="p-2 me-2"><i class="bi bi-shuffle fs-3 text-gold"></i></div>
-            <div>
-                <h2 class="h4 mb-0 text-dark">Random Penilai</h2>
-            </div>
+            <div><h2 class="h4 mb-0 text-dark">Random Penilai</h2></div>
         </div>
     </div>
 
-    {{-- CEK JIKA SIKLUS KOSONG SAMA SEKALI --}}
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     @if($sikluses->isEmpty())
         <div class="card border-0 shadow-sm text-center py-5">
             <div class="card-body">
-                <div class="mb-3">
-                    <i class="bi bi-calendar-x text-warning" style="font-size: 4rem;"></i>
-                </div>
-                <h3 class="h5 fw-bold text-dark">Belum Ada Siklus Semester</h3>
-                <p class="text-muted col-lg-6 mx-auto mb-4">
-                    Anda belum membuat data Siklus Semester. Fitur Random Penilai membutuhkan siklus aktif.
-                </p>
-                <a href="{{ route('admin.siklus-semester') }}" class="btn btn-gold px-4 shadow-sm">
-                    <i class="bi bi-plus-circle me-2"></i>Buat Siklus Baru
-                </a>
+                <div class="mb-3"><i class="bi bi-calendar-x text-warning" style="font-size: 4rem;"></i></div>
+                <h3 class="h5 fw-bold text-dark">Data Siklus Tidak Ditemukan</h3>
+                <a href="{{ route('admin.siklus-semester') }}" class="btn btn-gold px-4 shadow-sm mt-3">Buat Siklus Baru</a>
             </div>
         </div>
     @else
-        {{-- SIKLUS ADA, LANJUT CEK --}}
 
         {{-- SIKLUS SELECTOR --}}
         <div class="card border-0 shadow-sm mb-4">
@@ -71,8 +65,8 @@
                         <select wire:model.live="siklus_id" class="form-select border-gold bg-light">
                             @foreach($sikluses as $siklus)
                                 <option value="{{ $siklus->id }}">
-                                    {{ $siklus->tahun_ajaran }} - {{ $siklus->semester }}
-                                    @if($siklus->penilaianSession) (Data Tersedia) @endif
+                                    {{ $siklus->tahun_ajaran }} - {{ $siklus->semester }} 
+                                    ({{ $siklus->status }})
                                 </option>
                             @endforeach
                         </select>
@@ -90,39 +84,73 @@
                             <i class="bi bi-sliders me-2 text-gold"></i>Konfigurasi
                         </h5>
 
-                        {{-- [FUNGSI BARU] CEK KELENGKAPAN DATA --}}
+                        {{-- [TAMPILAN CHECKLIST SYARAT] --}}
                         @if(!$isReadyToGenerate && !$isSessionExists)
                             <div class="alert alert-danger border-danger shadow-sm rounded-3">
-                                <h6 class="fw-bold mb-2"><i class="bi bi-exclamation-octagon-fill me-2"></i>Syarat Belum Terpenuhi!</h6>
-                                <p class="small mb-2">Mohon lengkapi data berikut sebelum memulai penilaian:</p>
+                                <h6 class="fw-bold mb-2"><i class="bi bi-exclamation-octagon-fill me-2"></i>Prasyarat Belum Lengkap!</h6>
+                                <p class="small mb-2">Sistem tidak dapat memproses sampai semua syarat terpenuhi:</p>
+                                
                                 <ul class="list-group list-group-flush small rounded bg-white">
                                     
+                                    {{-- 1. CEK SIKLUS AKTIF --}}
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Data Kompetensi</span>
-                                        @if($statusCheck['kompetensi']) 
-                                            <i class="bi bi-check-circle-fill text-success"></i> 
+                                        <span>Status Siklus "Aktif"</span>
+                                        @if($statusCheck['siklus_aktif']) 
+                                            <i class="bi bi-check-circle-fill text-success"></i>
                                         @else 
-                                            <a href="{{ route('admin.kompetensi') }}" class="btn btn-xs btn-outline-danger py-0" style="font-size: 0.7rem;">Lengkapi</a> 
+                                            <span class="badge bg-danger">Tidak Aktif</span>
                                         @endif
                                     </li>
 
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Data Pertanyaan</span>
-                                        @if($statusCheck['pertanyaan']) 
-                                            <i class="bi bi-check-circle-fill text-success"></i> 
-                                        @else 
-                                            <a href="{{ route('admin.pertanyaan') }}" class="btn btn-xs btn-outline-danger py-0" style="font-size: 0.7rem;">Lengkapi</a> 
+                                    {{-- 2. CEK BOBOT 100% --}}
+                                    <li class="list-group-item d-flex flex-column align-items-start">
+                                        <div class="d-flex justify-content-between w-100 align-items-center">
+                                            <span>Bobot Kompetensi (Total 100%)</span>
+                                            @if($statusCheck['bobot_100']) 
+                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                            @else 
+                                                <a href="{{ route('admin.kompetensi') }}" class="btn btn-xs btn-outline-danger py-0" style="font-size: 0.7rem;">Perbaiki</a>
+                                            @endif
+                                        </div>
+                                        @if(!$statusCheck['bobot_100'])
+                                            <small class="text-danger mt-1">Saat ini: <strong>{{ $totalBobotCurrent }}%</strong> (Harus pas 100)</small>
                                         @endif
                                     </li>
 
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Skema Penilaian (Siklus Ini)</span>
-                                        @if($statusCheck['skema']) 
-                                            <i class="bi bi-check-circle-fill text-success"></i> 
-                                        @else 
-                                            <a href="{{ route('admin.skema-penilaian') }}" class="btn btn-xs btn-outline-danger py-0" style="font-size: 0.7rem;">Buat Skema</a> 
+                                    {{-- 3. CEK PERTANYAAN (Setiap Kompetensi harus ada soal) --}}
+                                    <li class="list-group-item d-flex flex-column align-items-start">
+                                        <div class="d-flex justify-content-between w-100 align-items-center">
+                                            <span>Kelengkapan Pertanyaan</span>
+                                            @if($statusCheck['pertanyaan_lengkap']) 
+                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                            @else 
+                                                <a href="{{ route('admin.pertanyaan') }}" class="btn btn-xs btn-outline-danger py-0" style="font-size: 0.7rem;">Lengkapi</a>
+                                            @endif
+                                        </div>
+                                        @if(!$statusCheck['pertanyaan_lengkap'] && !empty($missingKompetensiNames))
+                                            <div class="mt-1 text-danger fst-italic" style="font-size: 0.7rem;">
+                                                Kompetensi tanpa soal: {{ implode(', ', $missingKompetensiNames) }}
+                                            </div>
                                         @endif
                                     </li>
+
+                                    {{-- 4. CEK SKEMA LEVEL 1-5 --}}
+                                    <li class="list-group-item d-flex flex-column align-items-start">
+                                        <div class="d-flex justify-content-between w-100 align-items-center">
+                                            <span>Skema Penilaian (Level 1-5)</span>
+                                            @if($statusCheck['skema_lengkap']) 
+                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                            @else 
+                                                <a href="{{ route('admin.skema-penilaian') }}" class="btn btn-xs btn-outline-danger py-0" style="font-size: 0.7rem;">Buat Skema</a>
+                                            @endif
+                                        </div>
+                                        @if(!$statusCheck['skema_lengkap'] && !empty($missingLevels))
+                                            <div class="mt-1 text-danger fst-italic" style="font-size: 0.7rem;">
+                                                Level belum dicakup: {{ implode(', ', $missingLevels) }}
+                                            </div>
+                                        @endif
+                                    </li>
+
                                 </ul>
                             </div>
                         @endif
@@ -142,7 +170,7 @@
 
                         <form wire:submit.prevent="generate">
                             @if($isSessionExists)
-                                {{-- TAMPILAN JIKA SESI SUDAH ADA (Locked) --}}
+                                {{-- TAMPILAN TERKUNCI KARENA SUDAH ADA SESI --}}
                                 <div class="text-center py-2">
                                     <div class="mb-3">
                                         <i class="bi {{ $isExpired ? 'bi-x-circle text-danger' : 'bi-check-circle text-success' }}" style="font-size: 4rem;"></i>
@@ -161,35 +189,22 @@
                                     </button>
                                 </div>
                             @elseif(!$isReadyToGenerate)
-                                {{-- TAMPILAN JIKA BELUM SIAP (Syarat Kurang) --}}
+                                {{-- TAMPILAN TERKUNCI KARENA SYARAT BELUM LENGKAP --}}
                                 <div class="text-center py-3 opacity-50">
                                     <i class="bi bi-slash-circle fs-1 mb-2 d-block"></i>
-                                    <span class="small fw-bold">Tombol terkunci karena data belum lengkap.</span>
+                                    <span class="small fw-bold">Tombol terkunci karena prasyarat belum lengkap.</span>
                                 </div>
                             @else
-                                {{-- TAMPILAN FORM (Hanya muncul jika SIAP & Belum Ada Sesi) --}}
+                                {{-- FORM INPUT (Hanya Muncul Jika Semua Syarat OK) --}}
                                 <div class="mb-3">
-                                        <label class="fw-bold text-muted small mb-1">Tentukan Batas Waktu (Deadline)</label>
-                                        <div class="input-group">
-                                            {{-- Ikon Kalender --}}
-                                            <span class="input-group-text bg-white border-end-0">
-                                                <i class="bi bi-calendar-event text-gold"></i>
-                                            </span>
-                                            
-                                            {{-- Input Tanggal & Jam --}}
-                                            <input type="datetime-local" 
-                                                wire:model="batas_waktu" 
-                                                min="{{ now()->format('Y-m-d\TH:i') }}"
-                                                class="form-control border-start-0 border-end-0 ps-0 text-center fw-bold @error('batas_waktu') is-invalid @enderror"
-                                                style="letter-spacing: 1px;"> {{-- Sedikit spasi agar angka jam lebih lega --}}
-                                            
-                                            {{-- Label WIB --}}
-                                            <span class="input-group-text bg-light text-muted fw-bold border-start-0">
-                                                WIB
-                                            </span>
-                                        </div>
-                                        @error('batas_waktu') <span class="text-danger small mt-1 d-block">{{ $message }}</span> @enderror
+                                    <label class="fw-bold text-muted small mb-1">Tentukan Batas Waktu (Deadline)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-calendar-event text-gold"></i></span>
+                                        <input type="datetime-local" wire:model="batas_waktu" min="{{ now()->format('Y-m-d\TH:i') }}" class="form-control border-start-0 border-end-0 ps-0 text-center fw-bold @error('batas_waktu') is-invalid @enderror">
+                                        <span class="input-group-text bg-light text-muted fw-bold border-start-0">WIB</span>
                                     </div>
+                                    @error('batas_waktu') <span class="text-danger small mt-1 d-block">{{ $message }}</span> @enderror
+                                </div>
 
                                 <div class="mb-3">
                                     <label class="fw-bold text-muted small mb-1">Jumlah Sampel Rekan</label>
@@ -221,10 +236,9 @@
                 </div>
             </div>
 
-            {{-- KOLOM KANAN (RIWAYAT) --}}
+            {{-- KOLOM KANAN (RIWAYAT) - (SAMA SEPERTI SEBELUMNYA) --}}
             <div class="col-12 col-lg-7">
                 <div class="card card-history h-100 bg-white">
-                    {{-- ... Bagian Riwayat Sama Saja ... --}}
                     <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history me-2 text-gold"></i>Riwayat Generate</h5>
                     </div>
@@ -278,11 +292,10 @@
         </div>
     @endif
 
-    {{-- MODAL DETAIL --}}
+    {{-- MODAL DETAIL (SAMA SEPERTI SEBELUMNYA) --}}
     <div wire:ignore.self class="modal fade" id="detailModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4">
-                {{-- ... Header Modal Sama ... --}}
                 <div class="modal-header modal-header-gold px-4 py-3">
                     <h5 class="modal-title fw-bold text-dark"><i class="bi bi-clipboard-data me-2 text-gold"></i>Detail Hasil</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -290,7 +303,6 @@
                 <div class="modal-body p-4 bg-light">
                     @if($selectedHistory)
                     <div class="card border-0 shadow-sm mb-4">
-                        {{-- ... Info Card Sama ... --}}
                         <div class="card-body">
                             <div class="row text-center gy-2">
                                 <div class="col-4 border-end"><div class="detail-label">Siklus</div><div class="detail-value">{{ $selectedHistory->siklus->tahun_ajaran }}</div></div>
@@ -312,12 +324,8 @@
                             <tbody>
                                 @foreach($selectedHistory->alokasis as $alokasi)
                                 <tr class="small">
-                                    {{-- Target Tetap Terlihat --}}
                                     <td class="ps-3 fw-bold">{{ $alokasi->targetUser->name ?? '-' }}</td>
-                                    
                                     <td>{{ $alokasi->targetJabatan->nama_jabatan ?? '-' }}</td>
-                                    
-                                    {{-- SENSOR NAMA PENILAI --}}
                                     <td>
                                         @if($alokasi->sebagai == 'Diri Sendiri')
                                             <span class="text-muted fst-italic">Diri Sendiri</span>
@@ -328,7 +336,6 @@
                                             </span>
                                         @endif
                                     </td>
-                                    
                                     <td class="text-center"><span class="badge bg-light text-dark border rounded-pill">{{ $alokasi->sebagai }}</span></td>
                                 </tr>
                                 @endforeach

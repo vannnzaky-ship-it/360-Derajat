@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\PenilaianAlokasi;
 use App\Models\Kompetensi;
 use App\Models\Pertanyaan;
+use App\Models\PenilaianSkor; // Pastikan Model ini diimport
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -13,7 +14,7 @@ class IsiPenilaian extends Component
 {
     public $alokasi_id;
     public $alokasi;
-    public $jawaban = []; // Array [pertanyaan_id => nilai]
+    public $jawaban = []; 
     public $deadline;
 
     public function mount($id)
@@ -25,72 +26,69 @@ class IsiPenilaian extends Component
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
-        // Cek apakah sudah menilai
         if ($this->alokasi->status_nilai == 'Sudah') {
             return redirect()->route('karyawan.penilaian');
         }
 
-        // Simpan deadline untuk tampilan timer
         $this->deadline = $this->alokasi->penilaianSession->batas_waktu;
 
-        // Cek batas waktu
         if (now() > $this->deadline) {
             session()->flash('error', 'Maaf, batas waktu penilaian untuk sesi ini sudah habis.');
             return redirect()->route('karyawan.penilaian');
+        }
+
+        // [BARU] Load jawaban sementara (draft) jika ada
+        // Supaya kalau user refresh, jawaban yg belum dikirim tidak hilang (jika sudah tersimpan di DB sebagai 0 atau draft)
+        // Kita ambil data dari snapshot skor yang sudah dibuat.
+        $existingScores = PenilaianSkor::where('penilaian_alokasi_id', $id)->get();
+        foreach($existingScores as $skor) {
+            // Hanya isi jika nilainya > 0 (artinya sudah pernah dijawab/disimpan)
+            if($skor->nilai > 0) {
+                $this->jawaban[$skor->pertanyaan_id] = $skor->nilai;
+            }
         }
     }
 
     public function simpan()
     {
-        $role = $this->alokasi->sebagai;
+        // [PERBAIKAN UTAMA DI SINI]
+        // Jangan ambil dari tabel Pertanyaan based on status/tanggal.
+        // Tapi ambil ID Pertanyaan yang SUDAH ADA di tabel skor untuk alokasi ini.
+        // Ini menjamin hanya pertanyaan yang 'terkunci' saat generate yang wajib diisi.
         
-        // [UPDATE] Gunakan logika session created_at juga di sini agar validasi konsisten
-        $sessionCreatedAt = $this->alokasi->penilaianSession->created_at;
+        $requiredIds = PenilaianSkor::where('penilaian_alokasi_id', $this->alokasi_id)
+                        ->pluck('pertanyaan_id')
+                        ->toArray();
 
-        // 1. Ambil semua ID pertanyaan yang wajib diisi (sesuai filter waktu session)
-        $requiredIds = Pertanyaan::where('status', 'Aktif')
-            ->where('created_at', '<=', $sessionCreatedAt) // FILTER WAKTU DITAMBAHKAN
-            ->where(function($q) use ($role) {
-                if ($role == 'Atasan') $q->where('untuk_atasan', 1);
-                elseif ($role == 'Bawahan') $q->where('untuk_bawahan', 1);
-                elseif ($role == 'Rekan') $q->where('untuk_rekan', 1);
-                elseif ($role == 'Diri Sendiri') $q->where('untuk_diri', 1);
-            })->pluck('id')->toArray();
-
-        // 2. Susun Rules secara dinamis
+        // 2. Susun Rules
         $dynamicRules = [];
         foreach ($requiredIds as $id) {
             $dynamicRules["jawaban.$id"] = 'required|integer|min:1|max:5';
         }
 
-        // 3. Jalankan Validasi
+        // 3. Validasi
         $this->validate($dynamicRules, [
-            'jawaban.*.required' => 'Pertanyaan ini belum diisi.',
+            'jawaban.*.required' => 'Pertanyaan ini wajib diberi nilai.',
             'jawaban.*.min' => 'Nilai minimal 1.',
             'jawaban.*.max' => 'Nilai maksimal 5.',
         ]);
 
         DB::beginTransaction();
         try {
-            // Simpan Jawaban ke tabel skor
+            // Update nilai di tabel skor yang sudah ada
             foreach ($this->jawaban as $pertanyaanId => $nilai) {
-                // Pastikan pertanyaan ID valid (opsional tapi aman)
+                // Pastikan kita hanya mengupdate pertanyaan yang memang jatahnya (snapshot)
                 if (in_array($pertanyaanId, $requiredIds)) {
-                    DB::table('penilaian_skor')->updateOrInsert(
-                        [
-                            'penilaian_alokasi_id' => $this->alokasi_id,
-                            'pertanyaan_id' => $pertanyaanId
-                        ],
-                        [
+                    PenilaianSkor::where('penilaian_alokasi_id', $this->alokasi_id)
+                        ->where('pertanyaan_id', $pertanyaanId)
+                        ->update([
                             'nilai' => $nilai,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]
-                    );
+                            'updated_at' => now()
+                        ]);
                 }
             }
 
-            // Ubah status alokasi menjadi 'Sudah'
+            // Ubah status alokasi
             $this->alokasi->update(['status_nilai' => 'Sudah']);
 
             DB::commit();
@@ -100,38 +98,29 @@ class IsiPenilaian extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Terjadi kesalahan saat menyimpan data.');
+            session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
     public function render()
     {
-        $role = $this->alokasi->sebagai;
+        // [PERBAIKAN UTAMA DI RENDER]
+        // Ambil ID pertanyaan yang HANYA ada di tabel skor alokasi ini.
+        // Abaikan status 'Aktif/Tidak Aktif' di tabel master Pertanyaan sekarang.
+        // Kita patuh pada Snapshot.
         
-        // [UPDATE] Ambil Waktu Pembuatan Sesi Penilaian
-        // Ini adalah kunci agar pertanyaan baru tidak bocor ke sesi lama
-        $sessionCreatedAt = $this->alokasi->penilaianSession->created_at;
+        $lockedPertanyaanIds = PenilaianSkor::where('penilaian_alokasi_id', $this->alokasi_id)
+                                ->pluck('pertanyaan_id')
+                                ->toArray();
 
-        $kompetensis = Kompetensi::where('status', 'Aktif')
-            ->with(['pertanyaans' => function($q) use ($role, $sessionCreatedAt) {
-                $q->where('status', 'Aktif')
-                  ->where('created_at', '<=', $sessionCreatedAt); // LOGIKA FILTER WAKTU
-                
-                if ($role == 'Atasan') $q->where('untuk_atasan', 1);
-                elseif ($role == 'Bawahan') $q->where('untuk_bawahan', 1);
-                elseif ($role == 'Rekan') $q->where('untuk_rekan', 1);
-                elseif ($role == 'Diri Sendiri') $q->where('untuk_diri', 1);
-            }])
-            // Hanya ambil kompetensi yang punya pertanyaan valid (setelah difilter)
-            ->whereHas('pertanyaans', function($q) use ($role, $sessionCreatedAt) {
-                $q->where('status', 'Aktif')
-                  ->where('created_at', '<=', $sessionCreatedAt);
-                  
-                if ($role == 'Atasan') $q->where('untuk_atasan', 1);
-                elseif ($role == 'Bawahan') $q->where('untuk_bawahan', 1);
-                elseif ($role == 'Rekan') $q->where('untuk_rekan', 1);
-                elseif ($role == 'Diri Sendiri') $q->where('untuk_diri', 1);
+        // Ambil Kompetensi beserta Pertanyaan-nya, TAPI filter pertanyaannya
+        // hanya yang ada di daftar $lockedPertanyaanIds
+        $kompetensis = Kompetensi::whereHas('pertanyaans', function($q) use ($lockedPertanyaanIds) {
+                $q->whereIn('id', $lockedPertanyaanIds);
             })
+            ->with(['pertanyaans' => function($q) use ($lockedPertanyaanIds) {
+                $q->whereIn('id', $lockedPertanyaanIds);
+            }])
             ->get();
 
         return view('livewire.karyawan.isi-penilaian', [

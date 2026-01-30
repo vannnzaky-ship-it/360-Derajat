@@ -5,11 +5,12 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use App\Models\Siklus;
 use App\Models\Pegawai;
-use App\Models\Kompetensi; // Import Model
-use App\Models\Pertanyaan; // Import Model
-use App\Models\SkemaPenilaian; // Import Model
+use App\Models\Kompetensi;
+use App\Models\Pertanyaan;
+use App\Models\SkemaPenilaian;
 use App\Models\PenilaianSession;
 use App\Models\PenilaianAlokasi;
+use App\Models\PenilaianSkor; // [PENTING] Import Model Ini
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
@@ -32,14 +33,20 @@ class RandomPenilai extends Component
     public $isExpired = false;       
     public $isProcessing = false;
 
-    // [BARU] State untuk Validasi Prasyarat
+    // State Validasi Ketat
     public $statusCheck = [
-        'kompetensi' => false,
-        'pertanyaan' => false,
-        'skema' => false
+        'siklus_aktif' => false,
+        'bobot_100' => false,
+        'pertanyaan_lengkap' => false,
+        'skema_lengkap' => false
     ];
-    public $isReadyToGenerate = false; // Master switch agar tombol aktif/mati
 
+    // Detail Error untuk UI
+    public $totalBobotCurrent = 0;
+    public $missingKompetensiNames = [];
+    public $missingLevels = [];
+
+    public $isReadyToGenerate = false; 
     public $selectedHistory = null;
 
     protected $rules = [
@@ -62,7 +69,6 @@ class RandomPenilai extends Component
             if($anySiklus) $this->siklus_id = $anySiklus->id;
         }
 
-        // Cek status sesi & Cek prasyarat data
         $this->checkSessionStatus();
         $this->checkPrerequisites(); 
     }
@@ -70,30 +76,73 @@ class RandomPenilai extends Component
     public function updatedSiklusId()
     {
         $this->checkSessionStatus();
-        $this->checkPrerequisites(); // Cek ulang saat ganti siklus (karena skema nempel di siklus)
+        $this->checkPrerequisites(); 
     }
 
-    // [FUNGSI BARU] Cek Kelengkapan Data
+    // [LOGIKA UTAMA] Validasi Ketat (Aman JSON/Array)
     public function checkPrerequisites()
     {
-        // 1. Cek Kompetensi (Harus ada yang aktif)
-        $this->statusCheck['kompetensi'] = Kompetensi::where('status', 'Aktif')->exists();
+        $this->resetErrorBag();
 
-        // 2. Cek Pertanyaan (Harus ada yang aktif)
-        $this->statusCheck['pertanyaan'] = Pertanyaan::where('status', 'Aktif')->exists();
+        // 1. Cek Siklus Aktif
+        $siklus = Siklus::find($this->siklus_id);
+        $this->statusCheck['siklus_aktif'] = ($siklus && $siklus->status === 'Aktif');
 
-        // 3. Cek Skema (Harus ada skema untuk siklus yang dipilih ini)
+        // 2. Cek Bobot Kompetensi (Harus pas 100%)
+        $activeKompetensi = Kompetensi::where('status', 'Aktif')->get();
+        $this->totalBobotCurrent = $activeKompetensi->sum('bobot');
+        $this->statusCheck['bobot_100'] = ($this->totalBobotCurrent === 100);
+
+        // 3. Cek Pertanyaan (Setiap Kompetensi Aktif HARUS punya minimal 1 Pertanyaan Aktif)
+        $this->missingKompetensiNames = [];
+        foreach ($activeKompetensi as $komp) {
+            $hasPertanyaan = Pertanyaan::where('kompetensi_id', $komp->id)
+                                ->where('status', 'Aktif')
+                                ->exists();
+            if (!$hasPertanyaan) {
+                $this->missingKompetensiNames[] = $komp->nama_kompetensi;
+            }
+        }
+        $this->statusCheck['pertanyaan_lengkap'] = empty($this->missingKompetensiNames) && $activeKompetensi->isNotEmpty();
+
+        // 4. Cek Skema (Harus mencakup Level 1, 2, 3, 4, 5)
+        $this->missingLevels = [];
         if ($this->siklus_id) {
-            $this->statusCheck['skema'] = SkemaPenilaian::where('siklus_id', $this->siklus_id)->exists();
+            $skemas = SkemaPenilaian::where('siklus_id', $this->siklus_id)->get();
+            $coveredLevels = [];
+            
+            // Gabungkan semua level target dari semua skema di siklus ini
+            foreach ($skemas as $skema) {
+                // Cek apakah datanya sudah Array atau string JSON
+                $dataLevel = $skema->level_target;
+                
+                if (is_array($dataLevel)) {
+                    $levels = $dataLevel;
+                } else {
+                    $levels = json_decode($dataLevel, true);
+                }
+                
+                $levels = $levels ?? []; 
+
+                // Pastikan format string agar match dengan array_diff
+                $levels = array_map('strval', $levels);
+                $coveredLevels = array_merge($coveredLevels, $levels);
+            }
+            
+            $requiredLevels = ['1', '2', '3', '4', '5'];
+            $this->missingLevels = array_diff($requiredLevels, array_unique($coveredLevels));
+            
+            $this->statusCheck['skema_lengkap'] = empty($this->missingLevels);
         } else {
-            $this->statusCheck['skema'] = false;
+            $this->statusCheck['skema_lengkap'] = false;
         }
 
-        // Tombol Ready jika: Session belum ada DAN semua checklist TRUE
+        // --- KESIMPULAN ---
         $this->isReadyToGenerate = !$this->isSessionExists 
-                                   && $this->statusCheck['kompetensi'] 
-                                   && $this->statusCheck['pertanyaan'] 
-                                   && $this->statusCheck['skema'];
+                                   && $this->statusCheck['siklus_aktif']
+                                   && $this->statusCheck['bobot_100'] 
+                                   && $this->statusCheck['pertanyaan_lengkap'] 
+                                   && $this->statusCheck['skema_lengkap'];
     }
 
     public function checkSessionStatus()
@@ -115,7 +164,6 @@ class RandomPenilai extends Component
 
     public function showDetail($sessionId)
     {
-        $this->selectedHistory = null;
         $this->selectedHistory = PenilaianSession::with([
             'siklus', 
             'alokasis.user', 
@@ -126,10 +174,17 @@ class RandomPenilai extends Component
 
     public function generate()
     {
-        // [VALIDASI SERVER SIDE] Cegah user bypass via inspect element
+        // [VALIDASI SERVER SIDE KETAT]
         $this->checkPrerequisites();
+        
         if (!$this->isReadyToGenerate) {
-            session()->flash('error', 'Data master (Kompetensi/Pertanyaan/Skema) belum lengkap! Tidak dapat memproses.');
+            $errorMsg = 'Validasi Gagal: ';
+            if(!$this->statusCheck['siklus_aktif']) $errorMsg .= 'Siklus Tidak Aktif. ';
+            if(!$this->statusCheck['bobot_100']) $errorMsg .= 'Bobot Kompetensi bukan 100%. ';
+            if(!$this->statusCheck['skema_lengkap']) $errorMsg .= 'Skema Level belum lengkap. ';
+            if(!$this->statusCheck['pertanyaan_lengkap']) $errorMsg .= 'Ada kompetensi tanpa pertanyaan. ';
+            
+            session()->flash('error', $errorMsg);
             return;
         }
 
@@ -143,6 +198,7 @@ class RandomPenilai extends Component
         $this->isProcessing = true;
         DB::beginTransaction();
         try {
+            // 1. Buat Session
             $session = PenilaianSession::create([
                 'siklus_id' => $this->siklus_id,
                 'tanggal_mulai' => now(),
@@ -154,14 +210,17 @@ class RandomPenilai extends Component
             $allTargets = Pegawai::with(['user', 'jabatans'])->get();
             $dataAlokasi = [];
 
+            // 2. Logic Alokasi Penilai
             foreach ($allTargets as $target) {
                 if (!$target->user) continue;
 
                 foreach ($target->jabatans as $jabatanTarget) {
+                    // Diri Sendiri
                     if (in_array('Diri Sendiri', $this->pilihan_kategori)) {
                         $this->tambahAlokasi($dataAlokasi, $session->id, $target->user_id, $jabatanTarget->id, $target->user_id, $jabatanTarget->id, 'Diri Sendiri');
                     }
 
+                    // Atasan
                     if (in_array('Atasan', $this->pilihan_kategori) && $jabatanTarget->parent_id) {
                         $atasanList = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('jabatan.id', $jabatanTarget->parent_id);
@@ -177,6 +236,7 @@ class RandomPenilai extends Component
                         }
                     }
 
+                    // Bawahan
                     if (in_array('Bawahan', $this->pilihan_kategori)) {
                         $bawahanList = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('parent_id', $jabatanTarget->id);
@@ -192,6 +252,7 @@ class RandomPenilai extends Component
                         }
                     }
 
+                    // Rekan
                     if (in_array('Rekan', $this->pilihan_kategori) && $jabatanTarget->parent_id) {
                         $rekanCandidates = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('parent_id', $jabatanTarget->parent_id)
@@ -213,14 +274,42 @@ class RandomPenilai extends Component
                 }
             }
 
+            // Insert Alokasi Massal
             foreach (array_chunk($dataAlokasi, 100) as $chunk) {
                 PenilaianAlokasi::insertOrIgnore($chunk);
             }
 
+            // --- STEP BARU: SNAPSHOT / KUNCI PERTANYAAN ---
+            // 3. Ambil ID Alokasi yang baru dibuat
+            $createdAlokasiIds = PenilaianAlokasi::where('penilaian_session_id', $session->id)->pluck('id');
+            
+            // 4. Ambil Pertanyaan yang AKTIF SAAT INI
+            $activePertanyaanIds = Pertanyaan::where('status', 'Aktif')->pluck('id');
+
+            $dataSkorAwal = [];
+            foreach ($createdAlokasiIds as $alokasiId) {
+                foreach ($activePertanyaanIds as $pertanyaanId) {
+                    $dataSkorAwal[] = [
+                        'penilaian_alokasi_id' => $alokasiId,
+                        'pertanyaan_id' => $pertanyaanId,
+                        'nilai' => 0, // Nilai 0 = Slot kosong, tapi terkunci
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ];
+                }
+            }
+
+            // 5. Insert Skor Awal Massal
+            // Ini akan membuat pertanyaan 'terkunci' sesuai kondisi saat ini.
+            foreach (array_chunk($dataSkorAwal, 200) as $chunkSkor) {
+                PenilaianSkor::insertOrIgnore($chunkSkor);
+            }
+            // ----------------------------------------------
+
             DB::commit();
             $this->checkSessionStatus();
-            $this->checkPrerequisites(); // Update status cek lagi
-            session()->flash('message', "Berhasil Generate!");
+            $this->checkPrerequisites(); 
+            session()->flash('message', "Berhasil Generate & Mengunci Daftar Pertanyaan!");
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -253,7 +342,7 @@ class RandomPenilai extends Component
     public function render()
     {
         return view('livewire.admin.random-penilai', [
-            'sikluses' => Siklus::where('status', 'Aktif')->with('penilaianSession')->get(),
+            'sikluses' => Siklus::with('penilaianSession')->get(), 
             'histories' => PenilaianSession::with('siklus')->latest()->paginate(5)
         ])->layout('layouts.admin');
     }

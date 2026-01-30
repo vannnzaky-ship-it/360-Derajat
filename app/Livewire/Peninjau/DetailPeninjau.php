@@ -218,45 +218,56 @@ class DetailPeninjau extends Component
         return "Raport-{$jabatanLabel}-{$cleanName}.{$ext}";
     }
 
-   public function exportPdf()
-    {
-        if (empty($this->tableData)) return;
+ public function exportPdf()
+{
+    if (empty($this->tableData)) return;
 
-        // 1. Setup Logo
+    // --- 1. SETUP LOGO YANG AMAN (ANTI ERROR 500) ---
+    $logoBase64 = null;
+    try {
+        // Pastikan path sesuai server Linux (Case Sensitive)
         $pathLogo = public_path('images/logo-polkam.png');
-        $pathLogo = str_replace('\\', '/', $pathLogo);
-        $logoBase64 = null;
+        
         if (file_exists($pathLogo)) {
-            try {
-                $type = pathinfo($pathLogo, PATHINFO_EXTENSION);
-                $data = file_get_contents($pathLogo);
+            $type = pathinfo($pathLogo, PATHINFO_EXTENSION);
+            $data = file_get_contents($pathLogo);
+            if ($data !== false) {
                 $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-            } catch (\Exception $e) {}
+            }
         }
-
-        // 2. Data Nilai (Hanya 360)
-        $rataRata = $this->finalScore;
-        $predikatAkhir = $this->getPredikatPolkam($rataRata);
-
-        // 3. Data View
-        $data = [
-            'namaUser' => $this->user->name,
-            'unitKerja' => $this->user->pegawai->unit_kerja ?? 'Politeknik Kampar',
-            'jabatan' => $this->label_jabatan,
-            'tableData' => $this->tableData,
-            
-            'finalScore' => $this->finalScore,
-            'nilai360' => $this->finalScore, // Disisakan
-            'rataRata' => $rataRata,
-            'mutu' => $predikatAkhir,
-            
-            'tanggal_cetak' => now()->translatedFormat('d F Y'),
-            'logoBase64' => $logoBase64
-        ];
-
-        $pdf = Pdf::loadView('livewire.karyawan.cetak-raport-pdf', $data)->setPaper('a4', 'portrait');
-        return response()->streamDownload(fn() => print($pdf->output()), $this->getGeneratedFilename('pdf'));
+    } catch (\Throwable $e) {
+        // Jika error (misal permission), biarkan $logoBase64 tetap null
+        // Tidak perlu throw error agar PDF tetap terdownload
     }
+
+    // --- 2. SETUP DATA LAINNYA ---
+    $rataRata = $this->finalScore;
+    $predikatAkhir = $this->getPredikatPolkam($rataRata);
+
+    $data = [
+        'namaUser' => $this->user->name,
+        'unitKerja' => $this->user->pegawai->unit_kerja ?? 'Politeknik Kampar',
+        'jabatan' => $this->label_jabatan,
+        'tableData' => $this->tableData,
+        
+        'finalScore' => $this->finalScore,
+        'nilai360' => $this->finalScore,
+        'rataRata' => $rataRata,
+        'mutu' => $predikatAkhir,
+        
+        'tanggal_cetak' => now()->translatedFormat('d F Y'),
+        'logoBase64' => $logoBase64 // <--- KITA KIRIM DARI SINI
+    ];
+
+    $pdf = Pdf::loadView('livewire.karyawan.cetak-raport-pdf', $data)->setPaper('a4', 'portrait');
+    
+    // Matikan debug bar jika ada (opsional, kadang mengganggu PDF)
+    if (app()->bound('debugbar')) {
+        app('debugbar')->disable();
+    }
+
+    return response()->streamDownload(fn() => print($pdf->output()), $this->getGeneratedFilename('pdf'));
+}
 
     // --- EXPORT EXCEL (DENGAN GRAFIK + LOGO + PHPSPREADSHEET) ---
     public function exportExcel()

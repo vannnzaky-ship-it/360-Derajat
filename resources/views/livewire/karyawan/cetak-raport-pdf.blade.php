@@ -50,31 +50,10 @@
     <table class="iso-table">
         <tr>
             <td class="logo-col" rowspan="2">
-                {{-- PENGAMAN: Cek apakah Server punya GD Extension --}}
-                <?php
-                    $showLogo = false;
-                    $base64 = '';
-                    // Kita cek manual apakah fungsi gambar tersedia
-                    if (function_exists('imagecreate') || extension_loaded('gd')) {
-                        $path = public_path('images/logo-polkam.png');
-                        if (file_exists($path)) {
-                            // Bungkus try-catch agar PDF tidak crash jika file gambar bermasalah
-                            try {
-                                $type = pathinfo($path, PATHINFO_EXTENSION);
-                                $data = file_get_contents($path);
-                                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                                $showLogo = true;
-                            } catch (\Exception $e) {
-                                $showLogo = false;
-                            }
-                        }
-                    }
-                ?>
-
-                @if($showLogo)
-                    <img src="{{ $base64 }}" width="65" alt="Logo">
+                @if(!empty($logoBase64))
+                    <img src="{{ $logoBase64 }}" width="65" alt="Logo">
                 @else
-                    {{-- Tampilkan teks pengganti jika GD mati / Gambar error --}}
+                    {{-- Fallback jika gambar gagal --}}
                     <div style="font-weight:bold; font-size:12pt; border:1px dashed #000; padding:5px;">POLKAM</div>
                 @endif
             </td>
