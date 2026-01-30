@@ -1,25 +1,33 @@
 <div class="container-fluid p-4">
 
-    {{-- ... (STYLE TETAP SAMA) ... --}}
+    {{-- STYLE KHUSUS: RANDOM PENILAI (WARNA DARK MODE DIPERBAIKI) --}}
     <style>
         :root { --polkam-gold: #c38e44; --polkam-gold-hover: #a57635; }
         .text-gold { color: var(--polkam-gold) !important; }
         .bg-gold { background-color: var(--polkam-gold) !important; color: white; }
         .border-gold { border-color: var(--polkam-gold) !important; }
+        
         .btn-gold { background-color: var(--polkam-gold); color: white; border: none; font-weight: 600; }
         .btn-gold:hover { background-color: var(--polkam-gold-hover); color: white; }
+        
         .form-check-input:checked { background-color: var(--polkam-gold); border-color: var(--polkam-gold); }
-        .card-panel { border: 0; box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); border-left: 5px solid var(--polkam-gold); }
-        .card-history { border: 0; box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); }
+        
+        /* Card Styles Default (Light Mode) */
+        .card-panel { border: 0; box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); border-left: 5px solid var(--polkam-gold); background-color: #fff; }
+        .card-history { border: 0; box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); background-color: #fff; }
+        
         .live-clock { background: linear-gradient(to right, #f8f9fa, #ffffff); border-left: 3px solid #6c757d; }
         .modal-header-gold { background-color: #f8f9fa; border-bottom: 2px solid var(--polkam-gold); }
+        
         .detail-label { font-size: 0.75rem; text-transform: uppercase; color: #6c757d; font-weight: 700; }
         .detail-value { font-weight: 600; color: #212529; }
+
+        /* Mobile Responsive Table */
         @media (max-width: 767px) {
             .table-mobile-card thead { display: none; }
             .table-mobile-card tbody tr { display: flex; flex-wrap: wrap; background-color: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 4px 8px rgba(0,0,0,0.05); overflow: hidden; }
             .table-mobile-card tbody td { display: block; width: 100%; border: none !important; padding: 8px 15px; }
-            .table-mobile-card tbody td:nth-child(1) { order: 1; background: linear-gradient(to right, rgba(195, 142, 68, 0.1), transparent); border-bottom: 1px solid rgba(0,0,0,0.05) !important; padding-top: 12px; padding-bottom: 12px; }
+            .table-mobile-card tbody td:nth-child(1) { order: 1; background: transparent; border-bottom: 1px solid rgba(0,0,0,0.05) !important; padding-top: 12px; padding-bottom: 12px; font-weight: bold; }
             .table-mobile-card tbody td:nth-child(2) { order: 2; font-size: 0.9rem; }
             .table-mobile-card tbody td:nth-child(2)::before { content: "Periode: "; font-weight: bold; color: #666; }
             .table-mobile-card tbody td:nth-child(3) { order: 3; border-bottom: 1px dashed rgba(0,0,0,0.1) !important; padding-bottom: 12px; }
@@ -27,6 +35,71 @@
             .table-mobile-card tbody td:nth-child(4) { order: 4; text-align: right !important; background-color: rgba(0,0,0,0.02); padding-top: 10px; padding-bottom: 10px; }
         }
         @media (min-width: 768px) { .w-md-auto { width: auto !important; } }
+
+        /* ========================================= */
+        /* DARK MODE FIXES (WARNA HITAM NETRAL)      */
+        /* ========================================= */
+        
+        /* 1. Paksa Background jadi Hitam Netral (Bukan Biru) */
+        [data-bs-theme="dark"] .bg-white,
+        [data-bs-theme="dark"] .card-panel,
+        [data-bs-theme="dark"] .card-history,
+        [data-bs-theme="dark"] .card {
+            background-color: #1a1a1a !important; /* Hitam Abu Netral */
+            border-color: #2d2d2d !important;
+            color: #e0e0e0 !important;
+        }
+
+        /* 2. Warna Teks */
+        [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
+        [data-bs-theme="dark"] .text-muted { color: #999 !important; }
+        [data-bs-theme="dark"] .detail-value { color: #fff !important; }
+        
+        /* 3. Input & Form (Abu Gelap Netral) */
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select,
+        [data-bs-theme="dark"] .input-group-text,
+        [data-bs-theme="dark"] .bg-light {
+            background-color: #252525 !important; /* Abu Gelap Solid */
+            border-color: #333 !important;
+            color: #e0e0e0 !important;
+        }
+        
+        /* 4. List Group & Clock */
+        [data-bs-theme="dark"] .list-group-item {
+            background-color: #1a1a1a !important;
+            border-color: #333 !important;
+            color: #e0e0e0 !important;
+        }
+        [data-bs-theme="dark"] .live-clock {
+            background: linear-gradient(to right, #252525, #1a1a1a) !important;
+            border-left-color: #555 !important;
+        }
+        
+        /* 5. Modal & Table Hover */
+        [data-bs-theme="dark"] .modal-content {
+            background-color: #1a1a1a !important;
+            border-color: #333 !important;
+        }
+        [data-bs-theme="dark"] .modal-header-gold,
+        [data-bs-theme="dark"] .modal-footer {
+            background-color: #252525 !important;
+            border-color: #333 !important;
+        }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover {
+            background-color: rgba(255,255,255,0.03) !important;
+        }
+
+        /* 6. Fix Mobile Table di Dark Mode */
+        @media (max-width: 767px) {
+            [data-bs-theme="dark"] .table-mobile-card tbody tr {
+                background-color: #1a1a1a !important;
+                border-color: #333 !important;
+            }
+            [data-bs-theme="dark"] .table-mobile-card tbody td:nth-child(4) {
+                background-color: rgba(255,255,255,0.03) !important;
+            }
+        }
     </style>
 
     {{-- HEADER --}}
@@ -38,7 +111,7 @@
     </div>
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -78,7 +151,7 @@
         <div class="row g-4">
             {{-- KOLOM KIRI (KONFIGURASI) --}}
             <div class="col-12 col-lg-5">
-                <div class="card card-panel h-100 bg-white">
+                <div class="card card-panel h-100">
                     <div class="card-body p-4">
                         <h5 class="fw-bold text-dark mb-4 pb-2 border-bottom">
                             <i class="bi bi-sliders me-2 text-gold"></i>Konfigurasi
@@ -91,8 +164,7 @@
                                 <p class="small mb-2">Sistem tidak dapat memproses sampai semua syarat terpenuhi:</p>
                                 
                                 <ul class="list-group list-group-flush small rounded bg-white">
-                                    
-                                    {{-- 1. CEK SIKLUS AKTIF --}}
+                                    {{-- 1. CEK SIKLUS --}}
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         <span>Status Siklus "Aktif"</span>
                                         @if($statusCheck['siklus_aktif']) 
@@ -102,7 +174,7 @@
                                         @endif
                                     </li>
 
-                                    {{-- 2. CEK BOBOT 100% --}}
+                                    {{-- 2. CEK BOBOT --}}
                                     <li class="list-group-item d-flex flex-column align-items-start">
                                         <div class="d-flex justify-content-between w-100 align-items-center">
                                             <span>Bobot Kompetensi (Total 100%)</span>
@@ -117,7 +189,7 @@
                                         @endif
                                     </li>
 
-                                    {{-- 3. CEK PERTANYAAN (Setiap Kompetensi harus ada soal) --}}
+                                    {{-- 3. CEK PERTANYAAN --}}
                                     <li class="list-group-item d-flex flex-column align-items-start">
                                         <div class="d-flex justify-content-between w-100 align-items-center">
                                             <span>Kelengkapan Pertanyaan</span>
@@ -134,7 +206,7 @@
                                         @endif
                                     </li>
 
-                                    {{-- 4. CEK SKEMA LEVEL 1-5 --}}
+                                    {{-- 4. CEK SKEMA --}}
                                     <li class="list-group-item d-flex flex-column align-items-start">
                                         <div class="d-flex justify-content-between w-100 align-items-center">
                                             <span>Skema Penilaian (Level 1-5)</span>
@@ -150,7 +222,6 @@
                                             </div>
                                         @endif
                                     </li>
-
                                 </ul>
                             </div>
                         @endif
@@ -170,7 +241,7 @@
 
                         <form wire:submit.prevent="generate">
                             @if($isSessionExists)
-                                {{-- TAMPILAN TERKUNCI KARENA SUDAH ADA SESI --}}
+                                {{-- TAMPILAN TERKUNCI --}}
                                 <div class="text-center py-2">
                                     <div class="mb-3">
                                         <i class="bi {{ $isExpired ? 'bi-x-circle text-danger' : 'bi-check-circle text-success' }}" style="font-size: 4rem;"></i>
@@ -189,13 +260,13 @@
                                     </button>
                                 </div>
                             @elseif(!$isReadyToGenerate)
-                                {{-- TAMPILAN TERKUNCI KARENA SYARAT BELUM LENGKAP --}}
+                                {{-- TAMPILAN BELUM SIAP --}}
                                 <div class="text-center py-3 opacity-50">
                                     <i class="bi bi-slash-circle fs-1 mb-2 d-block"></i>
                                     <span class="small fw-bold">Tombol terkunci karena prasyarat belum lengkap.</span>
                                 </div>
                             @else
-                                {{-- FORM INPUT (Hanya Muncul Jika Semua Syarat OK) --}}
+                                {{-- FORM INPUT --}}
                                 <div class="mb-3">
                                     <label class="fw-bold text-muted small mb-1">Tentukan Batas Waktu (Deadline)</label>
                                     <div class="input-group">
@@ -236,9 +307,9 @@
                 </div>
             </div>
 
-            {{-- KOLOM KANAN (RIWAYAT) - (SAMA SEPERTI SEBELUMNYA) --}}
+            {{-- KOLOM KANAN (RIWAYAT) --}}
             <div class="col-12 col-lg-7">
-                <div class="card card-history h-100 bg-white">
+                <div class="card card-history h-100">
                     <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history me-2 text-gold"></i>Riwayat Generate</h5>
                     </div>
@@ -292,7 +363,7 @@
         </div>
     @endif
 
-    {{-- MODAL DETAIL (SAMA SEPERTI SEBELUMNYA) --}}
+    {{-- MODAL DETAIL --}}
     <div wire:ignore.self class="modal fade" id="detailModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4">

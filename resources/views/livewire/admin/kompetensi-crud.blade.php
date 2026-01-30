@@ -24,6 +24,27 @@
         }
         .form-control-sm, .form-select-sm, .input-group-text-sm { font-size: 0.85rem; }
 
+        /* --- FIX KHUSUS PENCARIAN (DARK MODE) --- */
+    
+        /* 1. Mengubah background ikon kaca pembesar */
+        [data-bs-theme="dark"] .input-group .input-group-text {
+            background-color: #2c2c2c !important; /* Abu gelap */
+            border-color: #444 !important;       /* Border abu */
+            color: #ccc !important;              /* Ikon jadi terang */
+        }
+
+        /* 2. Mengubah background kolom ketik (input) */
+        [data-bs-theme="dark"] .input-group .form-control {
+            background-color: #2c2c2c !important; /* Abu gelap */
+            border-color: #444 !important;       /* Border abu */
+            color: #fff !important;              /* Teks ketikan jadi putih */
+        }
+
+        /* 3. Mengubah warna teks placeholder (tulisan 'Cari...') */
+        [data-bs-theme="dark"] .input-group .form-control::placeholder {
+            color: #777 !important;              /* Placeholder abu */
+        }
+
         /* 4. Responsif Mobile Card View (Tabel) */
         @media (max-width: 767px) {
             thead { display: none; }

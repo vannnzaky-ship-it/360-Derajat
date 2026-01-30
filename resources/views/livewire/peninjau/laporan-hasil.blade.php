@@ -1,65 +1,106 @@
 <div class="container-fluid p-4">
     
-    {{-- CSS KHUSUS (PREMIUM LOOK) --}}
-    <style>
-        .text-gold { color: #c38e44 !important; }
-        .bg-gold { background-color: #c38e44 !important; color: white; }
-        .btn-outline-gold {
-            color: #c38e44;
-            border: 1px solid #c38e44;
-            background: transparent;
-            transition: all 0.3s;
-        }
-        .btn-outline-gold:hover {
-            background-color: #c38e44;
-            color: white;
-            box-shadow: 0 5px 15px rgba(195, 142, 68, 0.2);
-        }
+ <style>
+    /* --- VARIABLES & UTILS --- */
+    .text-gold { color: #c38e44 !important; }
+    .bg-gold { background-color: #c38e44 !important; color: white; }
+    
+    .btn-outline-gold {
+        color: #c38e44;
+        border: 1px solid #c38e44;
+        background: transparent;
+        transition: all 0.3s;
+    }
+    .btn-outline-gold:hover {
+        background-color: #c38e44;
+        color: white;
+        box-shadow: 0 5px 15px rgba(195, 142, 68, 0.2);
+    }
 
-        /* Card Style Professional */
-        .card-pro {
-            border: 1px solid #eee;
-            border-left: 5px solid #c38e44; /* Aksen Emas di Kiri */
-            border-radius: 12px;
-            background: #fff;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .card-pro:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        }
+    /* --- CARD STYLE --- */
+    .card-pro {
+        border: 1px solid #eee;
+        border-left: 5px solid #c38e44;
+        border-radius: 12px;
+        background: #fff;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card-pro:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    .card-locked {
+        border-left: 5px solid #dcdcdc;
+        background: #fcfcfc;
+        opacity: 0.85;
+    }
 
-        /* Card Locked (Terkunci) */
-        .card-locked {
-            border-left: 5px solid #dcdcdc; /* Aksen Abu */
-            background: #fcfcfc;
-            opacity: 0.85;
-        }
-        .card-locked:hover {
-            transform: none;
-            box-shadow: none;
-        }
+    /* --- BADGE SEMESTER (DEFAULT LIGHT MODE) --- */
+    .badge-semester {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 6px 14px;
+        border-radius: 8px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    /* Warna Ganjil (Light Mode) - Kuning/Oranye */
+    .badge-ganjil {
+        background-color: #fff8e1; 
+        color: #f57f17;
+        border: 1px solid #ffe0b2;
+    }
 
-        /* Badge Semester Custom */
-        .badge-semester {
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 5px 12px;
-            border-radius: 6px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-        .badge-ganjil {
-            background-color: #fff8e1;
-            color: #f57f17;
-            border: 1px solid #ffe0b2;
-        }
-        .badge-genap {
-            background-color: #e3f2fd;
-            color: #1565c0;
-            border: 1px solid #bbdefb;
-        }
-    </style>
+    /* Warna Genap (Light Mode) - Biru */
+    .badge-genap {
+        background-color: #e3f2fd;
+        color: #1565c0;
+        border: 1px solid #bbdefb;
+    }
+
+    /* ========================================= */
+    /* PERBAIKAN DARK MODE (MASUKKAN INI)      */
+    /* ========================================= */
+    [data-bs-theme="dark"] .card-pro {
+        background-color: #212529 !important; /* Kartu jadi gelap */
+        border-color: #373b3e !important;
+        border-left-color: #c38e44 !important; /* Tetap emas di kiri */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    
+    [data-bs-theme="dark"] .card-locked {
+        background-color: #2c3034 !important;
+        border-left-color: #495057 !important;
+        opacity: 0.7;
+    }
+
+    [data-bs-theme="dark"] .text-dark {
+        color: #f8f9fa !important; /* Text hitam jadi putih */
+    }
+
+    /* FIX BADGE GANJIL DI DARK MODE */
+    [data-bs-theme="dark"] .badge-ganjil {
+        background-color: rgba(245, 127, 23, 0.15) !important; /* Background Transparan Oranye */
+        color: #ffb74d !important; /* Teks Oranye Terang */
+        border-color: rgba(255, 183, 77, 0.3) !important;
+    }
+
+    /* FIX BADGE GENAP DI DARK MODE */
+    [data-bs-theme="dark"] .badge-genap {
+        background-color: rgba(21, 101, 192, 0.15) !important; /* Background Transparan Biru */
+        color: #64b5f6 !important; /* Teks Biru Terang */
+        border-color: rgba(100, 181, 246, 0.3) !important;
+    }
+    
+    [data-bs-theme="dark"] .bg-white {
+        background-color: #212529 !important;
+        border-color: #373b3e !important;
+        color: #e0e0e0 !important;
+    }
+</style>
 
     {{-- HEADER SECTION --}}
     <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">

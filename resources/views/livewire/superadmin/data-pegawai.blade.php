@@ -1,64 +1,149 @@
 <div>
-    {{-- CSS CUSTOM: STYLE TABLE FLOATING & MODAL --}}
     <style>
-        /* --- 1. STYLE GLOBAL & TABLE --- */
-        body { background-color: #f8f9fa; }
+    /* --- 1. STYLE GLOBAL & TABLE (DEFAULT LIGHT) --- */
+    body { background-color: #f8f9fa; }
+    
+    .table-floating { border-collapse: separate; border-spacing: 0 15px; }
+    
+    .row-floating { 
+        background-color: #ffffff; /* Default Putih */
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.05); 
+        transition: transform 0.2s, background-color 0.3s;
+    }
+    .row-floating:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+    }
+
+    .row-floating td:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+    .row-floating td:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+
+    .avatar-circle {
+        width: 45px; height: 45px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; color: #fff; background-color: #C38E44;
+        font-size: 1.1rem; flex-shrink: 0;
+        border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* --- 2. STYLE MODAL --- */
+    .modal-dialog-compact { max-width: 550px; margin-top: 60px; margin-bottom: 2rem; }
+    .modal-body-compact { max-height: 70vh; overflow-y: auto; padding: 15px 20px !important; }
+    .form-label-sm { font-size: 0.75rem; font-weight: 700; margin-bottom: 2px; color: #555; }
+    .section-divider { 
+        font-size: 0.65rem; font-weight: 800; color: #c38e44; 
+        letter-spacing: 1px; text-transform: uppercase; 
+        margin: 15px 0 10px 0; border-bottom: 1px solid #eee; padding-bottom: 3px; 
+    }
+    .accordion-button-custom:not(.collapsed) {
+        color: #C38E44 !important; background-color: rgba(195, 142, 68, 0.1) !important;
+    }
+    .badge-jabatan {
+        color: #8f6222 !important; background-color: #fff3cd !important;
+        border: 1px solid #ffe69c !important; padding: 4px 8px;
+        border-radius: 6px; font-weight: 600; font-size: 0.7rem;
+        display: inline-flex; align-items: center; gap: 4px;
+    }
+
+    /* --- 3. RESPONSIVE MOBILE --- */
+    @media (max-width: 768px) {
+        .table-floating thead { display: none; }
+        .table-floating, .table-floating tbody, .table-floating tr, .table-floating td { display: block; width: 100%; }
+        .table-floating tr { margin-bottom: 1rem; border-radius: 12px; }
         
-        .table-floating { border-collapse: separate; border-spacing: 0 15px; }
-        .row-floating { 
-            background-color: #ffffff; 
-            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.05); 
-            transition: transform 0.2s;
-        }
-        .row-floating:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
-        }
+        .row-floating td:first-child { border-radius: 12px 12px 0 0; background: linear-gradient(to bottom, #fdfbf7, #fff); }
+        .row-floating td:last-child { border-radius: 0 0 12px 12px; border-top: 1px solid #eee; }
+        
+        .row-floating td { padding: 10px 15px; text-align: left; }
+    }
 
-        .row-floating td:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-        .row-floating td:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+    /* ========================================= */
+    /* FIX DARK MODE (TAMBAHAN PENTING)      */
+    /* ========================================= */
+    
+    /* 1. Global Background & Text */
+    [data-bs-theme="dark"] body, 
+    [data-bs-theme="dark"] .container-fluid {
+        background-color: #121212 !important; /* Hitam Gelap */
+        color: #e0e0e0 !important;
+    }
+    
+    /* 2. Baris Tabel Mengambang */
+    [data-bs-theme="dark"] .row-floating {
+        background-color: #1e1e1e !important; /* Abu Gelap */
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.5);
+    }
+    
+    /* 3. Text Colors Fix */
+    [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
+    [data-bs-theme="dark"] .text-secondary { color: #adb5bd !important; }
+    [data-bs-theme="dark"] .text-muted { color: #6c757d !important; }
 
-        .avatar-circle {
-            width: 45px; height: 45px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; color: #fff; background-color: #C38E44;
-            font-size: 1.1rem; flex-shrink: 0;
-            border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+    /* 4. Input Search & Background Putih Lainnya */
+    [data-bs-theme="dark"] .bg-white {
+        background-color: #1e1e1e !important;
+        color: #e0e0e0 !important;
+        border-color: #333 !important;
+    }
+    [data-bs-theme="dark"] .input-group-text {
+        background-color: transparent !important;
+        border-color: #333 !important;
+    }
+    [data-bs-theme="dark"] .form-control {
+        background-color: transparent !important;
+        color: #fff !important;
+        border-color: #444 !important;
+    }
+    [data-bs-theme="dark"] .form-control::placeholder {
+        color: #6c757d;
+    }
 
-        /* --- 2. STYLE MODAL (ASLI) --- */
-        .modal-dialog-compact { max-width: 550px; margin-top: 60px; margin-bottom: 2rem; }
-        .modal-body-compact { max-height: 70vh; overflow-y: auto; padding: 15px 20px !important; }
-        .form-label-sm { font-size: 0.75rem; font-weight: 700; margin-bottom: 2px; color: #555; }
-        .section-divider { 
-            font-size: 0.65rem; font-weight: 800; color: #c38e44; 
-            letter-spacing: 1px; text-transform: uppercase; 
-            margin: 15px 0 10px 0; border-bottom: 1px solid #eee; padding-bottom: 3px; 
-        }
-        .accordion-button-custom:not(.collapsed) {
-            color: #C38E44 !important; background-color: rgba(195, 142, 68, 0.1) !important;
-        }
-        .badge-jabatan {
-            color: #8f6222 !important; background-color: #fff3cd !important;
-            border: 1px solid #ffe69c !important; padding: 4px 8px;
-            border-radius: 6px; font-weight: 600; font-size: 0.7rem;
-            display: inline-flex; align-items: center; gap: 4px;
-        }
+    /* 5. Avatar & Badge Fixes */
+    [data-bs-theme="dark"] .avatar-circle {
+        border-color: #333 !important; 
+    }
+    [data-bs-theme="dark"] .badge.bg-light {
+        background-color: #2d2d2d !important;
+        color: #e0e0e0 !important;
+        border-color: #444 !important;
+    }
 
-        /* --- 3. RESPONSIVE MOBILE --- */
-        @media (max-width: 768px) {
-            .table-floating thead { display: none; }
-            .table-floating, .table-floating tbody, .table-floating tr, .table-floating td { display: block; width: 100%; }
-            .table-floating tr { margin-bottom: 1rem; border-radius: 12px; }
-            
-            .row-floating td:first-child { border-radius: 12px 12px 0 0; background: linear-gradient(to bottom, #fdfbf7, #fff); }
-            .row-floating td:last-child { border-radius: 0 0 12px 12px; border-top: 1px solid #eee; }
-            
-            .row-floating td { padding: 10px 15px; text-align: left; }
-        }
-    </style>
+    /* 6. Mobile View Fixes for Dark Mode */
+    [data-bs-theme="dark"] .row-floating td:first-child {
+        background: linear-gradient(to bottom, #2c2c2c, #1e1e1e) !important;
+    }
+    [data-bs-theme="dark"] .row-floating td:last-child {
+        border-top: 1px solid #333 !important;
+    }
+
+    /* 7. Modal Dark Mode */
+    [data-bs-theme="dark"] .modal-content {
+        background-color: #1e1e1e !important;
+        border: 1px solid #333 !important;
+    }
+    [data-bs-theme="dark"] .modal-header, 
+    [data-bs-theme="dark"] .modal-footer {
+        border-color: #333 !important;
+    }
+    [data-bs-theme="dark"] .form-label-sm {
+        color: #bbb !important;
+    }
+    [data-bs-theme="dark"] .section-divider {
+        border-bottom-color: #333 !important;
+    }
+    [data-bs-theme="dark"] .list-group-item {
+        background-color: #1e1e1e !important;
+        color: #e0e0e0 !important;
+        border-color: #333 !important;
+    }
+    [data-bs-theme="dark"] .accordion-button {
+        background-color: #1e1e1e !important;
+        color: #e0e0e0 !important;
+        box-shadow: none !important;
+    }
+</style>
 
     <div class="container-fluid p-4" style="background-color: #f8f9fa; min-height: 100vh;">
         
