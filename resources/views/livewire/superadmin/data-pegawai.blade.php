@@ -174,7 +174,7 @@
                     <span class="input-group-text bg-transparent border-0 ps-3">
                         <i class="bi bi-search text-secondary"></i>
                     </span>
-                    <input wire:model.live.debounce.300ms="search" type="text" class="form-control bg-transparent border-0 py-2" placeholder="Cari nama atau NIP...">
+                    <input wire:model.live.debounce.300ms="search" type="text" class="form-control bg-transparent border-0 py-2" placeholder="Cari nama atau NRP...">
                 </div>
 
                 <button wire:click="showTambahModal" class="btn shadow-sm rounded-pill px-4 fw-bold text-white d-flex align-items-center justify-content-center gap-2" style="background-color: #C38E44;">
@@ -202,7 +202,7 @@
                 <thead>
                     <tr class="text-secondary small text-uppercase" style="letter-spacing: 0.5px;">
                         <th class="fw-bold ps-4" style="width: 30%;">Profil Pegawai</th>
-                        <th class="fw-bold text-center" style="width: 15%;">NRP / ID</th>
+                        <th class="fw-bold text-center" style="width: 15%;">NRP</th>
                         <th class="fw-bold text-center" style="width: 35%;">Jabatan & Peran</th>
                         <th class="fw-bold text-center" style="width: 20%;">Aksi</th>
                     </tr>
@@ -236,7 +236,7 @@
 
                             {{-- 2. NIP --}}
                             <td class="py-3 text-center">
-                                <span class="d-md-none fw-bold text-secondary small d-block mb-1">NIP/NRP</span>
+                                <span class="d-md-none fw-bold text-secondary small d-block mb-1">NRP</span>
                                 <span class="badge bg-light text-dark border fw-bold" style="font-family: monospace; font-size: 0.9rem;">
                                     {{ $pegawai->nip }}
                                 </span>

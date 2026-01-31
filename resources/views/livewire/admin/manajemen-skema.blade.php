@@ -1,8 +1,8 @@
 <div class="container-fluid p-4">
 
-    {{-- CUSTOM STYLES --}}
+    {{-- CUSTOM STYLES & DARK MODE FIX --}}
     <style>
-        /* 1. Global Colors */
+        /* 1. Global Colors (Light Mode) */
         :root { --polkam-gold: #c38e44; --polkam-gold-hover: #a57635; }
         .text-gold { color: var(--polkam-gold) !important; }
         .bg-gold { background-color: var(--polkam-gold) !important; color: white; }
@@ -14,7 +14,7 @@
         .btn-gold { background-color: var(--polkam-gold); color: white; border: none; font-weight: 600; }
         .btn-gold:hover { background-color: var(--polkam-gold-hover); color: white; }
 
-        /* 3. Modal Compact Style (KUNCI AGAR TIDAK LEBAR) */
+        /* 3. Modal Compact Style */
         .modal-dialog-compact { 
             max-width: 500px; 
             margin-top: 50px; 
@@ -23,12 +23,8 @@
         
         /* Typography Form Kecil */
         .form-label-sm { 
-            font-size: 0.75rem; 
-            font-weight: 700; 
-            margin-bottom: 3px; 
-            color: #666; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
+            font-size: 0.75rem; font-weight: 700; margin-bottom: 3px; 
+            color: #666; text-transform: uppercase; letter-spacing: 0.5px; 
         }
         .form-control-sm, .form-select-sm, .input-group-text-sm, .form-check-label-sm { 
             font-size: 0.85rem; 
@@ -51,6 +47,63 @@
         @media (min-width: 768px) {
             .w-md-auto { width: auto !important; }
             .btn-action-mobile { width: 32px; height: 32px; }
+        }
+
+        /* 1. Global Backgrounds & Text */
+        [data-bs-theme="dark"] .bg-white {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+        }
+        [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
+        [data-bs-theme="dark"] .text-secondary { color: #adb5bd !important; }
+        [data-bs-theme="dark"] .text-muted { color: #999 !important; }
+
+        /* 2. Card Styles */
+        [data-bs-theme="dark"] .card {
+            background-color: #1e1e1e !important;
+            border-color: #333 !important;
+        }
+        [data-bs-theme="dark"] .card-skema:hover {
+            background-color: #252525 !important;
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,0.5) !important;
+        }
+        
+        /* 3. Input Select & Form Control */
+        [data-bs-theme="dark"] .form-select,
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .input-group-text {
+            background-color: #2c2c2c !important;
+            border-color: #444 !important;
+            color: #e0e0e0 !important;
+        }
+        [data-bs-theme="dark"] .bg-light {
+            background-color: #2c2c2c !important;
+            color: #e0e0e0 !important;
+            border-color: #444 !important;
+        }
+        
+        /* 4. Modal Styles */
+        [data-bs-theme="dark"] .modal-content {
+            background-color: #1e1e1e !important;
+            border: 1px solid #444 !important;
+        }
+        [data-bs-theme="dark"] .modal-header,
+        [data-bs-theme="dark"] .modal-footer {
+            border-color: #333 !important;
+        }
+        [data-bs-theme="dark"] .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+        [data-bs-theme="dark"] .form-label-sm { color: #ccc !important; }
+
+        /* 5. Checkbox & Radio Labels */
+        [data-bs-theme="dark"] .form-check-label { color: #e0e0e0 !important; }
+        [data-bs-theme="dark"] .form-check-label.text-muted { color: #666 !important; }
+
+        /* 6. Progress Bar Container */
+        [data-bs-theme="dark"] .progress.bg-light {
+            background-color: #333 !important;
+            border-color: #444 !important;
         }
     </style>
 
@@ -217,7 +270,7 @@
                         <div class="bg-warning bg-opacity-10 text-warning rounded p-1 me-2">
                             <i class="bi bi-diagram-3-fill fs-6"></i>
                         </div>
-                        <h6 class="modal-title fw-bold m-0" id="skemaModalLabel">
+                        <h6 class="modal-title fw-bold m-0 text-dark" id="skemaModalLabel">
                             {{ $isEditMode ? 'Edit Skema' : 'Buat Skema' }}
                         </h6>
                     </div>
@@ -230,7 +283,7 @@
                     @if($isFull && !$isEditMode)
                         <div class="text-center py-4">
                             <i class="bi bi-check-circle-fill text-success mb-3" style="font-size: 3rem;"></i>
-                            <h6 class="fw-bold">Semua Level Terisi!</h6>
+                            <h6 class="fw-bold text-dark">Semua Level Terisi!</h6>
                             <p class="text-muted small px-3 mb-0">
                                 Semua level jabatan (1-5) pada siklus ini sudah memiliki skema. Edit skema yang ada jika ingin mengubah.
                             </p>

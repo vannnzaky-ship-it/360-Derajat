@@ -1,14 +1,14 @@
 <div class="container-fluid p-4">
 
-    {{-- CSS CUSTOM --}}
+    {{-- CUSTOM STYLES & DARK MODE FIX --}}
     <style>
-        /* --- 1. GLOBAL STYLE --- */
+        /* 1. Global Colors (Light) */
         .text-custom-brown { color: #C38E44; }
         .bg-custom-brown { background-color: #C38E44 !important; }
         
-        /* --- 2. STYLE MODAL COMPACT (Supaya Ramping) --- */
+        /* 2. Modal Compact Style */
         .modal-dialog-compact { 
-            max-width: 500px; /* Ukuran Compact */
+            max-width: 500px; 
             margin-top: 60px; 
             margin-bottom: 2rem; 
         }
@@ -22,30 +22,9 @@
             text-transform: uppercase; 
             letter-spacing: 0.5px; 
         }
-
-        /* --- FIX KHUSUS PENCARIAN (DARK MODE) --- */
-        
-        /* 1. Mengubah background ikon kaca pembesar */
-        [data-bs-theme="dark"] .input-group .input-group-text {
-            background-color: #2c2c2c !important; /* Abu gelap */
-            border-color: #444 !important;       /* Border abu */
-            color: #ccc !important;              /* Ikon jadi terang */
-        }
-
-        /* 2. Mengubah background kolom ketik (input) */
-        [data-bs-theme="dark"] .input-group .form-control {
-            background-color: #2c2c2c !important; /* Abu gelap */
-            border-color: #444 !important;       /* Border abu */
-            color: #fff !important;              /* Teks ketikan jadi putih */
-        }
-
-        /* 3. Mengubah warna teks placeholder (tulisan 'Cari...') */
-        [data-bs-theme="dark"] .input-group .form-control::placeholder {
-            color: #777 !important;              /* Placeholder abu */
-        }
         .form-control-sm, .form-select-sm, .input-group-text-sm { font-size: 0.85rem; }
 
-        /* --- 3. RESPONSIF MOBILE CARD VIEW --- */
+        /* 3. Responsif Mobile Card View */
         @media (max-width: 767px) {
             thead { display: none; }
             tbody tr {
@@ -78,7 +57,7 @@
             tbody td:nth-child(5) {
                 order: 4; text-align: right; padding-top: 10px;
             }
-            tbody td:nth-child(1) { display: none; } /* No Hidden */
+            tbody td:nth-child(1) { display: none; }
 
             /* Aksi */
             tbody td:nth-child(6) {
@@ -87,8 +66,78 @@
             }
         }
         @media (min-width: 768px) { .w-md-auto { width: auto !important; } }
-    </style>
 
+        
+        /* 1. Global Backgrounds & Text */
+        [data-bs-theme="dark"] .bg-white {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+        }
+        [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
+        [data-bs-theme="dark"] .text-secondary { color: #adb5bd !important; }
+        [data-bs-theme="dark"] .text-muted { color: #999 !important; }
+
+        /* 2. Card Styles */
+        [data-bs-theme="dark"] .card {
+            background-color: #1e1e1e !important;
+            border-color: #333 !important;
+        }
+        
+        /* 3. Input, Select, Textarea & Checkbox Box */
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select,
+        [data-bs-theme="dark"] .input-group-text {
+            background-color: #2c2c2c !important;
+            border-color: #444 !important;
+            color: #fff !important;
+        }
+        [data-bs-theme="dark"] .form-control::placeholder { color: #777 !important; }
+        [data-bs-theme="dark"] .bg-light {
+            background-color: #2c2c2c !important;
+            color: #e0e0e0 !important;
+            border-color: #444 !important;
+        }
+        [data-bs-theme="dark"] .form-check-label { color: #e0e0e0 !important; }
+
+        /* 4. Table Styles */
+        [data-bs-theme="dark"] .table { color: #e0e0e0 !important; }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover {
+            color: #e0e0e0;
+            background-color: rgba(255,255,255,0.05);
+        }
+        
+        /* 5. Modal Styles */
+        [data-bs-theme="dark"] .modal-content {
+            background-color: #1e1e1e !important;
+            border: 1px solid #444 !important;
+        }
+        [data-bs-theme="dark"] .modal-header,
+        [data-bs-theme="dark"] .modal-footer {
+            border-color: #333 !important;
+        }
+        [data-bs-theme="dark"] .form-label-sm { color: #ccc !important; }
+        [data-bs-theme="dark"] .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+
+        /* 6. Mobile View Fixes in Dark Mode */
+        @media (max-width: 767px) {
+            [data-bs-theme="dark"] tbody tr {
+                background-color: #1e1e1e !important;
+                border-color: #333 !important;
+            }
+            [data-bs-theme="dark"] tbody td:nth-child(2) {
+                background: linear-gradient(to right, rgba(195, 142, 68, 0.2), transparent) !important;
+                color: #fff !important;
+                border-bottom-color: #333 !important;
+            }
+            [data-bs-theme="dark"] tbody td:nth-child(3) { color: #ddd !important; } /* Teks Pertanyaan */
+            [data-bs-theme="dark"] tbody td:nth-child(4) { border-bottom-color: #333 !important; }
+            [data-bs-theme="dark"] tbody td:nth-child(6) {
+                background-color: rgba(255,255,255,0.05) !important;
+                border-top-color: #333 !important;
+            }
+        }
+    </style>
+    
     {{-- HEADER HALAMAN --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
         <div class="d-flex align-items-center">
@@ -100,14 +149,14 @@
         </button>
     </div>
 
-    {{-- NOTIFIKASI --}}
+    {{-- ALERT MESSAGES --}}
     @if (session()->has('message')) 
-        <div class="alert alert-success alert-dismissible fade show">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('message') }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
     @if (session()->has('error')) 
-        <div class="alert alert-danger alert-dismissible fade show">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
             {{ session('error') }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
@@ -214,31 +263,27 @@
         </div>
     </div>
 
-    {{-- MODAL FORM (COMPACT & BLUR) --}}
+    {{-- MODAL FORM --}}
     <div wire:ignore.self class="modal fade" id="pertanyaanModal" tabindex="-1" aria-labelledby="pertanyaanModalLabel" aria-hidden="true"
          style="background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);"> 
         
-        {{-- Menggunakan 'modal-dialog-compact' --}}
         <div class="modal-dialog modal-dialog-centered modal-dialog-compact">
             <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
                 <form wire:submit="savePertanyaan"> 
                     
-                    {{-- HEADER --}}
                     <div class="modal-header py-2 px-3 border-bottom">
                         <div class="d-flex align-items-center">
                             <div class="bg-warning bg-opacity-10 text-warning rounded p-1 me-2">
                                 <i class="bi bi-question-lg fs-6"></i>
                             </div>
-                            <h6 class="modal-title fw-bold m-0" id="pertanyaanModalLabel">
+                            <h6 class="modal-title fw-bold m-0 text-dark" id="pertanyaanModalLabel">
                                 {{ $isEditMode ? 'Edit Pertanyaan' : 'Tambah Pertanyaan' }}
                             </h6>
                         </div>
                         <button type="button" class="btn-close btn-sm" wire:click="closeModal" aria-label="Close"></button>
                     </div>
 
-                    {{-- BODY COMPACT --}}
                     <div class="modal-body p-3">
-                        
                         <fieldset @if($isEditMode) disabled @endif>
                             {{-- 1. Kompetensi --}}
                             <div class="mb-3">
@@ -296,7 +341,7 @@
                             </div>
                         </fieldset>
 
-                        {{-- 4. Status (Bisa diedit kapan saja) --}}
+                        {{-- 4. Status --}}
                         <div class="mb-0">
                             <label for="status_pert" class="form-label-sm">Status <span class="text-danger">*</span></label>
                             <select id="status_pert" class="form-select form-select-sm @error('status') is-invalid @enderror" wire:model="status">
@@ -305,10 +350,8 @@
                             </select>
                             @error('status') <div class="invalid-feedback small">{{ $message }}</div> @enderror
                         </div>
-
                     </div>
 
-                    {{-- FOOTER --}}
                     <div class="modal-footer bg-light border-top py-2 px-3">
                         <button type="button" class="btn btn-sm btn-secondary border" wire:click="closeModal">Batal</button>
                         <button type="submit" class="btn btn-sm btn-primary fw-bold text-white px-3" style="background-color: #C38E44; border-color: #C38E44;">
@@ -316,7 +359,6 @@
                              <div wire:loading wire:target="savePertanyaan" class="spinner-border spinner-border-sm ms-1"></div>
                         </button>
                     </div>
-
                 </form>
             </div>
         </div>
@@ -334,10 +376,20 @@
         @this.on('close-pertanyaan-modal', () => { if (pertanyaanModal) pertanyaanModal.hide(); });
         
         @this.on('show-delete-confirmation-pertanyaan', () => { 
+            // Manual Dark Mode Check for JS
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+
             Swal.fire({
-                title: 'Hapus Pertanyaan?', text: "Data tidak dapat dikembalikan!", icon: 'warning', 
-                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', 
-                confirmButtonText: 'Ya, Hapus', cancelButtonText: 'Batal'
+                title: 'Hapus Pertanyaan?', 
+                text: "Data tidak dapat dikembalikan!", 
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#d33', 
+                cancelButtonColor: '#3085d6', 
+                confirmButtonText: 'Ya, Hapus', 
+                cancelButtonText: 'Batal',
+                background: isDark ? '#1e1e1e' : '#fff',
+                color: isDark ? '#f8f9fa' : '#545454'
             }).then((result) => { if (result.isConfirmed) @this.dispatch('deleteConfirmedPertanyaan'); });
         });
     });
