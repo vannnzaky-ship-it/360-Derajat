@@ -1,18 +1,87 @@
 <div class="container p-4" style="max-width: 900px;">
     
+    {{-- CSS CUSTOM: FORM EVALUASI + DARK MODE --}}
     <style>
+        /* --- VARIABLES & DEFAULT STYLE (LIGHT) --- */
         :root { --polkam-gold: #c38e44; --polkam-gold-hover: #a57635; --polkam-soft: #fdf8f3; }
         .text-gold { color: var(--polkam-gold) !important; }
         .bg-soft-gold { background-color: var(--polkam-soft) !important; }
+        
         .btn-gold { background-color: var(--polkam-gold); color: white; border: none; font-weight: 600; transition: 0.3s; }
         .btn-gold:hover { background-color: var(--polkam-gold-hover); color: white; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(195,142,68,0.3); }
+        
         .card-elegant { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.05); transition: all 0.3s ease; }
+        
+        /* Rating Styles */
         .rating-box { position: relative; }
         .rating-input { position: absolute; opacity: 0; width: 0; height: 0; }
-        .rating-label { display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; border-radius: 50%; border: 2px solid #e9ecef; background-color: white; color: #6c757d; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .rating-label { 
+            display: flex; align-items: center; justify-content: center; 
+            width: 45px; height: 45px; border-radius: 50%; 
+            border: 2px solid #e9ecef; background-color: white; 
+            color: #6c757d; font-weight: bold; cursor: pointer; transition: all 0.2s; 
+        }
         .rating-label:hover { border-color: var(--polkam-gold); color: var(--polkam-gold); background-color: var(--polkam-soft); }
-        .rating-input:checked + .rating-label { background-color: var(--polkam-gold); border-color: var(--polkam-gold); color: white; transform: scale(1.1); box-shadow: 0 4px 10px rgba(195,142,68,0.4); }
-        .timer-mini { background: #fdf8f3; border: 1px solid #f1e4d1; padding: 6px 15px; border-radius: 50px; color: #a57635; font-weight: bold; font-size: 0.9rem; }
+        .rating-input:checked + .rating-label { 
+            background-color: var(--polkam-gold); border-color: var(--polkam-gold); 
+            color: white; transform: scale(1.1); box-shadow: 0 4px 10px rgba(195,142,68,0.4); 
+        }
+        
+        /* Timer Styles */
+        .timer-mini { 
+            background: #fdf8f3; border: 1px solid #f1e4d1; 
+            padding: 6px 15px; border-radius: 50px; 
+            color: #a57635; font-weight: bold; font-size: 0.9rem; 
+        }
+
+        /* ========================================= */
+        /* DARK MODE FIXES                           */
+        /* ========================================= */
+        
+        /* 1. Global Backgrounds & Text */
+        [data-bs-theme="dark"] .bg-white {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+        }
+        [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
+        [data-bs-theme="dark"] .text-muted { color: #adb5bd !important; }
+        [data-bs-theme="dark"] .text-secondary { color: #999 !important; }
+
+        /* 2. Card Borders */
+        [data-bs-theme="dark"] .border-bottom { border-bottom-color: #333 !important; }
+        
+        /* 3. Rating Circles (Lingkaran Angka) */
+        [data-bs-theme="dark"] .rating-label {
+            background-color: #2c2c2c; /* Lingkaran Gelap */
+            border-color: #444;
+            color: #ccc;
+        }
+        [data-bs-theme="dark"] .rating-label:hover {
+            background-color: #333;
+            border-color: var(--polkam-gold);
+            color: var(--polkam-gold);
+        }
+        /* Saat dipilih tetap emas (kode light mode sudah handle ini karena classnya sama) */
+
+        /* 4. Timer & Alerts */
+        [data-bs-theme="dark"] .timer-mini {
+            background-color: #2c2c2c;
+            border-color: #444;
+            color: var(--polkam-gold);
+        }
+        [data-bs-theme="dark"] .bg-soft-gold {
+            background-color: rgba(195, 142, 68, 0.15) !important; /* Gold Transparan */
+            color: #e0e0e0 !important;
+        }
+        [data-bs-theme="dark"] .btn-light {
+            background-color: #2c2c2c;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+        [data-bs-theme="dark"] .badge.bg-secondary {
+            background-color: #333 !important;
+            color: #ccc !important;
+        }
     </style>
 
     {{-- Header Kartu --}}
@@ -40,8 +109,8 @@
             <div class="alert bg-soft-gold border-0 d-flex align-items-center mb-0 text-dark rounded-3">
                 <div class="me-3 text-gold"><i class="bi bi-shield-check fs-2"></i></div>
                 <div>
-                    <h6 class="fw-bold mb-1">Instruksi Penilaian</h6>
-                    <p class="small mb-0 opacity-75">Skala 1 (Sangat Buruk) hingga 5 (Sangat Baik). Semua pertanyaan wajib diisi.</p>
+                    <h6 class="fw-bold mb-1 text-dark">Instruksi Penilaian</h6>
+                    <p class="small mb-0 opacity-75 text-muted">Skala 1 (Sangat Buruk) hingga 5 (Sangat Baik). Semua pertanyaan wajib diisi.</p>
                 </div>
             </div>
         </div>
@@ -56,13 +125,13 @@
                         <h6 class="mb-0 fw-bold text-dark">{{ $kompetensi->nama_kompetensi }}</h6>
                     </div>
 
-                    <div class="card-body p-0">
+                    <div class="card-body bg-white p-0">
                         @foreach($kompetensi->pertanyaans as $index => $tanya)
                             <div class="p-4 border-bottom {{ $loop->last ? 'border-0' : '' }}">
                                 <div class="row align-items-center">
                                     <div class="col-md-7 mb-3 mb-md-0">
                                         <p class="fw-medium mb-1 text-dark">{{ $tanya->teks_pertanyaan }}</p>
-                                        {{-- VALIDASI ERROR PER PERTANYAAN --}}
+                                        {{-- VALIDASI ERROR --}}
                                         @error('jawaban.'.$tanya->id) 
                                             <span class="text-danger small animate__animated animate__fadeIn">
                                                 <i class="bi bi-exclamation-circle me-1"></i> Wajib diisi

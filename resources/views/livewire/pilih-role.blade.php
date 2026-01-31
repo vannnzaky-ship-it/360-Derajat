@@ -1,4 +1,4 @@
-<div class="min-vh-100 d-flex justify-content-center align-items-center" style="background-color: #f4f6f9;">
+<div class="min-vh-100 d-flex justify-content-center align-items-center py-5" style="background-color: #f4f6f9;">
     
     {{-- Custom CSS untuk halaman ini --}}
     <style>
@@ -13,19 +13,21 @@
             border-radius: 24px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.05);
             background: white;
-            overflow: hidden;
+            /* PENTING: Ubah hidden jadi visible agar icon tidak kepotong */
+            overflow: visible !important; 
             position: relative;
+            margin-top: 40px; /* Tambah jarak atas agar icon punya ruang */
         }
 
-        /* Aksen Atas Gold */
-        .role-card-container::before {
-            content: '';
+        /* Aksen Atas Gold - Kita ganti cara buatnya agar tidak merusak overflow */
+        .card-top-accent {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 6px;
             background: var(--primary-gold);
+            border-radius: 24px 24px 0 0;
         }
 
         /* Tombol Peran (Role Button) */
@@ -71,6 +73,7 @@
         .role-icon-wrapper {
             width: 40px;
             height: 40px;
+            min-width: 40px; /* Menjaga agar icon tidak gepeng di HP */
             border-radius: 10px;
             background-color: #f8f9fa;
             display: flex;
@@ -98,55 +101,67 @@
             justify-content: center;
             color: white;
             font-size: 2rem;
-            margin: -60px auto 20px; /* Efek floating keluar kartu */
-            border: 5px solid #f4f6f9; /* Border warna background body agar terlihat terpotong */
+            /* Posisi Absolute agar pasti di tengah garis kartu */
+            position: absolute; 
+            top: -40px; 
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid #f4f6f9; 
             box-shadow: 0 10px 20px rgba(195, 142, 68, 0.3);
+            z-index: 10;
         }
 
-        .page-content {
-            flex-grow: 1;
-            position: relative; /* Membuatnya menjadi 'parent' untuk posisi logo */
-            z-index: 1; /* Memastikan konten tetap di atas logo */
+        /* Responsive Text untuk HP */
+        @media (max-width: 576px) {
+            .btn-role-select {
+                padding: 12px 15px;
+            }
+            h4 { font-size: 1.25rem; }
+            p { font-size: 0.85rem; }
         }
 
-        .page-content::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+        .page-bg-logo {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
             background-image: url('/images/logo-polkam.png');
             background-repeat: no-repeat;
             background-position: center;
-            background-size: 55%; /* Atur ukuran logo, misal 50% dari area konten */
-            opacity: 0.05; /* Opacity 10% */
-            z-index: -1; /* Meletakkan logo di belakang konten */
+            background-size: 55%;
+            opacity: 0.05;
+            z-index: 0;
+            pointer-events: none;
         }
     </style>
 
-    <div class="container">
+    {{-- Background Logo --}}
+    <div class="page-bg-logo"></div>
+
+    <div class="container" style="position: relative; z-index: 2;">
         <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
+            {{-- Ubah col-md-6 jadi lebih fleksibel untuk HP (col-11) --}}
+            <div class="col-11 col-sm-8 col-md-6 col-lg-5">
                 
                 {{-- Kartu Pilih Role --}}
-                <div class="card role-card-container pt-4 px-4 pb-4 mt-5">
+                <div class="card role-card-container px-3 pb-4">
                     
+                    {{-- Garis Aksen Gold (Pengganti ::before) --}}
+                    <div class="card-top-accent"></div>
+
                     {{-- Icon Utama Floating --}}
                     <div class="main-icon">
                         <i class="bi bi-person-bounding-box"></i>
                     </div>
 
-                    <div class="card-body text-center pt-0">
+                    <div class="card-body text-center pt-5 mt-2">
                         <h4 class="fw-bold text-dark mb-2">Selamat Datang!</h4>
-                        <p class="text-muted small mb-4 px-3">
-                            Akun Anda terhubung dengan beberapa hak akses. <br>
+                        <p class="text-muted small mb-4 px-2">
+                            Akun Anda terhubung dengan beberapa hak akses. <br class="d-none d-sm-block">
                             Silakan pilih portal untuk melanjutkan.
                         </p>
 
                         {{-- Alert Error (Jika ada) --}}
                         @if (session('error'))
-                            <div class="alert alert-danger border-0 shadow-sm mb-4" style="font-size: 0.9rem;">
+                            <div class="alert alert-danger border-0 shadow-sm mb-4 text-start" style="font-size: 0.9rem;">
                                 <i class="bi bi-exclamation-circle me-2"></i> {{ session('error') }}
                             </div>
                         @endif
@@ -155,9 +170,9 @@
                         <div class="d-grid gap-2 text-start">
                             @foreach ($roles as $role)
                                 <button wire:click="selectRole('{{ $role->name }}')" class="btn-role-select group">
-                                    <div class="d-flex align-items-center">
+                                    <div class="d-flex align-items-center w-100">
                                         {{-- Icon kecil berdasarkan nama role --}}
-                                        <div class="role-icon-wrapper">
+                                        <div class="role-icon-wrapper flex-shrink-0">
                                             @if($role->name == 'superadmin') <i class="bi bi-shield-lock-fill"></i>
                                             @elseif($role->name == 'admin') <i class="bi bi-laptop"></i>
                                             @elseif($role->name == 'peninjau') <i class="bi bi-eye-fill"></i>
@@ -166,13 +181,13 @@
                                             @endif
                                         </div>
                                         
-                                        <div class="d-flex flex-column">
-                                            <span class="fw-bold" style="font-size: 1rem;">{{ $role->label }}</span>
-                                            <span class="text-muted" style="font-size: 0.75rem;">Masuk sebagai {{ strtolower($role->label) }}</span>
+                                        <div class="d-flex flex-column flex-grow-1">
+                                            <span class="fw-bold text-truncate" style="font-size: 1rem;">{{ $role->label }}</span>
+                                            <span class="text-muted text-truncate" style="font-size: 0.75rem;">Masuk sebagai {{ strtolower($role->label) }}</span>
                                         </div>
+                                        
+                                        <i class="bi bi-arrow-right role-arrow ms-2"></i>
                                     </div>
-                                    
-                                    <i class="bi bi-arrow-right role-arrow"></i>
                                 </button>
                             @endforeach
                         </div>
@@ -191,11 +206,6 @@
                     </div>
                 </div>
                 
-                {{-- Copyright Footer --}}
-                {{-- <div class="text-center mt-4 text-muted small opacity-50">
-                    &copy; {{ date('Y') }} Penilaian 360 Derajat
-                </div> --}}
-
             </div>
         </div>
     </div>

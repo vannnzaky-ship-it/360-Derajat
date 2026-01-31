@@ -232,7 +232,7 @@
                         <div class="text-start mt-3 px-2">
                             {{-- Gunakan class 'info-box' agar bisa di-style dark mode --}}
                             <div class="info-box">
-                                <small class="text-muted d-block text-uppercase" style="font-size: 10px; letter-spacing: 1px;">NIP / User ID</small>
+                                <small class="text-muted d-block text-uppercase" style="font-size: 10px; letter-spacing: 1px;">NRP / User ID</small>
                                 <span class="fw-bold text-dark">{{ $nip }}</span>
                             </div>
                             <div class="info-box">
