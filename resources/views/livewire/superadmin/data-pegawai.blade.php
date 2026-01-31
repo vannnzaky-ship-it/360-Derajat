@@ -143,6 +143,20 @@
         color: #e0e0e0 !important;
         box-shadow: none !important;
     }
+
+    /* 8. SWEETALERT DARK MODE FIX (TAMBAHAN KHUSUS) */
+    [data-bs-theme="dark"] .swal2-popup {
+        background-color: #1e1e1e !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #333;
+    }
+    [data-bs-theme="dark"] .swal2-title {
+        color: #f8f9fa !important;
+    }
+    [data-bs-theme="dark"] .swal2-content, 
+    [data-bs-theme="dark"] .swal2-html-container {
+        color: #adb5bd !important;
+    }
 </style>
 
     <div class="container-fluid p-4" style="background-color: #f8f9fa; min-height: 100vh;">
@@ -211,7 +225,6 @@
                                         <span class="fw-bold text-dark">{{ $pegawai->user->name }}</span>
                                         <span class="text-secondary small">{{ $pegawai->user->email }}</span>
                                         
-                                        {{-- NO HP & ICON (DITAMPILKAN KEMBALI) --}}
                                         @if($pegawai->no_hp)
                                             <span class="text-muted small mt-1">
                                                 <i class="bi bi-whatsapp text-success me-1"></i>{{ $pegawai->no_hp }}
@@ -291,7 +304,7 @@
         @endif
     </div>
 
-    {{-- MODAL (TETAP SAMA) --}}
+    {{-- MODAL --}}
     <div class="modal fade @if($showModal) show d-block @endif" 
          id="pegawaiModal" tabindex="-1" aria-labelledby="pegawaiModalLabel" 
          aria-hidden="{{ !$showModal ? 'true' : 'false' }}" 
@@ -343,7 +356,7 @@
                         </div>
                     </div>
 
-                    {{-- B. Jabatan & Peran (LOGIC ACCORDION) --}}
+                    {{-- B. Jabatan & Peran --}}
                     <div class="section-divider">Akses & Jabatan</div>
                     <div class="row g-3">
                         <div class="col-12">
@@ -443,6 +456,9 @@
     <script>
         document.addEventListener('livewire:initialized', () => {
             @this.on('show-delete-confirmation', (id) => {
+                // Mendapatkan tema saat ini dari atribut html
+                const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+                
                 Swal.fire({
                     title: 'Hapus Pegawai?',
                     text: "Data tidak dapat dikembalikan!",
@@ -451,7 +467,10 @@
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#3085d6',
                     confirmButtonText: 'Ya, Hapus',
-                    cancelButtonText: 'Batal'
+                    cancelButtonText: 'Batal',
+                    // Konfigurasi warna background berdasarkan tema
+                    background: isDark ? '#1e1e1e' : '#fff',
+                    color: isDark ? '#e0e0e0' : '#545454'
                 }).then((result) => {
                     if (result.isConfirmed) { @this.call('destroy', id); }
                 });
