@@ -1,16 +1,86 @@
 <div>
+    {{-- CSS STYLE DENGAN PERBAIKAN DARK MODE --}}
     <style>
         :root { --theme-brown: #c59d5f; --theme-brown-dark: #a68b53; }
+        
+        /* Style Default (Light Mode) */
         .text-theme { color: var(--theme-brown) !important; }
         .bg-theme { background-color: var(--theme-brown) !important; }
-        .card-modern { border: none; border-left: 5px solid var(--theme-brown); border-radius: 12px; background: #fff; transition: all 0.3s ease; }
+        
+        .card-modern { 
+            border: none; 
+            border-left: 5px solid var(--theme-brown); 
+            border-radius: 12px; 
+            background: #fff; 
+            transition: all 0.3s ease; 
+        }
+        
         .btn-theme { background-color: var(--theme-brown); color: #fff; border: none; transition: 0.3s; }
         .btn-theme:hover { background-color: var(--theme-brown-dark); color: #fff; transform: translateY(-2px); }
         .btn-disabled { background-color: #e9ecef; color: #6c757d; border: 1px solid #dee2e6; cursor: not-allowed; }
-        .timer-box { background: #fdf8f3; border: 1px solid #f1e4d1; color: var(--theme-brown-dark); padding: 10px 20px; border-radius: 10px; display: inline-flex; gap: 15px; }
+        
+        /* Style Awal Timer Box (Light Mode) */
+        .timer-box { 
+            background: #fdf8f3; 
+            border: 1px solid #f1e4d1; 
+            color: var(--theme-brown-dark); 
+            padding: 10px 20px; 
+            border-radius: 10px; 
+            display: inline-flex; 
+            gap: 15px; 
+        }
         .timer-unit { text-align: center; }
         .timer-value { display: block; font-size: 1.2rem; font-weight: bold; line-height: 1; }
         .timer-label { font-size: 0.7rem; text-transform: uppercase; }
+
+        /* ========================================= */
+        /* DARK MODE CONFIGURATION          */
+        /* ========================================= */
+        
+        /* 1. Global Background & Text */
+        [data-bs-theme="dark"] body,
+        [data-bs-theme="dark"] .container-fluid {
+            background-color: #121212 !important;
+            color: #e0e0e0 !important;
+        }
+
+        /* 2. Fix Card Background (Agar tidak putih) */
+        [data-bs-theme="dark"] .card-modern {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
+        }
+
+        /* 3. FIX KHUSUS TIMER BOX (WAKTU) */
+        [data-bs-theme="dark"] .timer-box {
+            background-color: #2c2c2c !important; /* Latar jadi Abu Gelap */
+            border-color: #444 !important;        /* Border jadi gelap */
+            color: #f8f9fa !important;            /* Teks dasar jadi Putih */
+        }
+
+        /* Angka Waktu jadi warna Emas agar kontras */
+        [data-bs-theme="dark"] .timer-value {
+            color: var(--theme-brown) !important; 
+        }
+        
+        /* Label (Hari, Jam, Menit) jadi abu-abu muda */
+        [data-bs-theme="dark"] .timer-label {
+            color: #adb5bd !important;
+        }
+
+        /* 4. Fix Warna Teks Lainnya */
+        [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
+        [data-bs-theme="dark"] .text-muted { color: #adb5bd !important; }
+        
+        /* 5. Fix Tombol Outline di Dark Mode */
+        [data-bs-theme="dark"] .btn-outline-theme {
+            color: var(--theme-brown);
+            border-color: var(--theme-brown);
+        }
+        [data-bs-theme="dark"] .btn-outline-theme:hover {
+            background-color: var(--theme-brown);
+            color: #fff;
+        }
     </style>
 
     <div class="container-fluid p-4">
@@ -36,6 +106,7 @@
                             <h5 class="card-title fw-bold m-0 text-dark">Progress Pengisian Penilaian</h5>
                             <small class="text-muted">Selesaikan sebelum waktu habis.</small>
                         </div>
+                        {{-- Timer Box dengan Logic x-data --}}
                         <div class="timer-box shadow-sm" x-data="timerData('{{ $deadline }}')" x-init="start()">
                             <div class="timer-unit"><span class="timer-value" x-text="days">00</span><span class="timer-label">Hari</span></div>
                             <div class="timer-unit"><span class="timer-value" x-text="hours">00</span><span class="timer-label">Jam</span></div>
@@ -68,13 +139,14 @@
             <div class="card card-modern card-menu text-center shadow-sm h-100" style="width: 18rem;">
                 <div class="card-body d-flex flex-column justify-content-center p-4">
                     <i class="bi bi-clipboard-data display-4 text-theme mb-3"></i>
-                    <h5 class="card-title fw-bold mt-2">Lihat Raport</h5>
+                    <h5 class="card-title fw-bold mt-2 text-dark">Lihat Raport</h5>
                     <p class="card-text text-muted small mb-4">Lihat hasil akhir penilaian kinerja Anda semester ini.</p>
                     <a href="{{ url('karyawan/raport') }}" class="btn btn-outline-theme rounded-pill w-100 mt-auto">Lihat</a>
                 </div>
             </div>
         </div>
     </div>
+    
     <script>
         function timerData(deadline) {
             return {
