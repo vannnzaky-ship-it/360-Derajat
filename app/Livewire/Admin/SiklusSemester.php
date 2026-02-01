@@ -8,6 +8,7 @@ use Livewire\Attributes\Rule;
 use App\Models\Siklus;
 use Livewire\WithPagination;
 use Livewire\Attributes\On;
+use Carbon\Carbon;
 
 #[Layout('layouts.admin', ['title' => 'Siklus Semester'])]
 class SiklusSemester extends Component
@@ -20,8 +21,6 @@ class SiklusSemester extends Component
     public $isEditMode = false;
     public $showModal = false;
 
-    // [UBAH] Rule validasi disesuaikan untuk format string "202X/202Y"
-    // Regex: 4 digit angka, garis miring, 4 digit angka. Contoh: 2025/2026
     #[Rule(['required', 'string', 'regex:/^\d{4}\/\d{4}$/'], message: [
         'required' => 'Tahun ajaran wajib diisi.',
         'regex' => 'Format wajib TAHUN/TAHUN (Contoh: 2025/2026).'
@@ -38,7 +37,18 @@ class SiklusSemester extends Component
     {
         $validatedData = $this->validate();
 
-        // Validasi Siklus Aktif
+        // 1. CEK KEAMANAN BACKEND: Jangan izinkan edit jika siklus sedang berjalan
+        if ($this->isEditMode && $this->siklusId) {
+            $siklus = Siklus::with('penilaianSession')->find($this->siklusId);
+            if ($siklus && $siklus->penilaianSession) {
+                $batasWaktu = Carbon::parse($siklus->penilaianSession->batas_waktu);
+                if (now()->lessThan($batasWaktu)) {
+                    $this->dispatch('show-error-alert', message: 'Gagal! Siklus sedang berjalan dalam penilaian. Tidak bisa diubah.');
+                    return;
+                }
+            }
+        }
+
         if ($this->status == 'Aktif') {
              $query = Siklus::where('status', 'Aktif');
              if ($this->isEditMode && $this->siklusId) {
@@ -50,7 +60,6 @@ class SiklusSemester extends Component
              }
         }
         
-        // Validasi Unik Tahun+Semester
         $queryUnique = Siklus::where('tahun_ajaran', $this->tahun_ajaran)
                              ->where('semester', $this->semester);
         if ($this->isEditMode && $this->siklusId) {
@@ -72,7 +81,18 @@ class SiklusSemester extends Component
 
     public function edit($id)
     {
-        $siklus = Siklus::findOrFail($id);
+        $siklus = Siklus::with('penilaianSession')->findOrFail($id);
+
+        // --- LOGIKA PENGUNCIAN EDIT ---
+        if ($siklus->penilaianSession) {
+            $batasWaktu = Carbon::parse($siklus->penilaianSession->batas_waktu);
+            // Jika waktu sekarang kurang dari batas waktu (sedang berjalan) -> TOLAK EDIT
+            if (now()->lessThan($batasWaktu)) {
+                $this->dispatch('show-error-alert', message: 'Siklus ini sedang digunakan dalam penilaian aktif. Tidak bisa diedit hingga selesai.');
+                return; 
+            }
+        }
+
         $this->siklusId = $siklus->id;
         $this->tahun_ajaran = $siklus->tahun_ajaran;
         $this->semester = $siklus->semester;
@@ -91,7 +111,7 @@ class SiklusSemester extends Component
         
         $now = date('Y');
         $next = $now + 1;
-        $this->tahun_ajaran = "$now/$next"; // Contoh: 2025/2026
+        $this->tahun_ajaran = "$now/$next"; 
         
         $this->semester = 'Ganjil';
         $this->status = 'Tidak Aktif';
@@ -103,6 +123,13 @@ class SiklusSemester extends Component
     public function confirmDelete($id)
     {
         $this->siklusId = $id; 
+        
+        $siklus = Siklus::with('penilaianSession')->find($id);
+        if ($siklus && $siklus->penilaianSession) {
+             $this->dispatch('show-error-alert', message: 'Siklus ini memiliki data penilaian. Tidak dapat dihapus.');
+             return;
+        }
+
         $this->dispatch('show-delete-confirmation');
     }
 
@@ -149,8 +176,6 @@ class SiklusSemester extends Component
                                 $query->where('tahun_ajaran', 'like', '%'.$this->search.'%')
                                       ->orWhere('semester', 'like', '%'.$this->search.'%');
                             })
-                            // [OPSIONAL] Sorting string mungkin perlu penyesuaian jika formatnya kompleks, 
-                            // tapi untuk "YYYY/YYYY" sorting string desc biasanya sudah benar (tahun terbaru diatas)
                             ->orderBy('tahun_ajaran', 'desc') 
                             ->orderBy('semester', 'desc')
                             ->paginate(10); 

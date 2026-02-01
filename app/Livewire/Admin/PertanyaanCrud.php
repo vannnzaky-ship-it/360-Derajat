@@ -15,6 +15,8 @@ class PertanyaanCrud extends Component
 {
     use WithPagination;
 
+    protected $paginationTheme = 'bootstrap';
+
     public $search = '';
     public $perPage = 10;
 

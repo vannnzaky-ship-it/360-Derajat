@@ -13,12 +13,8 @@
             margin-bottom: 2rem; 
         }
         .form-label-sm { 
-            font-size: 0.75rem; 
-            font-weight: 700; 
-            margin-bottom: 4px; 
-            color: #666; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
+            font-size: 0.75rem; font-weight: 700; margin-bottom: 4px; 
+            color: #666; text-transform: uppercase; letter-spacing: 0.5px; 
         }
         .form-control-sm, .form-select-sm, .input-group-text-sm { font-size: 0.85rem; }
 
@@ -32,7 +28,6 @@
             }
             tbody td { border: none !important; padding: 10px 15px; width: 100%; display: block; }
 
-            /* Mapping Label Mobile */
             tbody td:nth-child(2) { /* Tahun */
                 background: linear-gradient(to right, rgba(195, 142, 68, 0.1), transparent);
                 border-bottom: 1px solid rgba(0,0,0,0.05) !important;
@@ -57,88 +52,54 @@
         }
         @media (min-width: 768px) { .w-md-auto { width: auto !important; } }
 
+        /* ========================================= */
+        /* DARK MODE FIXES                           */
+        /* ========================================= */
         
-        /* 1. Global Backgrounds & Text */
-        [data-bs-theme="dark"] .bg-white {
-            background-color: #1e1e1e !important;
-            color: #e0e0e0 !important;
-        }
+        [data-bs-theme="dark"] .bg-white { background-color: #1e1e1e !important; color: #e0e0e0 !important; }
         [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
         [data-bs-theme="dark"] .text-muted { color: #adb5bd !important; }
         
-        /* 2. Input Fields & Search */
         [data-bs-theme="dark"] .input-group-text, 
         [data-bs-theme="dark"] .bg-light {
-            background-color: #2c2c2c !important; /* Abu Gelap */
-            border-color: #444 !important;
-            color: #ccc !important;
+            background-color: #2c2c2c !important; border-color: #444 !important; color: #ccc !important;
         }
         [data-bs-theme="dark"] .form-control,
         [data-bs-theme="dark"] .form-select {
-            background-color: #2c2c2c !important;
-            border-color: #444 !important;
-            color: #fff !important;
+            background-color: #2c2c2c !important; border-color: #444 !important; color: #fff !important;
         }
         [data-bs-theme="dark"] .form-control::placeholder { color: #777 !important; }
 
-        /* 3. Card Styles */
-        [data-bs-theme="dark"] .card {
-            background-color: #1e1e1e !important;
-            border: 1px solid #333 !important;
-        }
-        
-        /* 4. Table Styles */
+        [data-bs-theme="dark"] .card { background-color: #1e1e1e !important; border: 1px solid #333 !important; }
         [data-bs-theme="dark"] .table { color: #e0e0e0 !important; }
-        [data-bs-theme="dark"] .table-hover tbody tr:hover {
-            color: #e0e0e0;
-            background-color: rgba(255,255,255,0.05);
-        }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover { color: #e0e0e0; background-color: rgba(255,255,255,0.05); }
         
-        /* 5. Modal Styles */
-        [data-bs-theme="dark"] .modal-content {
-            background-color: #1e1e1e !important;
-            border: 1px solid #444 !important;
-        }
+        [data-bs-theme="dark"] .modal-content { background-color: #1e1e1e !important; border: 1px solid #444 !important; }
         [data-bs-theme="dark"] .modal-header,
-        [data-bs-theme="dark"] .modal-footer {
-            border-color: #333 !important;
-        }
+        [data-bs-theme="dark"] .modal-footer { border-color: #333 !important; }
         [data-bs-theme="dark"] .form-label-sm { color: #ccc !important; }
         [data-bs-theme="dark"] .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
 
-        /* 6. Mobile View Fixes in Dark Mode */
         @media (max-width: 767px) {
-            [data-bs-theme="dark"] tbody tr {
-                background-color: #1e1e1e !important;
-                border-color: #333 !important;
-            }
+            [data-bs-theme="dark"] tbody tr { background-color: #1e1e1e !important; border-color: #333 !important; }
             [data-bs-theme="dark"] tbody td:nth-child(2) {
                 background: linear-gradient(to right, rgba(195, 142, 68, 0.2), transparent) !important;
-                color: #fff !important;
-                border-bottom-color: #333 !important;
+                color: #fff !important; border-bottom-color: #333 !important;
             }
             [data-bs-theme="dark"] tbody td:nth-child(3),
-            [data-bs-theme="dark"] tbody td:nth-child(4) {
-                border-bottom-color: #333 !important;
-            }
-            [data-bs-theme="dark"] tbody td:nth-child(5) {
-                background-color: rgba(255,255,255,0.05) !important;
-                border-top-color: #333 !important;
-            }
+            [data-bs-theme="dark"] tbody td:nth-child(4) { border-bottom-color: #333 !important; }
+            [data-bs-theme="dark"] tbody td:nth-child(5) { background-color: rgba(255,255,255,0.05) !important; border-top-color: #333 !important; }
         }
 
-        /* 7. SWEETALERT (POPUP HAPUS) DARK MODE CSS */
-        /* Ini untuk memastikan CSS dasar juga gelap */
+        /* SWEETALERT DARK MODE FIX */
         [data-bs-theme="dark"] .swal2-popup {
-            background-color: #1e1e1e !important;
-            color: #e0e0e0 !important;
-            border: 1px solid #333;
+            background-color: #1e1e1e !important; color: #e0e0e0 !important; border: 1px solid #333;
         }
         [data-bs-theme="dark"] .swal2-title { color: #f8f9fa !important; }
         [data-bs-theme="dark"] .swal2-html-container { color: #adb5bd !important; }
     </style>
     
-    {{-- HEADER HALAMAN --}}
+    {{-- HEADER --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
        <div class="d-flex align-items-center">
             <i class="bi bi-calendar-range-fill fs-1 text-custom-brown me-3"></i>
@@ -149,7 +110,7 @@
        </button>
     </div>
 
-    {{-- ALERT MESSAGES --}}
+    {{-- ALERT --}}
     @if (session()->has('message')) 
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('message') }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -206,33 +167,57 @@
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-end justify-content-md-center gap-1">
-                                    <button class="btn btn-sm btn-outline-primary" wire:click="edit({{ $siklus->id }})" title="Edit">
-                                        <i class="bi bi-pencil-square"></i> <span class="d-md-none ms-1">Edit</span>
-                                    </button>
+                                    
+                                    @php
+                                        // LOGIKA KUNCI: Cek apakah sesi ada dan sedang berjalan
+                                        $hasSession = $siklus->penilaianSession ? true : false;
+                                        $isLocked = false;
+                                        $tglIndo = '';
 
-                                    @if($siklus->penilaianSession)
-                                        @php
+                                        if ($hasSession) {
                                             $batasWaktu = \Carbon\Carbon::parse($siklus->penilaianSession->batas_waktu);
-                                            $isOngoing = now()->lessThan($batasWaktu);
-                                            $tglIndo = $batasWaktu->translatedFormat('d F Y H:i');
-                                        @endphp
+                                            if (now()->lessThan($batasWaktu)) {
+                                                $isLocked = true; // SEDANG BERJALAN -> LOCK EDIT
+                                                $tglIndo = $batasWaktu->translatedFormat('d F Y H:i');
+                                            }
+                                        }
+                                    @endphp
 
-                                        @if($isOngoing)
-                                            <button class="btn btn-sm btn-secondary border-0" 
-                                                    {{-- Gunakan JS Swal manual disini juga untuk konsistensi --}}
+                                    {{-- 1. TOMBOL EDIT (Terkunci jika Sedang Berjalan) --}}
+                                    @if($isLocked)
+                                        <button class="btn btn-sm btn-secondary border-0 opacity-75" 
+                                                onclick="showLockedAlert('{{ $tglIndo }}')">
+                                            <i class="bi bi-lock-fill"></i> <span class="d-md-none ms-1">Terkunci</span>
+                                        </button>
+                                    @else
+                                        {{-- Jika tidak ada sesi ATAU sesi sudah selesai -> Bisa Edit --}}
+                                        <button class="btn btn-sm btn-outline-primary" wire:click="edit({{ $siklus->id }})" title="Edit">
+                                            <i class="bi bi-pencil-square"></i> <span class="d-md-none ms-1">Edit</span>
+                                        </button>
+                                    @endif
+
+                                    {{-- 2. TOMBOL REKAP (Terkunci jika Sedang Berjalan) --}}
+                                    @if($hasSession)
+                                        @if($isLocked)
+                                            <button class="btn btn-sm btn-secondary border-0 opacity-75" 
                                                     onclick="showLockedAlert('{{ $tglIndo }}')">
                                                 <i class="bi bi-eye-slash-fill"></i> <span class="d-md-none ms-1">Terkunci</span>
                                             </button>
                                         @else
+                                            {{-- Jika Selesai -> Bisa Lihat Rekap --}}
                                             <a href="{{ route('admin.rekap-siklus', $siklus->id) }}" class="btn btn-sm btn-info text-white border-0" title="Lihat Rekap">
                                                 <i class="bi bi-eye-fill"></i> <span class="d-md-none ms-1">Rekap</span>
                                             </a>
                                         @endif
-                                    @else
+                                    @endif
+
+                                    {{-- 3. TOMBOL HAPUS (Hanya jika belum ada sesi sama sekali) --}}
+                                    @if(!$hasSession)
                                         <button class="btn btn-sm btn-outline-danger" wire:click="confirmDelete({{ $siklus->id }})" title="Hapus">
                                             <i class="bi bi-trash"></i> <span class="d-md-none ms-1">Hapus</span>
                                         </button>
                                     @endif
+
                                 </div>
                             </td>
                         </tr>
@@ -257,7 +242,7 @@
         </div>
     </div>
 
-    {{-- MODAL TAMBAH/EDIT SIKLUS --}}
+    {{-- MODAL FORM --}}
     <div wire:ignore.self class="modal fade" id="siklusModal" tabindex="-1" aria-labelledby="siklusModalLabel" aria-hidden="true"
          style="background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);">
         
@@ -330,13 +315,13 @@
 
 @push('scripts')
 <script>
-    // Fungsi bantuan untuk alert "Terkunci" agar bisa dipanggil di HTML
+    // Alert untuk Tombol Terkunci (Edit & Rekap)
     function showLockedAlert(dateStr) {
         const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
         Swal.fire({
             icon: 'info', 
             title: 'Penilaian Sedang Berjalan', 
-            text: 'Hasil rekap baru dapat dilihat setelah ' + dateStr + ' WIB.', 
+            text: 'Data dikunci sementara. Anda baru bisa mengakses fitur ini setelah ' + dateStr + ' WIB.', 
             confirmButtonColor: '#c38e44',
             background: isDark ? '#1e1e1e' : '#fff',
             color: isDark ? '#e9ecef' : '#545454'
@@ -350,25 +335,24 @@
         @this.on('open-modal', () => { if(siklusModal) siklusModal.show(); });
         @this.on('close-modal', () => { if(siklusModal) siklusModal.hide(); });
 
-        // SWEETALERT HAPUS DENGAN DETEKSI DARK MODE
         @this.on('show-delete-confirmation', () => {
-            // Cek apakah tema gelap aktif di tag <html>
             const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
 
             Swal.fire({
                 title: 'Hapus Data?',
                 text: "Data siklus semester ini akan dihapus permanen!",
-                icon: 'warning', 
-                showCancelButton: true, 
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6', 
-                confirmButtonText: 'Ya, hapus!', 
-                cancelButtonText: 'Batal',
-                // Konfigurasi Warna Manual
+                icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal',
                 background: isDark ? '#1e1e1e' : '#fff',
                 color: isDark ? '#e9ecef' : '#545454'
-            }).then((result) => { 
-                if (result.isConfirmed) { @this.dispatch('deleteConfirmed'); } 
+            }).then((result) => { if (result.isConfirmed) { @this.dispatch('deleteConfirmed'); } });
+        });
+        
+        @this.on('show-error-alert', (event) => {
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            Swal.fire({
+                icon: 'error', title: 'Akses Ditolak', text: event.message, confirmButtonColor: '#d33',
+                background: isDark ? '#1e1e1e' : '#fff', color: isDark ? '#e9ecef' : '#545454'
             });
         });
 
