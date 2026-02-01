@@ -171,6 +171,8 @@ class DataPegawai extends Component
         $this->checkPeninjauStatus();
         
         $this->showModal = true;
+
+        $this->dispatch('reset-modal-ui');
     }
 
      public function showTambahModal()
@@ -182,6 +184,8 @@ class DataPegawai extends Component
         $this->checkPeninjauStatus();
         
         $this->showModal = true;
+
+        $this->dispatch('reset-modal-ui');
     }
 
     public function store()

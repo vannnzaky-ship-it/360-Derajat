@@ -6,7 +6,7 @@
     .table-floating { border-collapse: separate; border-spacing: 0 15px; }
     
     .row-floating { 
-        background-color: #ffffff; /* Default Putih */
+        background-color: #ffffff;
         box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.05); 
         transition: transform 0.2s, background-color 0.3s;
     }
@@ -29,8 +29,15 @@
     .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
 
     /* --- 2. STYLE MODAL --- */
+    /* Scroll behavior smooth agar resetnya terlihat halus */
+    .modal-body-compact { 
+        max-height: 70vh; 
+        overflow-y: auto; 
+        padding: 15px 20px !important; 
+        scroll-behavior: smooth; 
+    }
     .modal-dialog-compact { max-width: 550px; margin-top: 60px; margin-bottom: 2rem; }
-    .modal-body-compact { max-height: 70vh; overflow-y: auto; padding: 15px 20px !important; }
+    
     .form-label-sm { font-size: 0.75rem; font-weight: 700; margin-bottom: 2px; color: #555; }
     .section-divider { 
         font-size: 0.65rem; font-weight: 800; color: #c38e44; 
@@ -52,112 +59,37 @@
         .table-floating thead { display: none; }
         .table-floating, .table-floating tbody, .table-floating tr, .table-floating td { display: block; width: 100%; }
         .table-floating tr { margin-bottom: 1rem; border-radius: 12px; }
-        
         .row-floating td:first-child { border-radius: 12px 12px 0 0; background: linear-gradient(to bottom, #fdfbf7, #fff); }
         .row-floating td:last-child { border-radius: 0 0 12px 12px; border-top: 1px solid #eee; }
-        
         .row-floating td { padding: 10px 15px; text-align: left; }
     }
 
     /* ========================================= */
-    /* FIX DARK MODE (TAMBAHAN PENTING)      */
+    /* FIX DARK MODE */
     /* ========================================= */
-    
-    /* 1. Global Background & Text */
-    [data-bs-theme="dark"] body, 
-    [data-bs-theme="dark"] .container-fluid {
-        background-color: #121212 !important; /* Hitam Gelap */
-        color: #e0e0e0 !important;
-    }
-    
-    /* 2. Baris Tabel Mengambang */
-    [data-bs-theme="dark"] .row-floating {
-        background-color: #1e1e1e !important; /* Abu Gelap */
-        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.5);
-    }
-    
-    /* 3. Text Colors Fix */
+    [data-bs-theme="dark"] body, [data-bs-theme="dark"] .container-fluid { background-color: #121212 !important; color: #e0e0e0 !important; }
+    [data-bs-theme="dark"] .row-floating { background-color: #1e1e1e !important; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.5); }
     [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
     [data-bs-theme="dark"] .text-secondary { color: #adb5bd !important; }
     [data-bs-theme="dark"] .text-muted { color: #6c757d !important; }
-
-    /* 4. Input Search & Background Putih Lainnya */
-    [data-bs-theme="dark"] .bg-white {
-        background-color: #1e1e1e !important;
-        color: #e0e0e0 !important;
-        border-color: #333 !important;
-    }
-    [data-bs-theme="dark"] .input-group-text {
-        background-color: transparent !important;
-        border-color: #333 !important;
-    }
-    [data-bs-theme="dark"] .form-control {
-        background-color: transparent !important;
-        color: #fff !important;
-        border-color: #444 !important;
-    }
-    [data-bs-theme="dark"] .form-control::placeholder {
-        color: #6c757d;
-    }
-
-    /* 5. Avatar & Badge Fixes */
-    [data-bs-theme="dark"] .avatar-circle {
-        border-color: #333 !important; 
-    }
-    [data-bs-theme="dark"] .badge.bg-light {
-        background-color: #2d2d2d !important;
-        color: #e0e0e0 !important;
-        border-color: #444 !important;
-    }
-
-    /* 6. Mobile View Fixes for Dark Mode */
-    [data-bs-theme="dark"] .row-floating td:first-child {
-        background: linear-gradient(to bottom, #2c2c2c, #1e1e1e) !important;
-    }
-    [data-bs-theme="dark"] .row-floating td:last-child {
-        border-top: 1px solid #333 !important;
-    }
-
-    /* 7. Modal Dark Mode */
-    [data-bs-theme="dark"] .modal-content {
-        background-color: #1e1e1e !important;
-        border: 1px solid #333 !important;
-    }
-    [data-bs-theme="dark"] .modal-header, 
-    [data-bs-theme="dark"] .modal-footer {
-        border-color: #333 !important;
-    }
-    [data-bs-theme="dark"] .form-label-sm {
-        color: #bbb !important;
-    }
-    [data-bs-theme="dark"] .section-divider {
-        border-bottom-color: #333 !important;
-    }
-    [data-bs-theme="dark"] .list-group-item {
-        background-color: #1e1e1e !important;
-        color: #e0e0e0 !important;
-        border-color: #333 !important;
-    }
-    [data-bs-theme="dark"] .accordion-button {
-        background-color: #1e1e1e !important;
-        color: #e0e0e0 !important;
-        box-shadow: none !important;
-    }
-
-    /* 8. SWEETALERT DARK MODE FIX (TAMBAHAN KHUSUS) */
-    [data-bs-theme="dark"] .swal2-popup {
-        background-color: #1e1e1e !important;
-        color: #e0e0e0 !important;
-        border: 1px solid #333;
-    }
-    [data-bs-theme="dark"] .swal2-title {
-        color: #f8f9fa !important;
-    }
-    [data-bs-theme="dark"] .swal2-content, 
-    [data-bs-theme="dark"] .swal2-html-container {
-        color: #adb5bd !important;
-    }
-</style>
+    [data-bs-theme="dark"] .bg-white { background-color: #1e1e1e !important; color: #e0e0e0 !important; border-color: #333 !important; }
+    [data-bs-theme="dark"] .input-group-text { background-color: transparent !important; border-color: #333 !important; }
+    [data-bs-theme="dark"] .form-control { background-color: transparent !important; color: #fff !important; border-color: #444 !important; }
+    [data-bs-theme="dark"] .form-control::placeholder { color: #6c757d; }
+    [data-bs-theme="dark"] .avatar-circle { border-color: #333 !important; }
+    [data-bs-theme="dark"] .badge.bg-light { background-color: #2d2d2d !important; color: #e0e0e0 !important; border-color: #444 !important; }
+    [data-bs-theme="dark"] .row-floating td:first-child { background: linear-gradient(to bottom, #2c2c2c, #1e1e1e) !important; }
+    [data-bs-theme="dark"] .row-floating td:last-child { border-top: 1px solid #333 !important; }
+    [data-bs-theme="dark"] .modal-content { background-color: #1e1e1e !important; border: 1px solid #333 !important; }
+    [data-bs-theme="dark"] .modal-header, [data-bs-theme="dark"] .modal-footer { border-color: #333 !important; }
+    [data-bs-theme="dark"] .form-label-sm { color: #bbb !important; }
+    [data-bs-theme="dark"] .section-divider { border-bottom-color: #333 !important; }
+    [data-bs-theme="dark"] .list-group-item { background-color: #1e1e1e !important; color: #e0e0e0 !important; border-color: #333 !important; }
+    [data-bs-theme="dark"] .accordion-button { background-color: #1e1e1e !important; color: #e0e0e0 !important; box-shadow: none !important; }
+    [data-bs-theme="dark"] .swal2-popup { background-color: #1e1e1e !important; color: #e0e0e0 !important; border: 1px solid #333; }
+    [data-bs-theme="dark"] .swal2-title { color: #f8f9fa !important; }
+    [data-bs-theme="dark"] .swal2-content, [data-bs-theme="dark"] .swal2-html-container { color: #adb5bd !important; }
+    </style>
 
     <div class="container-fluid p-4" style="background-color: #f8f9fa; min-height: 100vh;">
         
@@ -210,7 +142,6 @@
                 <tbody>
                     @forelse ($pegawaiList as $pegawai)
                         <tr wire:key="pegawai-{{ $pegawai->id }}" class="row-floating">
-                            
                             {{-- 1. PROFIL --}}
                             <td class="py-3 ps-4">
                                 <div class="d-flex align-items-center">
@@ -224,7 +155,6 @@
                                     <div class="d-flex flex-column">
                                         <span class="fw-bold text-dark">{{ $pegawai->user->name }}</span>
                                         <span class="text-secondary small">{{ $pegawai->user->email }}</span>
-                                        
                                         @if($pegawai->no_hp)
                                             <span class="text-muted small mt-1">
                                                 <i class="bi bi-whatsapp text-success me-1"></i>{{ $pegawai->no_hp }}
@@ -233,7 +163,6 @@
                                     </div>
                                 </div>
                             </td>
-
                             {{-- 2. NIP --}}
                             <td class="py-3 text-center">
                                 <span class="d-md-none fw-bold text-secondary small d-block mb-1">NIP/NRP</span>
@@ -241,7 +170,6 @@
                                     {{ $pegawai->nip }}
                                 </span>
                             </td>
-
                             {{-- 3. JABATAN & PERAN --}}
                             <td class="py-3 text-center">
                                 <span class="d-md-none fw-bold text-secondary small d-block mb-1">JABATAN</span>
@@ -265,7 +193,6 @@
                                     </div>
                                 </div>
                             </td>
-
                             {{-- 4. AKSI --}}
                             <td class="py-3 text-center">
                                 <div class="d-flex justify-content-end justify-content-md-center w-100 gap-2">
@@ -277,7 +204,6 @@
                                     </button>
                                 </div>
                             </td>
-
                         </tr>
                     @empty
                         <tr>
@@ -297,11 +223,10 @@
         </div>
 
         {{-- PAGINATION --}}
-        @if($pegawaiList->hasPages())
-            <div class="d-flex justify-content-center mt-4">
-                 {{ $pegawaiList->links('pagination::bootstrap-5') }}
-            </div>
-        @endif
+        <div class="d-flex justify-content-center mt-3">
+             {{ $pegawaiList->links('pagination::bootstrap-5') }}
+        </div>
+
     </div>
 
     {{-- MODAL --}}
@@ -324,7 +249,8 @@
                     <button type="button" class="btn-close btn-sm" wire:click="closeModal" aria-label="Close"></button>
                 </div>
 
-                <div class="modal-body modal-body-compact">
+                {{-- ID ditambahkan untuk target JS Scroll --}}
+                <div class="modal-body modal-body-compact" id="modalBodyScroll">
                     {{-- A. Data Diri --}}
                     <div class="section-divider mt-0">Data Pribadi</div>
                     <div class="row g-2">
@@ -455,10 +381,40 @@
     @push('scripts')
     <script>
         document.addEventListener('livewire:initialized', () => {
-            @this.on('show-delete-confirmation', (id) => {
-                // Mendapatkan tema saat ini dari atribut html
-                const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            
+            // --- 1. Event Listener untuk Reset Scroll & Accordion ---
+            // Event ini HARUS di-dispatch dari component PHP: $this->dispatch('reset-modal-ui');
+            @this.on('reset-modal-ui', () => {
                 
+                // Gunakan timeout kecil untuk memastikan DOM sudah render
+                setTimeout(() => {
+                    // A. Reset Scroll ke Paling Atas
+                    const modalBody = document.getElementById('modalBodyScroll');
+                    if(modalBody) {
+                        modalBody.scrollTop = 0;
+                    }
+
+                    // B. Tutup Semua Accordion yang Terbuka
+                    const openAccordions = document.querySelectorAll('#pegawaiModal .accordion-collapse.show');
+                    openAccordions.forEach(el => {
+                        // Hapus class 'show' dari body accordion
+                        el.classList.remove('show');
+                        
+                        // Reset tombol triggernya (tambah class 'collapsed', set aria-expanded false)
+                        // Kita cari tombol yang menargetkan ID element ini
+                        const triggerBtn = document.querySelector(`[data-bs-target="#${el.id}"]`);
+                        if(triggerBtn) {
+                            triggerBtn.classList.add('collapsed');
+                            triggerBtn.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+
+                }, 100); // delay 100ms agar aman
+            });
+
+            // --- 2. Event Listener untuk Konfirmasi Hapus ---
+            @this.on('show-delete-confirmation', (id) => {
+                const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
                 Swal.fire({
                     title: 'Hapus Pegawai?',
                     text: "Data tidak dapat dikembalikan!",
@@ -468,7 +424,6 @@
                     cancelButtonColor: '#3085d6',
                     confirmButtonText: 'Ya, Hapus',
                     cancelButtonText: 'Batal',
-                    // Konfigurasi warna background berdasarkan tema
                     background: isDark ? '#1e1e1e' : '#fff',
                     color: isDark ? '#e0e0e0' : '#545454'
                 }).then((result) => {
