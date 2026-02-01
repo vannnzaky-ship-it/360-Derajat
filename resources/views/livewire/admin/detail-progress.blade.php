@@ -107,7 +107,7 @@
                     {{-- Detail Info --}}
                     <div class="text-start px-2">
                         <div class="info-box">
-                            <span class="info-label">NIP / Identitas</span>
+                            <span class="info-label">NRP</span>
                             <div class="fw-bold text-dark">{{ $user->pegawai->nip ?? '-' }}</div>
                         </div>
                         <div class="info-box">

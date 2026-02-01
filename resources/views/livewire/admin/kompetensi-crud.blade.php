@@ -1,6 +1,6 @@
 <div class="container-fluid p-4">
 
-    {{-- STYLE KHUSUS: MENYAMAKAN DENGAN MANAJEMEN JABATAN --}}
+    {{-- STYLE KHUSUS: MANAJEMEN KOMPETENSI (DENGAN DARK MODE FIX) --}}
     <style>
         /* 1. Warna Utama */
         .text-custom-brown { color: #C38E44; }
@@ -8,12 +8,12 @@
 
         /* 2. Mengatur Lebar Modal AGAR TIDAK LEBAR (Compact) */
         .modal-dialog-compact { 
-            max-width: 500px; /* KUNCI: Membatasi lebar agar ramping */
+            max-width: 500px; 
             margin-top: 60px; 
             margin-bottom: 2rem; 
         }
 
-        /* 3. Typography Form Kecil (Agar muat di modal kecil) */
+        /* 3. Typography Form Kecil */
         .form-label-sm { 
             font-size: 0.75rem; 
             font-weight: 700; 
@@ -24,28 +24,7 @@
         }
         .form-control-sm, .form-select-sm, .input-group-text-sm { font-size: 0.85rem; }
 
-        /* --- FIX KHUSUS PENCARIAN (DARK MODE) --- */
-    
-        /* 1. Mengubah background ikon kaca pembesar */
-        [data-bs-theme="dark"] .input-group .input-group-text {
-            background-color: #2c2c2c !important; /* Abu gelap */
-            border-color: #444 !important;       /* Border abu */
-            color: #ccc !important;              /* Ikon jadi terang */
-        }
-
-        /* 2. Mengubah background kolom ketik (input) */
-        [data-bs-theme="dark"] .input-group .form-control {
-            background-color: #2c2c2c !important; /* Abu gelap */
-            border-color: #444 !important;       /* Border abu */
-            color: #fff !important;              /* Teks ketikan jadi putih */
-        }
-
-        /* 3. Mengubah warna teks placeholder (tulisan 'Cari...') */
-        [data-bs-theme="dark"] .input-group .form-control::placeholder {
-            color: #777 !important;              /* Placeholder abu */
-        }
-
-        /* 4. Responsif Mobile Card View (Tabel) */
+        /* 4. Responsif Mobile Card View */
         @media (max-width: 767px) {
             thead { display: none; }
             tbody tr {
@@ -78,6 +57,92 @@
             }
         }
         @media (min-width: 768px) { .w-md-auto { width: auto !important; } }
+
+        /* 1. Global Backgrounds & Text */
+        [data-bs-theme="dark"] .bg-white {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+            border-color: #333 !important;
+        }
+        [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
+        [data-bs-theme="dark"] .text-muted { color: #adb5bd !important; }
+        
+        /* 2. Input Fields & Selects & Search Bar */
+        [data-bs-theme="dark"] .input-group-text, 
+        [data-bs-theme="dark"] .bg-light {
+            background-color: #2c2c2c !important; /* Abu Gelap */
+            border-color: #444 !important;
+            color: #ccc !important;
+        }
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select {
+            background-color: #2c2c2c !important;
+            border-color: #444 !important;
+            color: #fff !important;
+        }
+        [data-bs-theme="dark"] .form-control::placeholder {
+            color: #777 !important;
+        }
+
+        /* 3. Card Styles */
+        [data-bs-theme="dark"] .card {
+            background-color: #1e1e1e !important;
+            border: 1px solid #333 !important;
+        }
+        
+        /* 4. Table Styles */
+        [data-bs-theme="dark"] .table { color: #e0e0e0 !important; }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover {
+            color: #e0e0e0;
+            background-color: rgba(255,255,255,0.05);
+        }
+        
+        /* 5. Modal Styles */
+        [data-bs-theme="dark"] .modal-content {
+            background-color: #1e1e1e !important;
+            border: 1px solid #444 !important;
+        }
+        [data-bs-theme="dark"] .modal-header,
+        [data-bs-theme="dark"] .modal-footer {
+            border-color: #333 !important;
+        }
+        [data-bs-theme="dark"] .form-label-sm {
+            color: #ccc !important;
+        }
+        [data-bs-theme="dark"] .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        /* 6. Mobile View Fixes in Dark Mode */
+        @media (max-width: 767px) {
+            [data-bs-theme="dark"] tbody tr {
+                background-color: #1e1e1e !important;
+                border-color: #333 !important;
+            }
+            [data-bs-theme="dark"] tbody td:nth-child(2) {
+                background: linear-gradient(to right, rgba(195, 142, 68, 0.2), transparent) !important;
+                color: #fff !important;
+                border-bottom-color: #333 !important;
+            }
+            [data-bs-theme="dark"] tbody td:nth-child(3),
+            [data-bs-theme="dark"] tbody td:nth-child(4),
+            [data-bs-theme="dark"] tbody td:nth-child(5) {
+                border-bottom-color: #333 !important;
+            }
+            [data-bs-theme="dark"] tbody td:nth-child(6) {
+                background-color: rgba(255,255,255,0.05) !important;
+                border-top-color: #333 !important;
+            }
+        }
+
+        /* 7. SweetAlert Dark Mode */
+        [data-bs-theme="dark"] .swal2-popup {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+            border: 1px solid #333;
+        }
+        [data-bs-theme="dark"] .swal2-title { color: #f8f9fa !important; }
+        [data-bs-theme="dark"] .swal2-html-container { color: #adb5bd !important; }
     </style>
 
     {{-- HEADER HALAMAN --}}
@@ -116,6 +181,7 @@
                  <h5 class="mb-0 fw-bold text-dark d-flex align-items-center">
                     <i class="bi bi-table me-2"></i>Daftar Kompetensi
                  </h5>
+                 {{-- PENCARIAN (Input Group sudah diperbaiki CSS-nya di atas) --}}
                  <div class="input-group w-100 w-md-auto" style="max-width: 400px;">
                       <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
                       <input type="text" class="form-control border-start-0 ps-0" placeholder="Cari..." wire:model.live.debounce.300ms="search">
@@ -180,11 +246,10 @@
         </div>
     </div>
 
-    {{-- MODAL FORM YANG BENAR (UKURAN COMPACT/KECIL) --}}
+    {{-- MODAL FORM --}}
     <div wire:ignore.self class="modal fade" id="kompetensiModal" tabindex="-1" aria-hidden="true" 
          style="background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);"> 
         
-        {{-- PENTING: Gunakan 'modal-dialog-compact' yang sudah didefinisikan di CSS atas --}}
         <div class="modal-dialog modal-dialog-centered modal-dialog-compact">
             <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
                 <form wire:submit="saveKompetensi"> 
@@ -195,7 +260,7 @@
                             <div class="bg-warning bg-opacity-10 text-warning rounded p-1 me-2">
                                 <i class="bi bi-star-fill fs-6"></i>
                             </div>
-                            <h6 class="modal-title fw-bold m-0" id="kompetensiModalLabel">
+                            <h6 class="modal-title fw-bold m-0 text-dark" id="kompetensiModalLabel">
                                 {{ $isEditMode ? 'Edit' : 'Tambah' }} Kompetensi
                             </h6>
                         </div>
@@ -221,7 +286,7 @@
                             @error('deskripsi') <div class="invalid-feedback small">{{ $message }}</div> @enderror
                         </div>
 
-                        {{-- 3. Grid Bobot & Status (Kecil & Rapi) --}}
+                        {{-- 3. Grid Bobot & Status --}}
                         <div class="row g-2">
                             <div class="col-6">
                                 <label class="form-label-sm">Bobot (%) <span class="text-danger">*</span></label>
@@ -272,11 +337,21 @@
         @this.on('close-kompetensi-modal', () => { modalObj.hide(); });
         
         @this.on('show-delete-confirmation-kompetensi', () => { 
+            // Deteksi Mode Gelap secara manual untuk SweetAlert
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+
             Swal.fire({
                 title: 'Hapus Kompetensi?',
                 text: "Data tidak bisa dikembalikan!",
-                icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', 
-                confirmButtonText: 'Ya, Hapus', cancelButtonText: 'Batal'
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#d33', 
+                cancelButtonColor: '#3085d6', 
+                confirmButtonText: 'Ya, Hapus', 
+                cancelButtonText: 'Batal',
+                // Konfigurasi warna untuk SweetAlert di Dark Mode
+                background: isDark ? '#1e1e1e' : '#fff',
+                color: isDark ? '#e9ecef' : '#545454'
             }).then((res) => { if (res.isConfirmed) @this.dispatch('deleteConfirmedKompetensi'); });
         });
     });

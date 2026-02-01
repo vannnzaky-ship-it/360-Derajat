@@ -12,17 +12,14 @@
         }
 
         /* --- DESKTOP PODIUM (CSS RAMPING) --- */
-        /* INI KUNCI AGAR RAMPING: KITA BATASI LEBARNYA DI TENGAH */
         .podium-container { 
             display: flex; 
             justify-content: center; 
             align-items: flex-end; 
-            gap: 20px; /* Jarak antar kartu lebih rapat */
+            gap: 20px; 
             margin-bottom: 50px; 
             padding-top: 30px;
-            
-            /* FORCING SLIM LAYOUT */
-            max-width: 900px; /* Batas lebar maksimal agar tidak melar */
+            max-width: 900px; 
             margin-left: auto; 
             margin-right: auto;
         }
@@ -39,7 +36,7 @@
         .rank-card-2 { min-height: 310px; border-top: 8px solid var(--silver); }
         .rank-card-3 { min-height: 290px; border-top: 8px solid var(--bronze); }
 
-        .rank-1-wrapper { width: 34%; order: 2; } /* Persentase dari max-width 900px */
+        .rank-1-wrapper { width: 34%; order: 2; }
         .rank-2-wrapper { width: 32%; order: 1; }
         .rank-3-wrapper { width: 32%; order: 3; }
 
@@ -102,14 +99,97 @@
         .ml-role { font-size: 0.75rem; color: #888; }
         .ml-score { font-weight: bold; color: var(--primary-gold); font-size: 1rem; }
 
-        /* --- DARK MODE --- */
-        [data-bs-theme="dark"] .rank-card, [data-bs-theme="dark"] .leaderboard-item, [data-bs-theme="dark"] .mobile-list-card { background-color: #212529 !important; border-color: #373b3e !important; }
-        [data-bs-theme="dark"] .rank-name, [data-bs-theme="dark"] .rank-score-val, [data-bs-theme="dark"] .m-user-name, [data-bs-theme="dark"] .m-score-val, [data-bs-theme="dark"] .ml-name { color: #fff !important; }
-        [data-bs-theme="dark"] .rank-jabatan, [data-bs-theme="dark"] .m-user-jabatan, [data-bs-theme="dark"] .ml-role { color: #adb5bd !important; }
-        [data-bs-theme="dark"] .rank-score-box { background-color: #2c3034 !important; border-top: 1px solid #373b3e !important; }
-        [data-bs-theme="dark"] .m-rank-1 { background: linear-gradient(to right, rgba(255, 215, 0, 0.1), #212529); }
-        [data-bs-theme="dark"] .card-header, [data-bs-theme="dark"] .table thead { background-color: #2c3034 !important; color: #adb5bd !important; }
-        [data-bs-theme="dark"] .table-hover tbody tr:hover { color: #fff; background-color: rgba(255,255,255,.075); }
+        /* ========================================= */
+        /* DARK MODE FIXES                           */
+        /* ========================================= */
+        [data-bs-theme="dark"] .bg-white {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+        }
+        [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
+        [data-bs-theme="dark"] .text-secondary { color: #adb5bd !important; }
+        [data-bs-theme="dark"] .text-muted { color: #999 !important; }
+
+        /* Card Podium & List */
+        [data-bs-theme="dark"] .rank-card, 
+        [data-bs-theme="dark"] .leaderboard-item, 
+        [data-bs-theme="dark"] .mobile-list-card,
+        [data-bs-theme="dark"] .card { 
+            background-color: #1e1e1e !important; 
+            border-color: #333 !important; 
+        }
+        
+        /* Text Colors inside Card */
+        [data-bs-theme="dark"] .rank-name, 
+        [data-bs-theme="dark"] .rank-score-val, 
+        [data-bs-theme="dark"] .m-user-name, 
+        [data-bs-theme="dark"] .m-score-val, 
+        [data-bs-theme="dark"] .ml-name { 
+            color: #fff !important; 
+        }
+        [data-bs-theme="dark"] .rank-jabatan, 
+        [data-bs-theme="dark"] .m-user-jabatan, 
+        [data-bs-theme="dark"] .ml-role { 
+            color: #adb5bd !important; 
+        }
+        
+        /* Score Box Background */
+        [data-bs-theme="dark"] .rank-score-box { 
+            background-color: #2c2c2c !important; 
+            border-top: 1px solid #333 !important; 
+        }
+        
+        /* Mobile Gradient Fix */
+        [data-bs-theme="dark"] .m-rank-1 { 
+            background: linear-gradient(to right, rgba(255, 215, 0, 0.1), #1e1e1e) !important; 
+        }
+        
+        /* Table Styles */
+        [data-bs-theme="dark"] .card-header, 
+        [data-bs-theme="dark"] .table thead { 
+            background-color: #2c2c2c !important; 
+            color: #adb5bd !important; 
+            border-bottom-color: #333 !important;
+        }
+        [data-bs-theme="dark"] .table tbody td {
+            border-bottom-color: #333 !important;
+            color: #e0e0e0 !important;
+        }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover { 
+            color: #fff; 
+            background-color: rgba(255,255,255,.05) !important; 
+        }
+        
+        /* Input & Search */
+        [data-bs-theme="dark"] .input-group-text, 
+        [data-bs-theme="dark"] .bg-light {
+            background-color: #2c2c2c !important;
+            border-color: #444 !important;
+            color: #ccc !important;
+        }
+        [data-bs-theme="dark"] .form-control {
+            background-color: #2c2c2c !important;
+            border-color: #444 !important;
+            color: #fff !important;
+        }
+        [data-bs-theme="dark"] .form-control::placeholder {
+            color: #777 !important;
+        }
+        
+        /* Avatar & Badges */
+        [data-bs-theme="dark"] .rank-avatar {
+            background-color: #2c2c2c !important;
+            border-color: #444 !important;
+            color: #e0e0e0 !important;
+        }
+        [data-bs-theme="dark"] .m-user-avatar {
+            border-color: #444 !important;
+        }
+        [data-bs-theme="dark"] .badge.bg-light {
+            background-color: #2c2c2c !important;
+            color: #e0e0e0 !important;
+            border-color: #444 !important;
+        }
     </style>
 
     {{-- HEADER --}}
