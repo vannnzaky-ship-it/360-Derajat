@@ -19,7 +19,7 @@
         .btn-theme:hover { background-color: var(--theme-brown-dark); color: #fff; transform: translateY(-2px); }
         .btn-disabled { background-color: #e9ecef; color: #6c757d; border: 1px solid #dee2e6; cursor: not-allowed; }
         
-        /* Style Awal Timer Box (Light Mode) */
+        /* Style Timer Box */
         .timer-box { 
             background: #fdf8f3; 
             border: 1px solid #f1e4d1; 
@@ -29,6 +29,14 @@
             display: inline-flex; 
             gap: 15px; 
         }
+        
+        /* [BARU] Style Timer Box Jika Diperpanjang (Biru) */
+        .timer-box.extended {
+            background: #e7f1ff;
+            border: 1px solid #b6d4fe;
+            color: #0d6efd;
+        }
+
         .timer-unit { text-align: center; }
         .timer-value { display: block; font-size: 1.2rem; font-weight: bold; line-height: 1; }
         .timer-label { font-size: 0.7rem; text-transform: uppercase; }
@@ -36,51 +44,25 @@
         /* ========================================= */
         /* DARK MODE CONFIGURATION          */
         /* ========================================= */
+        [data-bs-theme="dark"] body, [data-bs-theme="dark"] .container-fluid { background-color: #121212 !important; color: #e0e0e0 !important; }
+        [data-bs-theme="dark"] .card-modern { background-color: #1e1e1e !important; color: #e0e0e0 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; }
         
-        /* 1. Global Background & Text */
-        [data-bs-theme="dark"] body,
-        [data-bs-theme="dark"] .container-fluid {
-            background-color: #121212 !important;
-            color: #e0e0e0 !important;
-        }
+        [data-bs-theme="dark"] .timer-box { background-color: #2c2c2c !important; border-color: #444 !important; color: #f8f9fa !important; }
+        [data-bs-theme="dark"] .timer-value { color: var(--theme-brown) !important; }
+        [data-bs-theme="dark"] .timer-label { color: #adb5bd !important; }
 
-        /* 2. Fix Card Background (Agar tidak putih) */
-        [data-bs-theme="dark"] .card-modern {
-            background-color: #1e1e1e !important;
-            color: #e0e0e0 !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
+        /* [BARU] Dark Mode untuk Timer Diperpanjang */
+        [data-bs-theme="dark"] .timer-box.extended {
+            background-color: #0a2a4d !important; /* Biru Gelap */
+            border-color: #0d6efd !important;
+            color: #6ea8fe !important;
         }
+        [data-bs-theme="dark"] .timer-box.extended .timer-value { color: #6ea8fe !important; }
 
-        /* 3. FIX KHUSUS TIMER BOX (WAKTU) */
-        [data-bs-theme="dark"] .timer-box {
-            background-color: #2c2c2c !important; /* Latar jadi Abu Gelap */
-            border-color: #444 !important;        /* Border jadi gelap */
-            color: #f8f9fa !important;            /* Teks dasar jadi Putih */
-        }
-
-        /* Angka Waktu jadi warna Emas agar kontras */
-        [data-bs-theme="dark"] .timer-value {
-            color: var(--theme-brown) !important; 
-        }
-        
-        /* Label (Hari, Jam, Menit) jadi abu-abu muda */
-        [data-bs-theme="dark"] .timer-label {
-            color: #adb5bd !important;
-        }
-
-        /* 4. Fix Warna Teks Lainnya */
         [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
         [data-bs-theme="dark"] .text-muted { color: #adb5bd !important; }
-        
-        /* 5. Fix Tombol Outline di Dark Mode */
-        [data-bs-theme="dark"] .btn-outline-theme {
-            color: var(--theme-brown);
-            border-color: var(--theme-brown);
-        }
-        [data-bs-theme="dark"] .btn-outline-theme:hover {
-            background-color: var(--theme-brown);
-            color: #fff;
-        }
+        [data-bs-theme="dark"] .btn-outline-theme { color: var(--theme-brown); border-color: var(--theme-brown); }
+        [data-bs-theme="dark"] .btn-outline-theme:hover { background-color: var(--theme-brown); color: #fff; }
     </style>
 
     <div class="container-fluid p-4">
@@ -89,7 +71,7 @@
             <p class="text-muted">Selamat beraktivitas di Sistem Penilaian 360 Derajat.</p>
         </div>
 
-        <div class="card card-modern shadow-sm mb-5">
+        <div class="card card-modern shadow-sm mb-5" style="{{ $isDiperpanjang ? 'border-left-color: #0d6efd;' : '' }}">
             <div class="card-body p-4">
                 @if(!$adaSesi)
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -103,19 +85,30 @@
                 @else
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                         <div>
-                            <h5 class="card-title fw-bold m-0 text-dark">Progress Pengisian Penilaian</h5>
-                            <small class="text-muted">Selesaikan sebelum waktu habis.</small>
+                            @if($isDiperpanjang)
+                                <h5 class="card-title fw-bold m-0 text-primary">
+                                    <i class="bi bi-hourglass-split me-2"></i>Waktu Penilaian Diperpanjang!
+                                </h5>
+                                <small class="text-muted">Batas waktu telah ditambah. Manfaatkan kesempatan ini.</small>
+                            @else
+                                <h5 class="card-title fw-bold m-0 text-dark">Progress Pengisian Penilaian</h5>
+                                <small class="text-muted">Selesaikan sebelum waktu habis.</small>
+                            @endif
                         </div>
+                        
                         {{-- Timer Box dengan Logic x-data --}}
-                        <div class="timer-box shadow-sm" x-data="timerData('{{ $deadline }}')" x-init="start()">
+                        {{-- Tambahkan class 'extended' jika diperpanjang --}}
+                        <div class="timer-box {{ $isDiperpanjang ? 'extended' : '' }} shadow-sm" x-data="timerData('{{ $deadline }}')" x-init="start()">
                             <div class="timer-unit"><span class="timer-value" x-text="days">00</span><span class="timer-label">Hari</span></div>
                             <div class="timer-unit"><span class="timer-value" x-text="hours">00</span><span class="timer-label">Jam</span></div>
                             <div class="timer-unit"><span class="timer-value" x-text="minutes">00</span><span class="timer-label">Menit</span></div>
                             <div class="timer-unit"><span class="timer-value" x-text="seconds">00</span><span class="timer-label">Detik</span></div>
                         </div>
                     </div>
+
+                    {{-- Progress Bar --}}
                     <div class="progress mb-3" style="height: 25px; border-radius: 20px; background-color: #f0f0f0; overflow: hidden;">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated {{ $persentase == 100 ? 'bg-success' : 'bg-theme' }}" 
+                        <div class="progress-bar progress-bar-striped progress-bar-animated {{ $persentase == 100 ? 'bg-success' : ($isDiperpanjang ? 'bg-primary' : 'bg-theme') }}" 
                              style="width: {{ $persentase }}%;">{{ $persentase }}%</div>
                     </div>
                     <p class="text-muted small">Anda telah menyelesaikan <strong>{{ $sudahSelesai }}</strong> dari <strong>{{ $totalTugas }}</strong> formulir.</p>

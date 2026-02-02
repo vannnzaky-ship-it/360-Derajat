@@ -24,12 +24,18 @@ class Dashboard extends Component
         $userId = Auth::id();
         $now = Carbon::now();
 
-        // Cari sesi yang statusnya 'Open'
-        $sesiAktif = PenilaianSession::where('status', 'Open')
-                                      ->where('batas_waktu', '>', $now)
-                                      ->first();
+        // [PERBAIKAN] Cari sesi yang statusnya 'Open' ATAU 'Diperpanjang'
+        $sesiAktif = PenilaianSession::whereIn('status', ['Open', 'Diperpanjang'])
+                                     ->where('batas_waktu', '>', $now)
+                                     ->latest() // Ambil yang paling baru jika ada multiple (safety)
+                                     ->first();
         
-        $totalTugas = 0; $sudahSelesai = 0; $persentase = 0; $adaSesi = false; $deadline = null;
+        $totalTugas = 0; 
+        $sudahSelesai = 0; 
+        $persentase = 0; 
+        $adaSesi = false; 
+        $deadline = null;
+        $isDiperpanjang = false; // Flag baru untuk UI
 
         if ($sesiAktif) {
             $totalTugas = PenilaianAlokasi::where('user_id', $userId)
@@ -39,6 +45,7 @@ class Dashboard extends Component
             if ($totalTugas > 0) {
                 $adaSesi = true;
                 $deadline = $sesiAktif->batas_waktu;
+                $isDiperpanjang = ($sesiAktif->status === 'Diperpanjang'); // Cek status
 
                 $sudahSelesai = PenilaianAlokasi::where('user_id', $userId)
                                                 ->where('penilaian_session_id', $sesiAktif->id)
@@ -54,7 +61,8 @@ class Dashboard extends Component
             'sudahSelesai' => $sudahSelesai,
             'persentase'   => $persentase,
             'adaSesi'      => $adaSesi,
-            'deadline'     => $deadline 
+            'deadline'     => $deadline,
+            'isDiperpanjang' => $isDiperpanjang // Kirim ke View
         ]);
     }
 }
