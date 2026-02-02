@@ -10,10 +10,11 @@ use App\Models\Pertanyaan;
 use App\Models\SkemaPenilaian;
 use App\Models\PenilaianSession;
 use App\Models\PenilaianAlokasi;
-use App\Models\PenilaianSkor; // [PENTING] Import Model Ini
+use App\Models\PenilaianSkor;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
+use Carbon\Carbon;
 
 #[Layout('layouts.admin', ['title' => 'Random Penilai'])]
 class RandomPenilai extends Component
@@ -41,13 +42,16 @@ class RandomPenilai extends Component
         'skema_lengkap' => false
     ];
 
-    // Detail Error untuk UI
     public $totalBobotCurrent = 0;
     public $missingKompetensiNames = [];
     public $missingLevels = [];
 
     public $isReadyToGenerate = false; 
     public $selectedHistory = null;
+
+    // --- STATE UNTUK EDIT SESI ---
+    public $editingSessionId = null;
+    public $editBatasWaktu = null;
 
     protected $rules = [
         'siklus_id' => 'required|exists:siklus,id',
@@ -79,65 +83,42 @@ class RandomPenilai extends Component
         $this->checkPrerequisites(); 
     }
 
-    // [LOGIKA UTAMA] Validasi Ketat (Aman JSON/Array)
     public function checkPrerequisites()
     {
         $this->resetErrorBag();
-
-        // 1. Cek Siklus Aktif
         $siklus = Siklus::find($this->siklus_id);
         $this->statusCheck['siklus_aktif'] = ($siklus && $siklus->status === 'Aktif');
 
-        // 2. Cek Bobot Kompetensi (Harus pas 100%)
         $activeKompetensi = Kompetensi::where('status', 'Aktif')->get();
         $this->totalBobotCurrent = $activeKompetensi->sum('bobot');
         $this->statusCheck['bobot_100'] = ($this->totalBobotCurrent === 100);
 
-        // 3. Cek Pertanyaan (Setiap Kompetensi Aktif HARUS punya minimal 1 Pertanyaan Aktif)
         $this->missingKompetensiNames = [];
         foreach ($activeKompetensi as $komp) {
             $hasPertanyaan = Pertanyaan::where('kompetensi_id', $komp->id)
-                                ->where('status', 'Aktif')
-                                ->exists();
-            if (!$hasPertanyaan) {
-                $this->missingKompetensiNames[] = $komp->nama_kompetensi;
-            }
+                                        ->where('status', 'Aktif')->exists();
+            if (!$hasPertanyaan) $this->missingKompetensiNames[] = $komp->nama_kompetensi;
         }
         $this->statusCheck['pertanyaan_lengkap'] = empty($this->missingKompetensiNames) && $activeKompetensi->isNotEmpty();
 
-        // 4. Cek Skema (Harus mencakup Level 1, 2, 3, 4, 5)
         $this->missingLevels = [];
         if ($this->siklus_id) {
             $skemas = SkemaPenilaian::where('siklus_id', $this->siklus_id)->get();
             $coveredLevels = [];
-            
-            // Gabungkan semua level target dari semua skema di siklus ini
             foreach ($skemas as $skema) {
-                // Cek apakah datanya sudah Array atau string JSON
                 $dataLevel = $skema->level_target;
-                
-                if (is_array($dataLevel)) {
-                    $levels = $dataLevel;
-                } else {
-                    $levels = json_decode($dataLevel, true);
-                }
-                
+                if (is_array($dataLevel)) { $levels = $dataLevel; } else { $levels = json_decode($dataLevel, true); }
                 $levels = $levels ?? []; 
-
-                // Pastikan format string agar match dengan array_diff
                 $levels = array_map('strval', $levels);
                 $coveredLevels = array_merge($coveredLevels, $levels);
             }
-            
             $requiredLevels = ['1', '2', '3', '4', '5'];
             $this->missingLevels = array_diff($requiredLevels, array_unique($coveredLevels));
-            
             $this->statusCheck['skema_lengkap'] = empty($this->missingLevels);
         } else {
             $this->statusCheck['skema_lengkap'] = false;
         }
 
-        // --- KESIMPULAN ---
         $this->isReadyToGenerate = !$this->isSessionExists 
                                    && $this->statusCheck['siklus_aktif']
                                    && $this->statusCheck['bobot_100'] 
@@ -152,7 +133,8 @@ class RandomPenilai extends Component
         if ($this->existingSession) {
             $this->isSessionExists = true;
             $this->isExpired = now() > $this->existingSession->batas_waktu;
-            $this->batas_waktu = \Carbon\Carbon::parse($this->existingSession->batas_waktu)->format('Y-m-d\TH:i');
+            // PENTING: Update $this->batas_waktu agar UI Kiri Sinkron dengan Database
+            $this->batas_waktu = Carbon::parse($this->existingSession->batas_waktu)->format('Y-m-d\TH:i');
         } else {
             $this->isSessionExists = false;
             $this->isExpired = false;
@@ -162,19 +144,108 @@ class RandomPenilai extends Component
         }
     }
 
+    // --- LOGIKA EDIT & UPDATE (PERBAIKAN UTAMA) ---
+
+    public function editSession($sessionId)
+    {
+        $session = PenilaianSession::with('siklus')->find($sessionId);
+        
+        if ($session) {
+            // Validasi: Siklus Harus Aktif
+            if ($session->siklus->status !== 'Aktif') {
+                $this->dispatch('show-alert', [
+                    'type' => 'error',
+                    'title' => 'Akses Ditolak!',
+                    'text' => 'Harap aktifkan Siklus Semester (' . $session->siklus->tahun_ajaran . ') terlebih dahulu di menu Siklus & Semester.'
+                ]);
+                return;
+            }
+
+            $this->editingSessionId = $session->id;
+            // Format HTML input datetime-local
+            $this->editBatasWaktu = Carbon::parse($session->batas_waktu)->format('Y-m-d\TH:i');
+        }
+    }
+
+    public function updateSession()
+    {
+        $this->validate([
+            'editBatasWaktu' => 'required|date'
+        ]);
+
+        $sessionToUpdate = PenilaianSession::with('siklus')->find($this->editingSessionId);
+        
+        // 1. Cek Validasi Siklus Lagi (Security)
+        if (!$sessionToUpdate || $sessionToUpdate->siklus->status !== 'Aktif') {
+            $this->dispatch('close-modal');
+            session()->flash('error', 'Gagal! Siklus semester sedang tidak aktif.');
+            return;
+        }
+
+        $oldDeadline = Carbon::parse($sessionToUpdate->batas_waktu);
+        $newDeadline = Carbon::parse($this->editBatasWaktu);
+        $now = now();
+
+        // 2. Cek Tabrakan Jadwal (Jika diperpanjang ke masa depan)
+        if ($newDeadline > $now) {
+            $otherActiveSession = PenilaianSession::where('id', '!=', $this->editingSessionId)
+                ->where(function($q) {
+                    $q->where('status', 'Open')->orWhere('status', 'Diperpanjang');
+                })
+                ->where('batas_waktu', '>', $now)
+                ->first();
+
+            if ($otherActiveSession) {
+                $this->dispatch('close-modal');
+                session()->flash('error', 'GAGAL! Sesi penilaian periode ' . $otherActiveSession->siklus->tahun_ajaran . ' masih berjalan.');
+                return;
+            }
+        }
+
+        try {
+            // 3. Tentukan Status Baru
+            $newStatus = 'Closed'; // Default jika expired
+
+            if ($newDeadline > $now) {
+                // Jika waktu baru > waktu lama -> DIPERPANJANG
+                if ($newDeadline > $oldDeadline) {
+                    $newStatus = 'Diperpanjang';
+                } 
+                // Jika waktu dimajukan tapi masih masa depan, kembalikan ke status awal (misal Open) atau tetap Diperpanjang
+                elseif ($sessionToUpdate->status == 'Diperpanjang') {
+                    $newStatus = 'Diperpanjang';
+                } else {
+                    $newStatus = 'Open';
+                }
+            }
+
+            // 4. Eksekusi Update
+            $sessionToUpdate->update([
+                'batas_waktu' => $this->editBatasWaktu,
+                'status' => $newStatus
+            ]);
+
+            // 5. Refresh State
+            $this->checkSessionStatus(); // Ini akan mengupdate $this->batas_waktu di UI Kiri
+            $this->editingSessionId = null;
+            $this->dispatch('close-modal');
+            
+            session()->flash('message', 'Waktu berhasil diperbarui. Status: ' . $newStatus);
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Gagal update: ' . $e->getMessage());
+        }
+    }
+
     public function showDetail($sessionId)
     {
         $this->selectedHistory = PenilaianSession::with([
-            'siklus', 
-            'alokasis.user', 
-            'alokasis.targetUser', 
-            'alokasis.targetJabatan' 
+            'siklus', 'alokasis.user', 'alokasis.targetUser', 'alokasis.targetJabatan' 
         ])->find($sessionId);
     }
 
     public function generate()
     {
-        // [VALIDASI SERVER SIDE KETAT]
         $this->checkPrerequisites();
         
         if (!$this->isReadyToGenerate) {
@@ -198,7 +269,6 @@ class RandomPenilai extends Component
         $this->isProcessing = true;
         DB::beginTransaction();
         try {
-            // 1. Buat Session
             $session = PenilaianSession::create([
                 'siklus_id' => $this->siklus_id,
                 'tanggal_mulai' => now(),
@@ -210,17 +280,14 @@ class RandomPenilai extends Component
             $allTargets = Pegawai::with(['user', 'jabatans'])->get();
             $dataAlokasi = [];
 
-            // 2. Logic Alokasi Penilai
             foreach ($allTargets as $target) {
                 if (!$target->user) continue;
 
                 foreach ($target->jabatans as $jabatanTarget) {
-                    // Diri Sendiri
                     if (in_array('Diri Sendiri', $this->pilihan_kategori)) {
                         $this->tambahAlokasi($dataAlokasi, $session->id, $target->user_id, $jabatanTarget->id, $target->user_id, $jabatanTarget->id, 'Diri Sendiri');
                     }
 
-                    // Atasan
                     if (in_array('Atasan', $this->pilihan_kategori) && $jabatanTarget->parent_id) {
                         $atasanList = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('jabatan.id', $jabatanTarget->parent_id);
@@ -236,7 +303,6 @@ class RandomPenilai extends Component
                         }
                     }
 
-                    // Bawahan
                     if (in_array('Bawahan', $this->pilihan_kategori)) {
                         $bawahanList = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('parent_id', $jabatanTarget->id);
@@ -252,7 +318,6 @@ class RandomPenilai extends Component
                         }
                     }
 
-                    // Rekan
                     if (in_array('Rekan', $this->pilihan_kategori) && $jabatanTarget->parent_id) {
                         $rekanCandidates = Pegawai::whereHas('jabatans', function($q) use ($jabatanTarget) {
                             $q->where('parent_id', $jabatanTarget->parent_id)
@@ -274,16 +339,11 @@ class RandomPenilai extends Component
                 }
             }
 
-            // Insert Alokasi Massal
             foreach (array_chunk($dataAlokasi, 100) as $chunk) {
                 PenilaianAlokasi::insertOrIgnore($chunk);
             }
 
-            // --- STEP BARU: SNAPSHOT / KUNCI PERTANYAAN ---
-            // 3. Ambil ID Alokasi yang baru dibuat
             $createdAlokasiIds = PenilaianAlokasi::where('penilaian_session_id', $session->id)->pluck('id');
-            
-            // 4. Ambil Pertanyaan yang AKTIF SAAT INI
             $activePertanyaanIds = Pertanyaan::where('status', 'Aktif')->pluck('id');
 
             $dataSkorAwal = [];
@@ -292,19 +352,16 @@ class RandomPenilai extends Component
                     $dataSkorAwal[] = [
                         'penilaian_alokasi_id' => $alokasiId,
                         'pertanyaan_id' => $pertanyaanId,
-                        'nilai' => 0, // Nilai 0 = Slot kosong, tapi terkunci
+                        'nilai' => 0, 
                         'created_at' => now(),
                         'updated_at' => now()
                     ];
                 }
             }
 
-            // 5. Insert Skor Awal Massal
-            // Ini akan membuat pertanyaan 'terkunci' sesuai kondisi saat ini.
             foreach (array_chunk($dataSkorAwal, 200) as $chunkSkor) {
                 PenilaianSkor::insertOrIgnore($chunkSkor);
             }
-            // ----------------------------------------------
 
             DB::commit();
             $this->checkSessionStatus();

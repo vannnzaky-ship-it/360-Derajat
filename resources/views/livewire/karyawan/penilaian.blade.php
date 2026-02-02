@@ -130,17 +130,17 @@
             <p class="text-secondary mb-0">Daftar rekan kerja yang perlu Anda nilai pada periode ini.</p>
         </div>
     </div>
-
-    {{-- LOGIKA ALERT & TIMER --}}
+   {{-- LOGIKA ALERT & TIMER --}}
     @if($sessionInfo)
         @php
             $isExpired = now() > $sessionInfo->batas_waktu;
             $carbonDate = \Carbon\Carbon::parse($sessionInfo->batas_waktu);
+            $isExtended = $sessionInfo->status == 'Diperpanjang'; // Cek status
         @endphp
 
         @if($isExpired)
+            {{-- TAMPILAN EXPIRED (TETAP SAMA) --}}
             <div class="alert alert-danger border-0 shadow-sm rounded-4 d-flex align-items-center mb-5 p-4">
-                {{-- Fix ikon background putih di dark mode --}}
                 <div class="bg-white text-danger rounded-circle p-3 me-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px;">
                     <i class="bi bi-lock-fill fs-4"></i>
                 </div>
@@ -150,17 +150,24 @@
                 </div>
             </div>
         @else
+            {{-- TAMPILAN AKTIF / DIPERPANJANG --}}
             <div class="card border-0 shadow-sm mb-5 rounded-4 overflow-hidden bg-white">
                 <div class="card-body p-4 d-flex align-items-center justify-content-between flex-wrap">
                     <div class="d-flex align-items-center">
-                        <div class="bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
-                            <i class="bi bi-stopwatch-fill fs-3"></i>
+                        {{-- Ikon & Warna Berubah jika Diperpanjang --}}
+                        <div class="{{ $isExtended ? 'bg-primary text-primary' : 'bg-info text-info' }} bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                            <i class="bi {{ $isExtended ? 'bi-hourglass-split' : 'bi-stopwatch-fill' }} fs-3"></i>
                         </div>
                         <div>
-                            <h6 class="fw-bold text-dark mb-1">Sisa Waktu Penilaian</h6>
-                            <p class="mb-0 text-secondary small">Harap selesaikan sebelum: <strong>{{ $carbonDate->isoFormat('dddd, D MMMM Y, HH:mm') }} WIB</strong></p>
+                            <h6 class="fw-bold text-dark mb-1">
+                                {{ $isExtended ? 'Masa Penilaian Diperpanjang!' : 'Sisa Waktu Penilaian' }}
+                            </h6>
+                            <p class="mb-0 text-secondary small">
+                                Harap selesaikan sebelum: <strong>{{ $carbonDate->isoFormat('dddd, D MMMM Y, HH:mm') }} WIB</strong>
+                            </p>
                         </div>
                     </div>
+                    
                     {{-- TIMER DISPLAY --}}
                     <div class="timer-box-small shadow-sm" x-data="timerData('{{ $sessionInfo->batas_waktu }}')" x-init="start()">
                         <div><span class="timer-val" x-text="days">00</span><span class="timer-lbl">Hari</span></div>

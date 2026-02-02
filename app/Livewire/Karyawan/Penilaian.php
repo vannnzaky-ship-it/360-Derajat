@@ -14,33 +14,38 @@ class Penilaian extends Component
         $userId = Auth::id();
         
         // 1. Cek Sesi Aktif (Untuk Alert & Validasi Waktu)
+        // UPDATE: Status boleh 'Open' ATAU 'Diperpanjang'
         $activeSession = PenilaianSession::whereHas('alokasis', function($q) use ($userId) {
             $q->where('user_id', $userId);
-        })->where('status', 'Open')->latest()->first();
+        })
+        ->whereIn('status', ['Open', 'Diperpanjang']) // <-- Izinkan status Diperpanjang
+        ->latest()
+        ->first();
 
         // 2. Ambil Data Penilaian (Hanya jika Sesi Masih Buka & Belum Expired)
-        $activeAssignments = PenilaianAlokasi::with(['target.pegawai.jabatans', 'jabatan', 'penilaiJabatan'])
+        $activeAssignments = PenilaianAlokasi::with(['targetUser', 'targetJabatan', 'penilaiJabatan'])
             ->where('user_id', $userId)
             ->whereHas('penilaianSession', function($q) {
-                $q->where('status', 'Open')
+                // UPDATE: Cek status 'Open' ATAU 'Diperpanjang' DAN Waktu belum habis
+                $q->whereIn('status', ['Open', 'Diperpanjang'])
                   ->where('batas_waktu', '>', now()); 
             })
             ->get();
 
         return view('livewire.karyawan.penilaian', [
-            // [LOGIKA DITUKAR DISINI AGAR TAMPILAN BENAR]
+            // LOGIKA DITUKAR (Sesuai request Anda sebelumnya agar Label Tab sesuai Persepsi User)
             
-            // Tab "Penilaian Atasan" -> Isinya orang yang saya nilai sebagai 'Bawahan' (Bos Saya)
+            // Tab "Penilaian Atasan" -> Menampilkan orang yang menilai saya sebagai 'Bawahan' (Artinya Target adalah Atasan saya)
             'atasan' => $activeAssignments->where('sebagai', 'Bawahan'),
 
-            // Tab "Penilaian Bawahan" -> Isinya orang yang saya nilai sebagai 'Atasan' (Anak Buah Saya)
+            // Tab "Penilaian Bawahan" -> Menampilkan orang yang menilai saya sebagai 'Atasan' (Artinya Target adalah Bawahan saya)
             'bawahan' => $activeAssignments->where('sebagai', 'Atasan'),
 
-            // Rekan & Diri Sendiri (Tidak berubah)
+            // Rekan & Diri Sendiri (Logika Lurus)
             'rekan' => $activeAssignments->where('sebagai', 'Rekan'),
             'diri' => $activeAssignments->where('sebagai', 'Diri Sendiri'),
             
             'sessionInfo' => $activeSession 
-        ])->layout('layouts.admin'); // Sesuaikan jika Anda punya layouts.karyawan
+        ])->layout('layouts.admin'); 
     }
 }
