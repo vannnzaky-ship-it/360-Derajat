@@ -1,27 +1,23 @@
 <div class="container-fluid p-4">
     <style>
-        /* --- VARIABLES (Sama dengan Admin agar konsisten) --- */
+        /* --- VARIABLES --- */
         :root { --primary-gold: #c38e44; --gold: #FFD700; --silver: #C0C0C0; --bronze: #CD7F32; }
         .text-gold { color: var(--primary-gold) !important; }
         .bg-gold { background-color: var(--primary-gold) !important; color: white; }
 
-        /* --- BUTTON FIX --- */
+        /* --- BUTTON & DROPDOWN RESPONSIVE --- */
         .btn-responsive { width: 100%; }
+        .filter-dropdown { width: 100%; }
         @media (min-width: 768px) {
             .btn-responsive { width: auto !important; }
+            .filter-dropdown { min-width: 200px; width: auto; }
         }
 
-        /* --- DESKTOP PODIUM (CSS RAMPING) --- */
+        /* --- DESKTOP PODIUM (Gaya Admin) --- */
         .podium-container { 
-            display: flex; 
-            justify-content: center; 
-            align-items: flex-end; 
-            gap: 20px; 
-            margin-bottom: 50px; 
-            padding-top: 30px;
-            max-width: 900px;
-            margin-left: auto; 
-            margin-right: auto;
+            display: flex; justify-content: center; align-items: flex-end; 
+            gap: 20px; margin-bottom: 50px; padding-top: 30px;
+            max-width: 900px; margin-left: auto; margin-right: auto;
         }
 
         .rank-card {
@@ -66,7 +62,7 @@
         .rank-score-val { font-size: 1.4rem; font-weight: 800; color: #333; }
         .rank-score-lbl { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
 
-        /* --- MOBILE & LIST STYLES --- */
+        /* --- MOBILE & LIST --- */
         .leaderboard-item {
             display: flex; align-items: center; background: #fff;
             padding: 15px; margin-bottom: 15px; border-radius: 12px;
@@ -99,53 +95,80 @@
         .ml-role { font-size: 0.75rem; color: #888; }
         .ml-score { font-weight: bold; color: var(--primary-gold); font-size: 1rem; }
 
-        /* --- DARK MODE --- */
-        [data-bs-theme="dark"] .rank-card, [data-bs-theme="dark"] .leaderboard-item, [data-bs-theme="dark"] .mobile-list-card { background-color: #212529 !important; border-color: #373b3e !important; }
-        [data-bs-theme="dark"] .rank-name, [data-bs-theme="dark"] .rank-score-val, [data-bs-theme="dark"] .m-user-name, [data-bs-theme="dark"] .m-score-val, [data-bs-theme="dark"] .ml-name { color: #fff !important; }
-        [data-bs-theme="dark"] .rank-jabatan, [data-bs-theme="dark"] .m-user-jabatan, [data-bs-theme="dark"] .ml-role { color: #adb5bd !important; }
-        [data-bs-theme="dark"] .rank-score-box { background-color: #2c3034 !important; border-top: 1px solid #373b3e !important; }
-        [data-bs-theme="dark"] .m-rank-1 { background: linear-gradient(to right, rgba(255, 215, 0, 0.1), #212529); }
-        [data-bs-theme="dark"] .card, [data-bs-theme="dark"] .card-header, [data-bs-theme="dark"] .table thead, [data-bs-theme="dark"] .bg-light { background-color: #2c3034 !important; color: #adb5bd !important; border-color: #373b3e !important; }
-        [data-bs-theme="dark"] .table tbody td, [data-bs-theme="dark"] .bg-white { background-color: #212529 !important; border-color: #373b3e !important; }
-        [data-bs-theme="dark"] .text-dark { color: #fff !important; }
+        /* DARK MODE */
+        [data-bs-theme="dark"] .bg-white { background-color: #1e1e1e !important; color: #e0e0e0 !important; }
+        [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
         [data-bs-theme="dark"] .text-secondary { color: #adb5bd !important; }
+        [data-bs-theme="dark"] .rank-card, [data-bs-theme="dark"] .card { background-color: #1e1e1e !important; border-color: #333 !important; }
+        [data-bs-theme="dark"] .form-select, [data-bs-theme="dark"] .form-control { background-color: #2c2c2c !important; border-color: #444 !important; color: #fff !important; }
+        [data-bs-theme="dark"] .table thead { background-color: #2c2c2c !important; color: #adb5bd !important; }
+        [data-bs-theme="dark"] .table tbody td { border-bottom-color: #333 !important; color: #e0e0e0 !important; }
     </style>
 
-    {{-- HEADER --}}
+    {{-- HEADER UTAMA --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-3">
+        
+        {{-- JUDUL --}}
         <div>
             <a href="{{ route('peninjau.laporan') }}" class="text-decoration-none text-muted small mb-1 d-block">
                 <i class="bi bi-arrow-left"></i> Kembali ke Laporan
             </a>
             <div class="d-flex align-items-center">
                 <div class="p-2 me-2">
-                    <i class="bi bi-bar-chart-fill fs-2 text-gold" style="color: #C38E44;"></i>
+                    <i class="bi bi-bar-chart-fill fs-2 text-gold " style="color: #C38E44;"></i>
                 </div>
                 <div>
-                    <h2 class="h3 text-dark mb-0">Peringkat Kinerja</h2>
-                    <p class="text-muted mb-0">Periode: <span class="fw-bold" style="color: #c38e44;">{{ $siklus->tahun_ajaran }} {{ $siklus->semester }}</span></p>
+                    <h2 class="h3 mb-0 text-dark">Peringkat Kinerja</h2>
                 </div>
             </div>
+            <p class="text-muted mb-0">Periode: <span class="fw-bold text-gold">{{ $siklus->tahun_ajaran }} {{ $siklus->semester }}</span></p>
         </div>
         
-        <div class="dropdown btn-responsive">
-            <button class="btn btn-white border shadow-sm dropdown-toggle px-4 py-2 rounded-3 text-secondary fw-bold btn-responsive" type="button" data-bs-toggle="dropdown">
-                <i class="bi bi-download me-2"></i> Unduh
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2 w-100">
-                <li><button class="dropdown-item py-2" wire:click="exportPdf"><i class="bi bi-file-earmark-pdf text-danger me-2"></i> PDF</button></li>
-                <li><button class="dropdown-item py-2" wire:click="exportExcel"><i class="bi bi-file-earmark-excel text-success me-2"></i> Excel</button></li>
-            </ul>
+        {{-- FILTER & UNDUH --}}
+        <div class="d-flex flex-column flex-md-row gap-2 align-items-center w-100 w-md-auto ms-md-auto justify-content-md-end">
+            
+            {{-- 1. FILTER BIDANG --}}
+            <div class="filter-dropdown btn-responsive">
+                <select class="form-select border shadow-sm py-2 rounded-3 text-secondary fw-bold" wire:model.live="filterBidang">
+                    <option value="">Semua Bidang</option>
+                    @foreach($listBidang as $bid)
+                        <option value="{{ $bid }}">{{ $bid }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- 2. FILTER JABATAN --}}
+            <div class="filter-dropdown btn-responsive">
+                <select class="form-select border shadow-sm py-2 rounded-3 text-secondary fw-bold" wire:model.live="filterKategori">
+                    <option value="">Semua Bagian/Jabatan</option>
+                    <option value="direktur">Direktur</option>
+                    <option value="wadir">Wakil Direktur</option>
+                    <option value="kaprodi">Kaprodi</option>
+                    <option value="kalab">Kepala Lab</option>
+                    <option value="kaunit">Kepala Unit (Ka. Bagian)</option>
+                    <option value="kasi">Kasi / Kasubbag</option>
+                    <option value="dosen">Dosen</option>
+                    <option value="karyawan">Staff/Karyawan</option>
+                </select>
+            </div>
+
+            {{-- 3. TOMBOL UNDUH --}}
+            <div class="dropdown btn-responsive">
+                <button class="btn btn-white border shadow-sm dropdown-toggle px-4 py-2 rounded-3 text-secondary fw-bold btn-responsive" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-download me-2"></i> Unduh
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2 w-100">
+                    <li><button class="dropdown-item py-2" wire:click="exportPdf"><i class="bi bi-file-earmark-pdf text-danger me-2"></i> PDF</button></li>
+                    <li><button class="dropdown-item py-2" wire:click="exportExcel"><i class="bi bi-file-earmark-excel text-success me-2"></i> Excel</button></li>
+                </ul>
+            </div>
         </div>
     </div>
 
+    {{-- PODIUM 3 BESAR --}}
     @if(count($dataPegawai) > 0)
         
-        {{-- ============================================================ --}}
-        {{-- A. DESKTOP PODIUM (3 BESAR) --}}
-        {{-- ============================================================ --}}
         <div class="d-none d-md-flex podium-container">
-            
             {{-- JUARA 2 --}}
             @if(isset($dataPegawai[1]))
             <div class="rank-2-wrapper">
@@ -210,27 +233,17 @@
             @endif
         </div>
 
-        {{-- ============================================================ --}}
-        {{-- B. MOBILE LIST (3 BESAR UNTUK HP) --}}
-        {{-- ============================================================ --}}
+        {{-- MOBILE LIST --}}
         <div class="d-block d-md-none mb-5">
             <h6 class="fw-bold text-muted text-uppercase mb-3 ps-1 small">3 Besar Terbaik</h6>
             @foreach(array_slice($dataPegawai, 0, 3) as $index => $row)
                 @php 
-                    $rank = $index + 1; 
-                    $mClass = 'm-rank-'.$rank; 
-                    $bgClass = 'm-bg-'.$rank;
+                    $rank = $index + 1; $mClass = 'm-rank-'.$rank; $bgClass = 'm-bg-'.$rank;
                 @endphp
                 <div class="leaderboard-item {{ $mClass }}">
                     @if($rank == 1) <i class="bi bi-trophy-fill m-trophy"></i> @endif
                     <div class="m-rank-number {{ $bgClass }}">{{ $rank }}</div>
-                    <div class="m-user-avatar d-flex align-items-center justify-content-center bg-light text-secondary fw-bold border">
-                        @if(!empty($row['foto']))
-                            <img src="{{ asset('storage/' . $row['foto']) }}" class="w-100 h-100 rounded-circle object-fit-cover">
-                        @else
-                            {{ substr($row['nama'], 0, 1) }}
-                        @endif
-                    </div>
+                    <div class="m-user-avatar d-flex align-items-center justify-content-center bg-light text-secondary fw-bold border">{{ substr($row['nama'], 0, 1) }}</div>
                     <div class="m-user-info">
                         <div class="m-user-name text-truncate">{{ $row['nama'] }}</div>
                         <div class="m-user-jabatan text-truncate">{{ $row['jabatan'] }}</div>
@@ -245,18 +258,22 @@
 
     @endif
 
-    {{-- TABEL / DAFTAR LENGKAP --}}
+    {{-- TABEL LENGKAP --}}
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden mt-4">
-        <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-            <h6 class="mb-0 fw-bold text-dark">Daftar Peringkat Lengkap</h6>
+        
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <h6 class="mb-0 fw-bold text-dark text-nowrap">Daftar Peringkat Lengkap</h6>
+                <span class="badge bg-light text-secondary border">{{ count($dataPegawai) }} Pegawai</span>
+            </div>
+        
             <div class="input-group btn-responsive" style="max-width: 300px;">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search small"></i></span>
-                <input type="text" class="form-control bg-light border-start-0 form-control-sm" placeholder="Cari Pegawai..." wire:model.live.debounce="300ms">
+                <input type="text" class="form-control bg-light border-start-0 form-control-sm" placeholder="Cari Nama/NRP..." wire:model.live.debounce="300ms">
             </div>
         </div>
 
         <div class="card-body p-0">
-            {{-- 1. TABEL DESKTOP --}}
             <div class="table-responsive d-none d-md-block">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light text-secondary">
@@ -280,9 +297,10 @@
                                     <div class="fw-bold text-dark">{{ $row['nama'] }}</div>
                                     <div class="small text-muted">{{ $row['nip'] }}</div>
                                 </td>
-                                <td><span class="text-secondary small">{{ Str::limit($row['jabatan'], 40) }}</span></td>
+                                <td><span class="text-secondary small">{{ Str::limit($row['jabatan'], 50) }}</span></td>
                                 <td class="text-center">
-                                    <span class="fw-bold fs-6 text-dark">{{ number_format($row['skor_akhir'], 2) }}</span>
+                                    @php $skorTampil = $row['skor_akhir'] <= 5 ? $row['skor_akhir'] * 20 : $row['skor_akhir']; @endphp
+                                    <span class="fw-bold fs-6 text-dark">{{ number_format($skorTampil, 2) }}</span>
                                 </td>
                                 <td class="text-center">
                                     <span class="badge bg-light text-secondary border rounded-pill fw-normal px-3"><i class="bi bi-person-check-fill me-1"></i> {{ $row['total_penilai'] }} Suara</span>
@@ -299,7 +317,7 @@
                                     <span class="badge {{ $class }} rounded-pill fw-normal px-3">{{ $row['predikat'] }}</span>
                                 </td>
                                 <td class="text-center">
-                                    {{-- ROUTE KHUSUS PENINJAU --}}
+                                    {{-- Route disesuaikan dengan Peninjau --}}
                                     <a href="{{ route('peninjau.laporan.detail', ['siklusId' => $siklus->id, 'userId' => $row['user_id']]) }}" class="btn btn-sm btn-light border rounded-3 px-3 text-muted w-100"><i class="bi bi-chevron-right"></i></a>
                                 </td>
                             </tr>
@@ -310,9 +328,10 @@
                 </table>
             </div>
             
-            {{-- 2. MOBILE CARD LIST (DAFTAR KARTU UNTUK HP) --}}
+            {{-- MOBILE CARD LIST --}}
             <div class="d-md-none p-3 bg-light">
                 @forelse($dataPegawai as $index => $row)
+                    @php $skorTampil = $row['skor_akhir'] <= 5 ? $row['skor_akhir'] * 20 : $row['skor_akhir']; @endphp
                     <div class="mobile-list-card" onclick="window.location='{{ route('peninjau.laporan.detail', ['siklusId' => $siklus->id, 'userId' => $row['user_id']]) }}'" style="cursor: pointer;">
                         <div class="ml-rank">{{ $index + 1 }}</div>
                         <div class="ml-info">
@@ -324,7 +343,7 @@
                             </div>
                         </div>
                         <div class="text-end">
-                            <div class="ml-score">{{ number_format($row['skor_akhir'], 2) }}</div>
+                            <div class="ml-score">{{ number_format($skorTampil, 2) }}</div>
                             <i class="bi bi-chevron-right text-muted small"></i>
                         </div>
                     </div>

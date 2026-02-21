@@ -8,7 +8,8 @@ use App\Livewire\PilihRole;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\VerifyOtp;
 // Import Middleware dengan Alias agar lebih pendek
-use App\Http\Middleware\PreventBackHistory; 
+use App\Http\Middleware\PreventBackHistory;
+use App\Livewire\Admin\Testing;
 
 // --- 1. RUTE PUBLIC & AUTH ---
 // Halaman Login & Lupa Password bisa diakses siapa saja (Guest)
