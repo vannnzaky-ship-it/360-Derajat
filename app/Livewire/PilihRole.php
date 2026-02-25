@@ -17,28 +17,25 @@ class PilihRole extends Component
     public function mount()
     {
         $user = Auth::user();
+        
+        // --- LOGIKA BARU: PROTEKSI SUPERADMIN ---
+        // Jika dia superadmin mencoba akses URL ini, kembalikan ke dashboardnya
+        if ($user->hasRole('superadmin')) {
+            Session::put('selected_role', 'superadmin');
+            return redirect('/superadmin/dashboard');
+        }
+
+        // Ambil role selain superadmin
         $this->roles = $user->roles;
 
-        // --- LOGIKA BARU: AUTO LOGOUT JIKA TEKAN BACK ---
-        // Jika user masuk ke sini tapi 'selected_role' sudah ada,
-        // berarti dia menekan tombol BACK dari Dashboard.
-        // Maka: Logout-kan dia & lempar ke halaman login.
-        if (Session::has('selected_role')) {
-            Auth::logout();
-            request()->session()->invalidate();
-            request()->session()->regenerateToken();
-            
-            return redirect()->route('login');
-        }
-        // ------------------------------------------------
-
-        // Logika Otomatis (Jika user baru login & cuma punya 1 role)
+        // Logika Otomatis (Jika user cuma punya 1 role)
         if ($this->roles->count() === 1) {
             $singleRole = $this->roles->first()->name;
             Session::put('selected_role', $singleRole);
             return $this->redirect($this->getRedirectPath($singleRole));
         }
 
+        // Jika tidak punya role sama sekali
         if ($this->roles->isEmpty()) {
             Auth::logout();
             return redirect()->route('login')->withErrors('Akun tidak punya peran.');
@@ -47,10 +44,12 @@ class PilihRole extends Component
 
     public function selectRole(string $roleName)
     {
+        // Validasi apakah role yang diklik benar-benar dimiliki oleh user tersebut
         if (!$this->roles->contains('name', $roleName)) {
             return session()->flash('error', 'Peran tidak valid.');
         }
 
+        // Timpa session 'selected_role' dengan role yang baru dipilih
         Session::put('selected_role', $roleName);
         return $this->redirect($this->getRedirectPath($roleName));
     }

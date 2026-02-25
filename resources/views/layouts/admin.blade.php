@@ -542,6 +542,14 @@
                                     <i class="bi bi-person-gear me-2 text-warning"></i> Ganti Password & Info Akun
                                 </a>
                             </li>
+                            @if(auth()->user()->roles->count() > 1)
+                            <li>
+                                <a class="dropdown-item py-2" href="{{ route('pilih-role') }}">
+                                    <i class="bi bi-arrow-left-right me-2 text-info"></i> Ganti Hak Akses / Peran
+                                </a>
+                            </li>
+                            @endif
+                            {{-- AKHIR TOMBOL GANTI PERAN --}}
                             @endif
 
                             <li>

@@ -36,12 +36,19 @@ class Login360 extends Component
                 return;
             }
 
-            // JIKA ROLE LEBIH DARI 1, ARAHKAN KE PILIH ROLE
+            // --- LOGIKA BARU: JIKA PUNYA ROLE SUPERADMIN, LANGSUNG MASUK ---
+            // Mengabaikan role lain jika dia adalah superadmin
+            if ($roles->contains('name', 'superadmin')) {
+                Session::put('selected_role', 'superadmin');
+                return $this->redirect('/superadmin/dashboard', navigate: true);
+            }
+
+            // JIKA BUKAN SUPERADMIN & ROLE LEBIH DARI 1, ARAHKAN KE HALAMAN PILIH ROLE
             if ($roles->count() > 1) {
                 return $this->redirect('/pilih-role', navigate: true);
             }
 
-            // JIKA ROLE HANYA 1, LANGSUNG MASUK DASHBOARD
+            // JIKA ROLE HANYA 1, LANGSUNG MASUK DASHBOARD SESUAI ROLENYA
             $roleName = $roles->first()->name;
             Session::put('selected_role', $roleName);
             

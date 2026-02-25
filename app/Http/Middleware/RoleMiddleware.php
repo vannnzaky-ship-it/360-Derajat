@@ -12,54 +12,56 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // Ambil user yang sedang login
         $user = $request->user();
 
-        // 1. Jika tidak ada user yang login (seharusnya tidak terjadi karena middleware 'auth')
+        // 1. Jika tidak ada user yang login
         if (!$user) {
-            Auth::logout();
-            return redirect('/login');
+            return redirect()->route('login');
         }
         
-        // Ambil peran yang sudah dipilih dari session
         $selectedRole = Session::get('selected_role');
 
-        // ==== HAPUS dd() DARI SINI ====
-        // dd('RoleMiddleware melihat session:', $selectedRole, 'Role yang diizinkan:', $roles); 
-
-        // 2. Cek apakah peran di session valid DAN diizinkan
-        if ($selectedRole && in_array($selectedRole, $roles)) {
-            // Peran di session cocok, izinkan akses
-            return $next($request);
-        }
-
-        // 3. FALLBACK: Jika session tidak cocok ATAU kosong, cek peran asli user
-        $hasAllowedRole = false;
-        foreach ($roles as $allowedRole) {
-            if ($user->hasRole($allowedRole)) {
-                $hasAllowedRole = true;
-                // Perbaiki session jika user punya peran tapi session salah/kosong
-                if ($selectedRole !== $allowedRole) {
-                    Session::put('selected_role', $allowedRole);
-                }
-                break; // Cukup temukan satu peran yang cocok
+        // 2. JAGA-JAGA: Jika session kosong (misal karena session kedaluwarsa tapi Auth cookie masih ada)
+        if (!$selectedRole) {
+            if ($user->roles()->count() > 1) {
+                return redirect()->route('pilih-role');
+            }
+            
+            // Set otomatis jika cuma punya 1 peran
+            $singleRole = $user->roles()->first();
+            if ($singleRole) {
+                $selectedRole = $singleRole->name;
+                Session::put('selected_role', $selectedRole);
+            } else {
+                Auth::logout();
+                return redirect()->route('login')->withErrors('Akun Anda tidak memiliki peran.');
             }
         }
 
-        if ($hasAllowedRole) {
-            // User punya peran asli yang diizinkan (session sudah diperbaiki), izinkan akses
-            return $next($request);
+        // 3. LOGIKA UTAMA: Cek apakah role yang SEDANG AKTIF diizinkan untuk mengakses URL ini
+        if (in_array($selectedRole, $roles)) {
+            // Lapis Keamanan Ekstra: Pastikan di database user tersebut memang benar-benar punya role ini
+            // (Untuk mencegah user usil memanipulasi session secara paksa)
+            if ($user->hasRole($selectedRole)) {
+                return $next($request);
+            }
         }
 
-        // 4. Jika session TIDAK cocok DAN peran asli user juga TIDAK cocok
-        // Cek apakah user punya > 1 role (mungkin dia salah pilih?)
-        if ($user->roles()->count() > 1) {
-            // Arahkan kembali ke halaman pilih peran
-             return redirect('/pilih-role')->with('error', 'Peran yang Anda pilih tidak memiliki akses ke halaman ini.');
-        } else {
-             // Jika hanya punya 1 role dan itu salah, logout saja
-             Auth::logout();
-             return redirect('/login')->withErrors('Peran Anda tidak diizinkan mengakses halaman ini.');
+        // --- 4. PENOLAKAN AKSES ---
+        // Jika sampai di baris ini, berarti peran yang sedang aktif tidak diizinkan masuk halaman ini.
+        // (Contoh: Sedang aktif jadi 'karyawan', tapi mau buka link '/admin/dashboard')
+        
+        // Khusus Superadmin: Kembalikan ke singgasananya (Superadmin tidak boleh masuk rute lain)
+        if ($selectedRole === 'superadmin') {
+            return redirect('/superadmin/dashboard')->with('error', 'Super Admin dibatasi hanya untuk halaman ini.');
         }
+
+        // Jika user punya lebih dari 1 peran, arahkan ke Pilih Peran agar dia ganti baju dulu
+        if ($user->roles()->count() > 1) {
+            return redirect()->route('pilih-role')->with('error', 'Silakan ganti peran Anda terlebih dahulu untuk mengakses halaman tersebut.');
+        }
+
+        // Jika user cuma punya 1 peran dan memang tidak berhak, blokir dengan halaman 403 (Forbidden)
+        abort(403, 'Akses Ditolak. Hak akses Anda tidak diizinkan untuk melihat halaman ini.');
     }
 }
